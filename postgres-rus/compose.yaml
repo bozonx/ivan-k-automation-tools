@@ -1,0 +1,15 @@
+services:
+  db:
+    image: bozonx/postgres-rus
+    container_name: pg-main
+    restart: always
+    # set shared memory limit when using docker compose
+    shm_size: 128mb
+    volumes:
+      - ../test-data/postgres:/var/lib/postgresql
+    environment:
+      # password of the user postgres - set in .env file
+      POSTGRES_PASSWORD: "123"
+      POSTGRES_INITDB_ARGS: "--data-checksums --locale=ru_RU.UTF-8"
+    #ports:
+    #  - "5432:5432"
