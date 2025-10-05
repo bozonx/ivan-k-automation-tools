@@ -17,25 +17,24 @@ RUN apk add --no-cache \
     bash \
     && rm -rf /var/cache/apk/*
 
-# Создаем пользователя для безопасности (не запускаем от root)
-RUN addgroup -g 1001 -S webhook && \
-    adduser -S webhook -u 1001 -G webhook
+# Используем существующего пользователя node (UID 1000) для безопасности
+# Пользователь node уже существует в базовом образе node:20-alpine
 
 # Создаем необходимые директории
 RUN mkdir -p /data/repos /data/compose && \
-    chown -R webhook:webhook /data
+    chown -R node:node /data
 
 # Устанавливаем рабочую директорию
 WORKDIR /app
 
 # Копируем файл приложения
-COPY --chown=webhook:webhook index.js ./
+COPY --chown=node:node index.js ./
 
 # Делаем файл исполняемым
 RUN chmod +x index.js
 
-# Переключаемся на пользователя webhook
-USER webhook
+# Переключаемся на пользователя node
+USER node
 
 # Открываем порт 80 (по умолчанию из index.js)
 EXPOSE 80

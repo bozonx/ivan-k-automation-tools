@@ -36,7 +36,7 @@ function checkAuthToken(requestToken) {
 }
 
 // Функция для выполнения git pull
-async function performGitPull(repo) {
+async function performGitPull(repo, compose = null) {
   const repoPath = `${REPO_BASE_PATH}/${repo}`;
 
   try {
@@ -49,7 +49,35 @@ async function performGitPull(repo) {
     const { stdout, stderr } = await execAsync(`cd "${repoPath}" && git pull`);
 
     log(`Git pull выполнен успешно для ${repo}: ${stdout}`);
-    return { success: true, output: stdout };
+
+    const result = { success: true, output: stdout };
+
+    // Если передан параметр compose, перезапускаем docker-compose контейнеры
+    if (compose) {
+      log(`Перезапускаю docker-compose контейнеры для: ${compose}`);
+      const composeResult = await performDockerComposeUpdate(compose);
+
+      if (composeResult.success) {
+        result.composeUpdate = {
+          success: true,
+          compose: compose,
+          pullOutput: composeResult.pullOutput,
+          restartOutput: composeResult.restartOutput,
+        };
+        log(`Docker-compose перезапуск выполнен успешно для ${compose}`);
+      } else {
+        result.composeUpdate = {
+          success: false,
+          compose: compose,
+          error: composeResult.error,
+        };
+        log(
+          `Ошибка при перезапуске docker-compose для ${compose}: ${composeResult.error}`
+        );
+      }
+    }
+
+    return result;
   } catch (error) {
     log(`Ошибка при выполнении git pull для ${repo}: ${error.message}`);
     return { success: false, error: error.message };
@@ -136,15 +164,22 @@ async function handleRequest(req, res) {
 
   // Определяем тип операции и выполняем соответствующее действие
   if (repo) {
-    const result = await performGitPull(repo);
+    const result = await performGitPull(repo, compose);
 
     if (result.success) {
-      sendResponse(res, 200, {
+      const response = {
         success: true,
         operation: "git_pull",
         repo: repo,
         output: result.output,
-      });
+      };
+
+      // Добавляем информацию о docker-compose обновлении если оно было выполнено
+      if (result.composeUpdate) {
+        response.composeUpdate = result.composeUpdate;
+      }
+
+      sendResponse(res, 200, response);
     } else {
       sendResponse(res, 500, {
         success: false,
@@ -195,6 +230,9 @@ server.listen(PORT, () => {
   log(`Вебхук сервер запущен на порту ${PORT}`);
   log(`Использование:`);
   log(`  GET /?repo=<repository_name> - выполнить git pull`);
+  log(
+    `  GET /?repo=<repository_name>&compose=<compose_name> - выполнить git pull и перезапустить docker-compose`
+  );
   log(
     `  GET /?compose=<compose_name> - выполнить docker-compose pull и restart`
   );
