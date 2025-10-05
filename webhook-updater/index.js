@@ -92,9 +92,9 @@ async function performDockerComposeUpdate(compose) {
     // Проверяем существование директории
     await execAsync(`test -d "${composePath}"`);
 
-    // Проверяем наличие docker-compose.yml или docker-compose.yaml
+    // Проверяем наличие файлов Docker Compose (все возможные варианты названий)
     await execAsync(
-      `test -f "${composePath}/docker-compose.yml" -o -f "${composePath}/docker-compose.yaml"`
+      `test -f "${composePath}/compose.yml" -o -f "${composePath}/compose.yaml" -o -f "${composePath}/docker-compose.yml" -o -f "${composePath}/docker-compose.yaml"`
     );
 
     // Выполняем docker-compose pull

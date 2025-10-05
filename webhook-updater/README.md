@@ -193,9 +193,9 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
       # Опционально: токен авторизации
-      - AUTH_TOKEN=your-secret-token-here
+      AUTH_TOKEN: your-secret-token-here
       # Опционально: порт (по умолчанию 80)
-      - PORT=80
+      PORT: 80
     restart: unless-stopped
     # Запуск от root для доступа к Docker socket
     user: "0:0"
