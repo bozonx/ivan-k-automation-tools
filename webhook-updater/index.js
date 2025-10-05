@@ -24,15 +24,13 @@ function log(message) {
 
 // Функция для проверки токена авторизации
 function checkAuthToken(requestToken) {
-  const envToken = process.env.AUTH_TOKEN;
-
   // Если AUTH_TOKEN не задан, авторизация не требуется
-  if (!envToken) {
+  if (!AUTH_TOKEN) {
     return true;
   }
 
   // Если токен задан, проверяем совпадение
-  return requestToken === envToken;
+  return requestToken === AUTH_TOKEN;
 }
 
 // Функция для выполнения git pull
