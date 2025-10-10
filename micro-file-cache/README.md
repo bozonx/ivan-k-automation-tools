@@ -15,6 +15,25 @@
 - ✅ Health check endpoint
 - ✅ Docker поддержка
 - ✅ Конфигурируемые ограничения
+- ✅ Безопасное определение MIME типа файлов
+- ✅ Упрощенная работа с файловой системой
+- ✅ Продвинутое тестирование API
+
+## Технологии
+
+### Основной стек
+- **Node.js** - среда выполнения
+- **TypeScript** - язык программирования
+- **NestJS** - фреймворк для создания масштабируемых серверных приложений
+- **Fastify** - HTTP адаптер (высокая производительность)
+
+### Дополнительные пакеты
+- **fs-extra** - расширенная работа с файловой системой
+- **file-type** - безопасное определение MIME типа файлов
+- **dayjs** - удобная работа с датами и временем
+- **supertest** - E2E тестирование API endpoints
+- **multer** - загрузка файлов
+- **@nestjs/schedule** - автоматическая очистка по расписанию
 
 ## Быстрый старт
 
@@ -316,11 +335,62 @@ pnpm run test
 # Запуск тестов с покрытием
 pnpm run test:cov
 
+# E2E тестирование
+pnpm run test:e2e
+
 # Линтинг
 pnpm run lint
 
 # Форматирование кода
 pnpm run format
+```
+
+### Ключевые особенности реализации
+
+#### Безопасное определение типов файлов
+Сервис использует пакет `file-type` для определения MIME типа файла по содержимому, а не по расширению:
+
+```typescript
+import { fileTypeFromBuffer } from "file-type";
+
+const mimeType = await fileTypeFromBuffer(buffer);
+// Безопасно определяет тип даже если файл переименован
+```
+
+#### Упрощенная работа с файлами
+Использование `fs-extra` упрощает операции с файловой системой:
+
+```typescript
+import * as fs from "fs-extra";
+
+// Автоматически создает директории
+await fs.ensureDir(path);
+
+// Безопасное удаление
+await fs.remove(filePath);
+```
+
+#### Удобная работа с датами
+Пакет `dayjs` обеспечивает простую работу с датами и временем:
+
+```typescript
+import dayjs from "dayjs";
+
+const expiration = dayjs().add(ttlMinutes, "minute").utc().toISOString();
+const isExpired = dayjs().utc().isAfter(dayjs(expiresAt).utc());
+```
+
+#### Комплексное тестирование
+`supertest` позволяет тестировать API endpoints как настоящие HTTP запросы:
+
+```typescript
+import * as request from "supertest";
+
+await request(app.getHttpServer())
+  .post("/api/v1/files")
+  .attach("file", buffer, "test.txt")
+  .field("ttlMinutes", "60")
+  .expect(201);
 ```
 
 ### Тестирование

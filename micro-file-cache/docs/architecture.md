@@ -165,15 +165,54 @@ class FilesService {
 **Основные методы**:
 
 ```typescript
+import * as fs from "fs-extra";
+import * as path from "path";
+import { fileTypeFromBuffer } from "file-type";
+
 class StorageService {
-  // Сохранение файла
-  async saveFile(file: Buffer, filename: string): Promise<string>;
+  // Сохранение файла с использованием fs-extra
+  async saveFile(buffer: Buffer, filename: string): Promise<string> {
+    const date = new Date();
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    
+    const dir = path.join(this.storageDir, year.toString(), month, day);
+    
+    // Автоматически создает директории если их нет
+    await fs.ensureDir(dir);
+    
+    const filePath = path.join(dir, filename);
+    await fs.writeFile(filePath, buffer);
+    
+    return path.relative(this.storageDir, filePath);
+  }
 
-  // Получение файла
-  async getFile(path: string): Promise<Buffer>;
+  // Получение файла с проверкой существования
+  async getFile(filePath: string): Promise<Buffer> {
+    const fullPath = path.join(this.storageDir, filePath);
+    
+    // Проверяет существование файла перед чтением
+    if (!(await fs.pathExists(fullPath))) {
+      throw new NotFoundException("File not found");
+    }
+    
+    return await fs.readFile(fullPath);
+  }
 
-  // Удаление файла
-  async deleteFile(path: string): Promise<void>;
+  // Безопасное удаление файла
+  async deleteFile(filePath: string): Promise<void> {
+    const fullPath = path.join(this.storageDir, filePath);
+    
+    // Безопасное удаление - не выбросит ошибку если файл не существует
+    await fs.remove(fullPath);
+  }
+
+  // Определение MIME типа по содержимому файла
+  async getFileMimeType(buffer: Buffer): Promise<string> {
+    const type = await fileTypeFromBuffer(buffer);
+    return type?.mime || "application/octet-stream";
+  }
 
   // Сохранение метаданных
   async saveMetadata(fileInfo: FileInfo): Promise<void>;
@@ -194,21 +233,76 @@ class StorageService {
 - Атомарные операции с файлами и метаданными
 - Обработка ошибок файловой системы
 - Оптимизированное чтение/запись data.json
+- Использование `fs-extra` для упрощения работы с файловой системой
+- Безопасное определение MIME типа с помощью `file-type`
 
 ### CleanupService
 
 **Основные методы**:
 
 ```typescript
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+
+dayjs.extend(utc);
+
 class CleanupService {
   // Запуск очистки
-  async runCleanup(): Promise<CleanupResult>;
+  async runCleanup(): Promise<CleanupResult> {
+    const startTime = dayjs().utc();
+    const expiredFiles = await this.findExpiredFiles();
+    const deletedCount = await this.removeExpiredFiles(expiredFiles);
+    
+    const endTime = dayjs().utc();
+    const duration = endTime.diff(startTime, "millisecond");
+    
+    this.logger.log(`Cleanup completed: ${deletedCount} files deleted in ${duration}ms`);
+    
+    return {
+      deletedCount,
+      duration,
+      lastRun: startTime.toISOString(),
+      nextRun: dayjs().add(1, "minute").utc().toISOString()
+    };
+  }
 
-  // Проверка файла на истечение
-  private isFileExpired(fileInfo: FileInfo): boolean;
+  // Проверка файла на истечение с использованием dayjs
+  private isFileExpired(fileInfo: FileInfo): boolean {
+    const now = dayjs().utc();
+    const expiration = dayjs(fileInfo.expiresAt).utc();
+    
+    return now.isAfter(expiration);
+  }
+
+  // Поиск устаревших файлов
+  private async findExpiredFiles(): Promise<FileInfo[]> {
+    const allFiles = await this.storageService.getAllMetadata();
+    const now = dayjs().utc();
+    
+    return Object.values(allFiles).filter(fileInfo => {
+      const expiration = dayjs(fileInfo.expiresAt).utc();
+      return now.isAfter(expiration);
+    });
+  }
 
   // Удаление устаревших файлов
-  private async removeExpiredFiles(): Promise<number>;
+  private async removeExpiredFiles(expiredFiles: FileInfo[]): Promise<number> {
+    let deletedCount = 0;
+    
+    for (const fileInfo of expiredFiles) {
+      try {
+        await this.storageService.deleteFile(fileInfo.path);
+        await this.storageService.deleteMetadata(fileInfo.id);
+        deletedCount++;
+        
+        this.logger.log(`Deleted expired file: ${fileInfo.originalName} (${fileInfo.id})`);
+      } catch (error) {
+        this.logger.error(`Failed to delete file ${fileInfo.id}: ${error.message}`);
+      }
+    }
+    
+    return deletedCount;
+  }
 }
 ```
 
@@ -450,6 +544,130 @@ function validateTTL(ttlMinutes: number, maxTTL: number): boolean {
 1. **Увеличение ресурсов**: CPU, RAM, диск
 2. **Оптимизация кода**: Профилирование и оптимизация
 3. **Настройка Node.js**: Увеличение лимитов памяти
+
+## Тестирование
+
+### Архитектура тестов
+
+Проект использует многоуровневую систему тестирования:
+
+1. **Unit тесты** - тестирование отдельных сервисов и методов
+2. **Integration тесты** - тестирование взаимодействия между модулями
+3. **E2E тесты** - тестирование полного API с помощью `supertest`
+
+### E2E тестирование с supertest
+
+```typescript
+// files.controller.e2e-spec.ts
+import { Test, TestingModule } from "@nestjs/testing";
+import { INestApplication } from "@nestjs/common";
+import * as request from "supertest";
+import { AppModule } from "../src/app.module";
+
+describe("FilesController (e2e)", () => {
+  let app: INestApplication;
+  const authToken = "test-token";
+
+  beforeEach(async () => {
+    const moduleFixture: TestingModule = await Test.createTestingModule({
+      imports: [AppModule],
+    }).compile();
+
+    app = moduleFixture.createNestApplication();
+    await app.init();
+  });
+
+  afterEach(async () => {
+    await app.close();
+  });
+
+  describe("POST /api/v1/files", () => {
+    it("should upload file successfully", () => {
+      return request(app.getHttpServer())
+        .post("/api/v1/files")
+        .set("Authorization", `Bearer ${authToken}`)
+        .attach("file", Buffer.from("test content"), "test.txt")
+        .field("ttlMinutes", "60")
+        .expect(201)
+        .expect((res) => {
+          expect(res.body.success).toBe(true);
+          expect(res.body.data).toHaveProperty("id");
+          expect(res.body.data.originalName).toBe("test.txt");
+          expect(res.body.data.ttlMinutes).toBe(60);
+        });
+    });
+
+    it("should handle file type detection", () => {
+      // Создаем PDF файл для тестирования file-type
+      const pdfBuffer = Buffer.from("%PDF-1.4\n1 0 obj\n<<\n/Type /Catalog\n>>\nendobj");
+      
+      return request(app.getHttpServer())
+        .post("/api/v1/files")
+        .set("Authorization", `Bearer ${authToken}`)
+        .attach("file", pdfBuffer, "document.pdf")
+        .field("ttlMinutes", "60")
+        .expect(201)
+        .expect((res) => {
+          expect(res.body.data.mimeType).toBe("application/pdf");
+        });
+    });
+  });
+
+  describe("GET /api/v1/files/:id/download", () => {
+    it("should download file with correct headers", () => {
+      return request(app.getHttpServer())
+        .get(`/api/v1/files/${fileId}/download`)
+        .set("Authorization", `Bearer ${authToken}`)
+        .expect(200)
+        .expect("Content-Type", /text\/plain/)
+        .expect("Content-Disposition", /attachment/)
+        .expect((res) => {
+          expect(res.text).toBe("test download content");
+        });
+    });
+  });
+});
+```
+
+### Тестирование с использованием dayjs
+
+```typescript
+// cleanup.service.spec.ts
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+
+dayjs.extend(utc);
+
+describe("CleanupService", () => {
+  let service: CleanupService;
+
+  it("should correctly identify expired files", () => {
+    const now = dayjs().utc();
+    const expiredFile: FileInfo = {
+      id: "test-id",
+      originalName: "test.txt",
+      expiresAt: now.subtract(1, "minute").toISOString(), // Истек минуту назад
+      // ... остальные поля
+    };
+
+    const isExpired = service.isFileExpired(expiredFile);
+    expect(isExpired).toBe(true);
+  });
+
+  it("should not mark non-expired files as expired", () => {
+    const now = dayjs().utc();
+    const validFile: FileInfo = {
+      id: "test-id",
+      originalName: "test.txt",
+      expiresAt: now.add(1, "hour").toISOString(), // Истечет через час
+      // ... остальные поля
+    };
+
+    const isExpired = service.isFileExpired(validFile);
+    expect(isExpired).toBe(false);
+  });
+});
+```
 
 ## Логирование и мониторинг
 

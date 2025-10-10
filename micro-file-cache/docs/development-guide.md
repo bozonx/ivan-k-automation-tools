@@ -15,6 +15,13 @@
 - **@nestjs/schedule** - для периодических задач (cron jobs)
 - **crypto** - встроенный модуль Node.js для хеширования
 
+### Дополнительные пакеты для упрощения разработки
+
+- **fs-extra** - расширенная версия fs с промисами и дополнительными методами
+- **file-type** - для надежного определения MIME типа файла по содержимому
+- **dayjs** - легковесная библиотека для работы с датами
+- **supertest** - для HTTP тестирования API endpoints
+
 ## Архитектура микросервиса
 
 ### Основные компоненты
@@ -137,6 +144,124 @@ function calculateFileHash(buffer: Buffer): string {
 }
 ```
 
+### Определение MIME типа файла
+
+Для безопасного определения типа файла используется пакет `file-type`:
+
+```typescript
+import { fileTypeFromBuffer } from "file-type";
+
+async function getFileMimeType(buffer: Buffer): Promise<string> {
+  const type = await fileTypeFromBuffer(buffer);
+  return type?.mime || "application/octet-stream";
+}
+
+// Использование в сервисе
+async uploadFile(file: Express.Multer.File, ttlMinutes: number) {
+  const buffer = file.buffer;
+  const mimeType = await getFileMimeType(buffer);
+  
+  // Дополнительная валидация по содержимому
+  if (!this.isAllowedMimeType(mimeType)) {
+    throw new BadRequestException("File type not allowed");
+  }
+  
+  // ... остальная логика
+}
+```
+
+### Работа с файловой системой
+
+Для упрощения работы с файлами используется пакет `fs-extra`:
+
+```typescript
+import * as fs from "fs-extra";
+import * as path from "path";
+
+export class StorageService {
+  async saveFile(buffer: Buffer, filename: string): Promise<string> {
+    const date = new Date();
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    
+    const dir = path.join(this.storageDir, year.toString(), month, day);
+    
+    // Автоматически создает директории если их нет
+    await fs.ensureDir(dir);
+    
+    const filePath = path.join(dir, filename);
+    await fs.writeFile(filePath, buffer);
+    
+    return path.relative(this.storageDir, filePath);
+  }
+
+  async deleteFile(filePath: string): Promise<void> {
+    const fullPath = path.join(this.storageDir, filePath);
+    
+    // Безопасное удаление - не выбросит ошибку если файл не существует
+    await fs.remove(fullPath);
+  }
+
+  async getFile(filePath: string): Promise<Buffer> {
+    const fullPath = path.join(this.storageDir, filePath);
+    
+    // Проверяет существование файла перед чтением
+    if (!(await fs.pathExists(fullPath))) {
+      throw new NotFoundException("File not found");
+    }
+    
+    return await fs.readFile(fullPath);
+  }
+}
+```
+
+### Работа с датами
+
+Для удобной работы с датами используется пакет `dayjs`:
+
+```typescript
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import duration from "dayjs/plugin/duration";
+
+dayjs.extend(utc);
+dayjs.extend(duration);
+
+export class FileService {
+  calculateExpirationDate(ttlMinutes: number): string {
+    return dayjs().add(ttlMinutes, "minute").utc().toISOString();
+  }
+
+  isFileExpired(expiresAt: string): boolean {
+    return dayjs().utc().isAfter(dayjs(expiresAt).utc());
+  }
+
+  getRemainingMinutes(expiresAt: string): number {
+    const now = dayjs().utc();
+    const expiration = dayjs(expiresAt).utc();
+    
+    if (now.isAfter(expiration)) {
+      return 0;
+    }
+    
+    return expiration.diff(now, "minute");
+  }
+
+  formatDuration(minutes: number): string {
+    const duration = dayjs.duration(minutes, "minute");
+    
+    if (duration.asDays() >= 1) {
+      return `${Math.floor(duration.asDays())}d ${duration.hours()}h`;
+    } else if (duration.asHours() >= 1) {
+      return `${duration.hours()}h ${duration.minutes()}m`;
+    } else {
+      return `${duration.minutes()}m`;
+    }
+  }
+}
+```
+
 ### Автоматическая очистка
 
 Каждую минуту выполняется проверка файлов на истечение TTL:
@@ -221,6 +346,8 @@ test/
 
 ### Примеры тестов
 
+#### Unit тесты
+
 ```typescript
 // files.service.spec.ts
 describe("FilesService", () => {
@@ -252,6 +379,190 @@ describe("FilesService", () => {
 
   it("should handle duplicate files", async () => {
     // Тест дедупликации
+  });
+});
+```
+
+#### E2E тесты с supertest
+
+```typescript
+// files.controller.e2e-spec.ts
+import { Test, TestingModule } from "@nestjs/testing";
+import { INestApplication } from "@nestjs/common";
+import * as request from "supertest";
+import { AppModule } from "../src/app.module";
+
+describe("FilesController (e2e)", () => {
+  let app: INestApplication;
+  const authToken = "test-token";
+
+  beforeEach(async () => {
+    const moduleFixture: TestingModule = await Test.createTestingModule({
+      imports: [AppModule],
+    }).compile();
+
+    app = moduleFixture.createNestApplication();
+    await app.init();
+  });
+
+  afterEach(async () => {
+    await app.close();
+  });
+
+  describe("POST /api/v1/files", () => {
+    it("should upload file successfully", () => {
+      return request(app.getHttpServer())
+        .post("/api/v1/files")
+        .set("Authorization", `Bearer ${authToken}`)
+        .attach("file", Buffer.from("test content"), "test.txt")
+        .field("ttlMinutes", "60")
+        .expect(201)
+        .expect((res) => {
+          expect(res.body.success).toBe(true);
+          expect(res.body.data).toHaveProperty("id");
+          expect(res.body.data.originalName).toBe("test.txt");
+          expect(res.body.data.ttlMinutes).toBe(60);
+        });
+    });
+
+    it("should reject file without auth token", () => {
+      return request(app.getHttpServer())
+        .post("/api/v1/files")
+        .attach("file", Buffer.from("test content"), "test.txt")
+        .field("ttlMinutes", "60")
+        .expect(401);
+    });
+
+    it("should reject file that is too large", () => {
+      const largeBuffer = Buffer.alloc(11 * 1024 * 1024); // 11MB
+      
+      return request(app.getHttpServer())
+        .post("/api/v1/files")
+        .set("Authorization", `Bearer ${authToken}`)
+        .attach("file", largeBuffer, "large.txt")
+        .field("ttlMinutes", "60")
+        .expect(413);
+    });
+
+    it("should reject invalid TTL", () => {
+      return request(app.getHttpServer())
+        .post("/api/v1/files")
+        .set("Authorization", `Bearer ${authToken}`)
+        .attach("file", Buffer.from("test content"), "test.txt")
+        .field("ttlMinutes", "0")
+        .expect(400);
+    });
+  });
+
+  describe("GET /api/v1/files/:id", () => {
+    let fileId: string;
+
+    beforeEach(async () => {
+      // Загружаем файл для тестов
+      const response = await request(app.getHttpServer())
+        .post("/api/v1/files")
+        .set("Authorization", `Bearer ${authToken}`)
+        .attach("file", Buffer.from("test content"), "test.txt")
+        .field("ttlMinutes", "60");
+      
+      fileId = response.body.data.id;
+    });
+
+    it("should return file info", () => {
+      return request(app.getHttpServer())
+        .get(`/api/v1/files/${fileId}`)
+        .set("Authorization", `Bearer ${authToken}`)
+        .expect(200)
+        .expect((res) => {
+          expect(res.body.success).toBe(true);
+          expect(res.body.data.id).toBe(fileId);
+          expect(res.body.data.originalName).toBe("test.txt");
+        });
+    });
+
+    it("should return 404 for non-existent file", () => {
+      const fakeId = "550e8400-e29b-41d4-a716-446655440000";
+      
+      return request(app.getHttpServer())
+        .get(`/api/v1/files/${fakeId}`)
+        .set("Authorization", `Bearer ${authToken}`)
+        .expect(404);
+    });
+  });
+
+  describe("GET /api/v1/files/:id/download", () => {
+    let fileId: string;
+
+    beforeEach(async () => {
+      const response = await request(app.getHttpServer())
+        .post("/api/v1/files")
+        .set("Authorization", `Bearer ${authToken}`)
+        .attach("file", Buffer.from("test download content"), "download.txt")
+        .field("ttlMinutes", "60");
+      
+      fileId = response.body.data.id;
+    });
+
+    it("should download file", () => {
+      return request(app.getHttpServer())
+        .get(`/api/v1/files/${fileId}/download`)
+        .set("Authorization", `Bearer ${authToken}`)
+        .expect(200)
+        .expect("Content-Type", /text\/plain/)
+        .expect("Content-Disposition", /attachment/)
+        .expect((res) => {
+          expect(res.text).toBe("test download content");
+        });
+    });
+  });
+
+  describe("DELETE /api/v1/files/:id", () => {
+    let fileId: string;
+
+    beforeEach(async () => {
+      const response = await request(app.getHttpServer())
+        .post("/api/v1/files")
+        .set("Authorization", `Bearer ${authToken}`)
+        .attach("file", Buffer.from("test content"), "delete.txt")
+        .field("ttlMinutes", "60");
+      
+      fileId = response.body.data.id;
+    });
+
+    it("should delete file", () => {
+      return request(app.getHttpServer())
+        .delete(`/api/v1/files/${fileId}`)
+        .set("Authorization", `Bearer ${authToken}`)
+        .expect(200)
+        .expect((res) => {
+          expect(res.body.success).toBe(true);
+          expect(res.body.data.id).toBe(fileId);
+        });
+    });
+
+    it("should return 404 when deleting non-existent file", () => {
+      const fakeId = "550e8400-e29b-41d4-a716-446655440000";
+      
+      return request(app.getHttpServer())
+        .delete(`/api/v1/files/${fakeId}`)
+        .set("Authorization", `Bearer ${authToken}`)
+        .expect(404);
+    });
+  });
+
+  describe("GET /api/v1/health", () => {
+    it("should return health status", () => {
+      return request(app.getHttpServer())
+        .get("/api/v1/health")
+        .expect(200)
+        .expect((res) => {
+          expect(res.body.success).toBe(true);
+          expect(res.body.data.status).toBe("healthy");
+          expect(res.body.data).toHaveProperty("uptime");
+          expect(res.body.data).toHaveProperty("storage");
+          expect(res.body.data).toHaveProperty("cleanup");
+        });
+    });
   });
 });
 ```
