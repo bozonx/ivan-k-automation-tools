@@ -154,6 +154,9 @@ function calculateFileHash(buffer: Buffer): string {
 NODE_ENV=development
 PORT=3000
 
+# Аутентификация
+AUTH_TOKEN=your-secret-token                # Bearer токен для аутентификации
+
 # Пути к хранилищу
 STORAGE_DIR=/app/storage                    # Продакшн
 # STORAGE_DIR=../test-data/micro-file-cache/storage  # Разработка
@@ -162,8 +165,8 @@ DATA_DIR=/app/data                          # Продакшн
 # DATA_DIR=../test-data/micro-file-cache/data        # Разработка
 
 # Настройки загрузки файлов
-MAX_FILE_SIZE=10485760                      # 10MB
-ALLOWED_MIME_TYPES=image/*,application/pdf,text/*
+FILE_MAX_SIZE_MB=10                         # Максимальный размер файла в мегабайтах
+TTL_MAX_MINUTES=10080                       # Максимальный TTL в минутах (7 дней)
 
 # Настройки очистки
 CLEANUP_INTERVAL=60000                      # 1 минута в мс
@@ -260,6 +263,8 @@ describe("FilesService", () => {
 - Используйте встроенные HTTP исключения NestJS
 - Логируйте все ошибки с контекстом
 - Возвращайте понятные сообщения об ошибках
+- Реализуйте Bearer токен аутентификацию
+- Валидируйте токены на всех защищенных endpoints
 
 ### 2. Валидация
 
@@ -279,6 +284,8 @@ describe("FilesService", () => {
 - Проверяйте MIME типы
 - Используйте безопасные имена файлов
 - Валидируйте все входные данные
+- Реализуйте Bearer токен аутентификацию
+- Защищайте все API endpoints (кроме /api/health)
 
 ## Развертывание
 

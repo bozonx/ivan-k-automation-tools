@@ -79,25 +79,27 @@ docker-compose up -d
 
 ### Переменные окружения
 
-| Переменная           | По умолчанию                            | Описание                                    |
-| -------------------- | --------------------------------------- | ------------------------------------------- |
-| `NODE_ENV`           | `development`                           | Режим работы приложения                     |
-| `PORT`               | `3000`                                  | Порт для HTTP сервера                       |
-| `STORAGE_DIR`        | `../test-data/micro-file-cache/storage` | Директория для хранения файлов              |
-| `DATA_DIR`           | `../test-data/micro-file-cache/data`    | Директория для метаданных                   |
-| `MAX_FILE_SIZE`      | `10485760`                              | Максимальный размер файла в байтах (10MB)   |
-| `ALLOWED_MIME_TYPES` | `image/*,application/pdf,text/*`        | Разрешенные MIME типы                       |
-| `CLEANUP_INTERVAL`   | `60000`                                 | Интервал очистки в миллисекундах (1 минута) |
+| Переменная         | По умолчанию                            | Описание                                      |
+| ------------------ | --------------------------------------- | --------------------------------------------- |
+| `NODE_ENV`         | `development`                           | Режим работы приложения                       |
+| `PORT`             | `3000`                                  | Порт для HTTP сервера                         |
+| `AUTH_TOKEN`       | -                                       | Bearer токен для аутентификации (опционально) |
+| `STORAGE_DIR`      | `../test-data/micro-file-cache/storage` | Директория для хранения файлов                |
+| `DATA_DIR`         | `../test-data/micro-file-cache/data`    | Директория для метаданных                     |
+| `FILE_MAX_SIZE_MB` | `10`                                    | Максимальный размер файла в мегабайтах        |
+| `TTL_MAX_MINUTES`  | `10080`                                 | Максимальный TTL в минутах (7 дней)           |
+| `CLEANUP_INTERVAL` | `60000`                                 | Интервал очистки в миллисекундах (1 минута)   |
 
 ### Пример .env файла
 
 ```bash
 NODE_ENV=production
 PORT=3000
+AUTH_TOKEN=your-secret-token
 STORAGE_DIR=/app/storage
 DATA_DIR=/app/data
-MAX_FILE_SIZE=10485760
-ALLOWED_MIME_TYPES=image/*,application/pdf,text/*,application/zip
+FILE_MAX_SIZE_MB=10
+TTL_MAX_MINUTES=10080
 CLEANUP_INTERVAL=60000
 ```
 
@@ -118,7 +120,8 @@ ttlMinutes: <number>
 **Пример:**
 
 ```bash
-curl -X POST http://localhost:3000/api/files \
+curl -H "Authorization: Bearer your-secret-token" \
+  -X POST http://localhost:3000/api/files \
   -F "file=@document.pdf" \
   -F "ttlMinutes=60"
 ```
@@ -192,10 +195,10 @@ GET /api/health
 
 ### Ограничения
 
-- **Максимальный размер файла**: 10MB (настраивается)
-- **Максимальный TTL**: 7 дней (10080 минут)
+- **Максимальный размер файла**: 10MB (настраивается через `FILE_MAX_SIZE_MB`)
+- **Максимальный TTL**: 7 дней (10080 минут, настраивается через `TTL_MAX_MINUTES`)
 - **Минимальный TTL**: 1 минута
-- **Разрешенные типы файлов**: image/_, application/pdf, text/_ (настраивается)
+- **Разрешенные типы файлов**: любые
 
 ## Примеры использования
 
@@ -203,13 +206,16 @@ GET /api/health
 
 ```typescript
 // Загрузка файла
-async function uploadFile(file: File, ttlMinutes: number) {
+async function uploadFile(file: File, ttlMinutes: number, token: string) {
   const formData = new FormData();
   formData.append("file", file);
   formData.append("ttlMinutes", ttlMinutes.toString());
 
   const response = await fetch("/api/files", {
     method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
     body: formData,
   });
 
@@ -231,17 +237,19 @@ function downloadFile(id: string, filename: string) {
 import requests
 
 # Загрузка файла
-def upload_file(file_path: str, ttl_minutes: int):
+def upload_file(file_path: str, ttl_minutes: int, token: str):
+    headers = {'Authorization': f'Bearer {token}'}
     with open(file_path, 'rb') as f:
         files = {'file': f}
         data = {'ttlMinutes': ttl_minutes}
         response = requests.post('http://localhost:3000/api/files',
-                               files=files, data=data)
+                               files=files, data=data, headers=headers)
     return response.json()
 
 # Скачивание файла
-def download_file(file_id: str, save_path: str):
-    response = requests.get(f'http://localhost:3000/files/{file_id}')
+def download_file(file_id: str, save_path: str, token: str):
+    headers = {'Authorization': f'Bearer {token}'}
+    response = requests.get(f'http://localhost:3000/files/{file_id}', headers=headers)
     with open(save_path, 'wb') as f:
         f.write(response.content)
 ```
@@ -250,18 +258,22 @@ def download_file(file_id: str, save_path: str):
 
 ```bash
 # Загрузка файла
-curl -X POST http://localhost:3000/api/files \
+curl -H "Authorization: Bearer your-secret-token" \
+  -X POST http://localhost:3000/api/files \
   -F "file=@document.pdf" \
   -F "ttlMinutes=60"
 
 # Получение информации
-curl http://localhost:3000/api/files/550e8400-e29b-41d4-a716-446655440000
+curl -H "Authorization: Bearer your-secret-token" \
+  http://localhost:3000/api/files/550e8400-e29b-41d4-a716-446655440000
 
 # Скачивание файла
-curl -O http://localhost:3000/files/550e8400-e29b-41d4-a716-446655440000
+curl -H "Authorization: Bearer your-secret-token" \
+  -O http://localhost:3000/files/550e8400-e29b-41d4-a716-446655440000
 
 # Удаление файла
-curl -X DELETE http://localhost:3000/api/files/550e8400-e29b-41d4-a716-446655440000
+curl -H "Authorization: Bearer your-secret-token" \
+  -X DELETE http://localhost:3000/api/files/550e8400-e29b-41d4-a716-446655440000
 ```
 
 ## Разработка
@@ -355,7 +367,7 @@ pnpm run test:cov
 
 ### Меры безопасности
 
-- ✅ Валидация MIME типов файлов
+- ✅ Bearer токен аутентификация
 - ✅ Ограничение размера файлов
 - ✅ Безопасные имена файлов (UUID)
 - ✅ Защита от path traversal атак
@@ -390,8 +402,7 @@ pnpm run test:cov
 
 #### Файл не загружается
 
-- Проверьте размер файла (максимум 10MB)
-- Убедитесь, что MIME тип разрешен
+- Проверьте размер файла (максимум настраивается через `FILE_MAX_SIZE_MB`)
 - Проверьте доступность места на диске
 
 #### Файлы не удаляются автоматически

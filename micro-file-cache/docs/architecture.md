@@ -329,10 +329,11 @@ async uploadFile(file: Express.Multer.File, ttlMinutes: number) {
 ```typescript
 interface AppConfig {
   port: number;
+  authToken?: string;
   storageDir: string;
   dataDir: string;
-  maxFileSize: number;
-  allowedMimeTypes: string[];
+  maxFileSizeMB: number;
+  ttlMaxMinutes: number;
   cleanupInterval: number;
 }
 ```
@@ -346,6 +347,10 @@ export class ConfigService {
     return parseInt(process.env.PORT || "3000", 10);
   }
 
+  get authToken(): string | undefined {
+    return process.env.AUTH_TOKEN;
+  }
+
   get storageDir(): string {
     return process.env.STORAGE_DIR || "../test-data/micro-file-cache/storage";
   }
@@ -354,14 +359,12 @@ export class ConfigService {
     return process.env.DATA_DIR || "../test-data/micro-file-cache/data";
   }
 
-  get maxFileSize(): number {
-    return parseInt(process.env.MAX_FILE_SIZE || "10485760", 10); // 10MB
+  get maxFileSizeMB(): number {
+    return parseInt(process.env.FILE_MAX_SIZE_MB || "10", 10); // 10MB
   }
 
-  get allowedMimeTypes(): string[] {
-    return (
-      process.env.ALLOWED_MIME_TYPES || "image/*,application/pdf,text/*"
-    ).split(",");
+  get ttlMaxMinutes(): number {
+    return parseInt(process.env.TTL_MAX_MINUTES || "10080", 10); // 7 дней
   }
 
   get cleanupInterval(): number {
@@ -397,19 +400,24 @@ interface PerformanceMetrics {
 
 ### Меры безопасности
 
-1. **Валидация файлов**:
+1. **Аутентификация**:
 
-   - Проверка MIME типов
+   - Bearer токен аутентификация
+   - Валидация токенов на всех защищенных endpoints
+   - Защита всех API endpoints (кроме /api/health)
+
+2. **Валидация файлов**:
+
    - Ограничение размера файлов
    - Проверка расширений
 
-2. **Безопасные имена файлов**:
+3. **Безопасные имена файлов**:
 
    - Использование UUID вместо оригинальных имен
    - Санитизация путей
    - Предотвращение path traversal
 
-3. **Ограничения ресурсов**:
+4. **Ограничения ресурсов**:
    - Лимиты на размер файлов
    - Ограничение количества файлов
    - Таймауты операций
@@ -422,14 +430,9 @@ function sanitizePath(path: string): string {
   return path.replace(/\.\./g, "").replace(/\/+/g, "/");
 }
 
-// Валидация MIME типа
-function validateMimeType(mimeType: string, allowedTypes: string[]): boolean {
-  return allowedTypes.some((type) => {
-    if (type.endsWith("/*")) {
-      return mimeType.startsWith(type.slice(0, -1));
-    }
-    return mimeType === type;
-  });
+// Валидация TTL
+function validateTTL(ttlMinutes: number, maxTTL: number): boolean {
+  return ttlMinutes >= 1 && ttlMinutes <= maxTTL;
 }
 ```
 

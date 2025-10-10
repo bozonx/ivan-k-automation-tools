@@ -12,7 +12,39 @@ http://localhost:3000
 
 ## Аутентификация
 
-В текущей версии аутентификация не требуется. В будущих версиях может быть добавлена поддержка API ключей или JWT токенов.
+Сервис использует Bearer токен аутентификацию. Все API endpoints (кроме `/api/health`) требуют передачи валидного токена в заголовке `Authorization`.
+
+### Формат аутентификации
+
+```http
+Authorization: Bearer <token>
+```
+
+### Настройка токена
+
+Токен настраивается через переменную окружения `AUTH_TOKEN`. Если переменная не установлена, аутентификация отключается.
+
+### Примеры использования
+
+```bash
+# С токеном
+curl -H "Authorization: Bearer your-secret-token" \
+  -X POST http://localhost:3000/api/files \
+  -F "file=@document.pdf" \
+  -F "ttlMinutes=60"
+
+# Без токена (если AUTH_TOKEN не установлен)
+curl -X POST http://localhost:3000/api/files \
+  -F "file=@document.pdf" \
+  -F "ttlMinutes=60"
+```
+
+### Коды ошибок аутентификации
+
+| Код             | Описание              |
+| --------------- | --------------------- |
+| `UNAUTHORIZED`  | Токен не предоставлен |
+| `INVALID_TOKEN` | Неверный токен        |
 
 ## Форматы данных
 
@@ -58,22 +90,23 @@ http://localhost:3000
 
 #### Параметры запроса
 
-| Параметр     | Тип    | Обязательный | Описание                              |
-| ------------ | ------ | ------------ | ------------------------------------- |
-| `file`       | File   | Да           | Загружаемый файл                      |
-| `ttlMinutes` | number | Да           | Время жизни файла в минутах (1-10080) |
+| Параметр     | Тип    | Обязательный | Описание                                                            |
+| ------------ | ------ | ------------ | ------------------------------------------------------------------- |
+| `file`       | File   | Да           | Загружаемый файл                                                    |
+| `ttlMinutes` | number | Да           | Время жизни файла в минутах (1-настраивается через TTL_MAX_MINUTES) |
 
 #### Ограничения
 
-- Максимальный размер файла: 10MB
-- Разрешенные MIME типы: `image/*`, `application/pdf`, `text/*`
+- Максимальный размер файла: 10MB (настраивается через `FILE_MAX_SIZE_MB`)
+- Разрешенные MIME типы: любые
 - Минимальный TTL: 1 минута
-- Максимальный TTL: 7 дней (10080 минут)
+- Максимальный TTL: 7 дней (10080 минут, настраивается через `TTL_MAX_MINUTES`)
 
 #### Пример запроса
 
 ```bash
-curl -X POST http://localhost:3000/api/files \
+curl -H "Authorization: Bearer your-secret-token" \
+  -X POST http://localhost:3000/api/files \
   -F "file=@document.pdf" \
   -F "ttlMinutes=60"
 ```
@@ -101,12 +134,13 @@ curl -X POST http://localhost:3000/api/files \
 
 #### Коды ошибок
 
-| Код                 | Описание                     |
-| ------------------- | ---------------------------- |
-| `FILE_TOO_LARGE`    | Размер файла превышает лимит |
-| `INVALID_MIME_TYPE` | Неподдерживаемый тип файла   |
-| `INVALID_TTL`       | Некорректное значение TTL    |
-| `UPLOAD_FAILED`     | Ошибка при сохранении файла  |
+| Код              | Описание                     |
+| ---------------- | ---------------------------- |
+| `FILE_TOO_LARGE` | Размер файла превышает лимит |
+| `INVALID_TTL`    | Некорректное значение TTL    |
+| `UPLOAD_FAILED`  | Ошибка при сохранении файла  |
+| `UNAUTHORIZED`   | Токен не предоставлен        |
+| `INVALID_TOKEN`  | Неверный токен               |
 
 ### 2. Получение информации о файле
 
@@ -123,7 +157,8 @@ curl -X POST http://localhost:3000/api/files \
 #### Пример запроса
 
 ```bash
-curl http://localhost:3000/api/files/550e8400-e29b-41d4-a716-446655440000
+curl -H "Authorization: Bearer your-secret-token" \
+  http://localhost:3000/api/files/550e8400-e29b-41d4-a716-446655440000
 ```
 
 #### Пример ответа
@@ -149,10 +184,11 @@ curl http://localhost:3000/api/files/550e8400-e29b-41d4-a716-446655440000
 
 #### Коды ошибок
 
-| Код              | Описание       |
-| ---------------- | -------------- |
-| `FILE_NOT_FOUND` | Файл не найден |
-| `FILE_EXPIRED`   | Файл истек     |
+| Код              | Описание              |
+| ---------------- | --------------------- |
+| `FILE_NOT_FOUND` | Файл не найден        |
+| `UNAUTHORIZED`   | Токен не предоставлен |
+| `INVALID_TOKEN`  | Неверный токен        |
 
 ### 3. Скачивание файла
 
@@ -169,7 +205,8 @@ curl http://localhost:3000/api/files/550e8400-e29b-41d4-a716-446655440000
 #### Пример запроса
 
 ```bash
-curl -O http://localhost:3000/files/550e8400-e29b-41d4-a716-446655440000
+curl -H "Authorization: Bearer your-secret-token" \
+  -O http://localhost:3000/files/550e8400-e29b-41d4-a716-446655440000
 ```
 
 #### Ответ
@@ -180,10 +217,11 @@ curl -O http://localhost:3000/files/550e8400-e29b-41d4-a716-446655440000
 
 #### Коды ошибок
 
-| Код              | Описание       |
-| ---------------- | -------------- |
-| `FILE_NOT_FOUND` | Файл не найден |
-| `FILE_EXPIRED`   | Файл истек     |
+| Код              | Описание              |
+| ---------------- | --------------------- |
+| `FILE_NOT_FOUND` | Файл не найден        |
+| `UNAUTHORIZED`   | Токен не предоставлен |
+| `INVALID_TOKEN`  | Неверный токен        |
 
 ### 4. Удаление файла
 
@@ -200,7 +238,8 @@ curl -O http://localhost:3000/files/550e8400-e29b-41d4-a716-446655440000
 #### Пример запроса
 
 ```bash
-curl -X DELETE http://localhost:3000/api/files/550e8400-e29b-41d4-a716-446655440000
+curl -H "Authorization: Bearer your-secret-token" \
+  -X DELETE http://localhost:3000/api/files/550e8400-e29b-41d4-a716-446655440000
 ```
 
 #### Пример ответа
@@ -223,6 +262,8 @@ curl -X DELETE http://localhost:3000/api/files/550e8400-e29b-41d4-a716-446655440
 | ---------------- | ------------------------- |
 | `FILE_NOT_FOUND` | Файл не найден            |
 | `DELETE_FAILED`  | Ошибка при удалении файла |
+| `UNAUTHORIZED`   | Токен не предоставлен     |
+| `INVALID_TOKEN`  | Неверный токен            |
 
 ### 5. Проверка состояния сервиса
 
@@ -319,15 +360,14 @@ interface HealthResponse {
 
 ## Коды HTTP статусов
 
-| Код | Описание                   |
-| --- | -------------------------- |
-| 200 | Успешный запрос            |
-| 201 | Файл успешно загружен      |
-| 400 | Некорректный запрос        |
-| 404 | Файл не найден             |
-| 413 | Файл слишком большой       |
-| 415 | Неподдерживаемый тип файла |
-| 500 | Внутренняя ошибка сервера  |
+| Код | Описание                  |
+| --- | ------------------------- |
+| 200 | Успешный запрос           |
+| 201 | Файл успешно загружен     |
+| 400 | Некорректный запрос       |
+| 404 | Файл не найден            |
+| 413 | Файл слишком большой      |
+| 500 | Внутренняя ошибка сервера |
 
 ## Примеры использования
 
@@ -335,13 +375,16 @@ interface HealthResponse {
 
 ```typescript
 // Загрузка файла
-async function uploadFile(file: File, ttlMinutes: number) {
+async function uploadFile(file: File, ttlMinutes: number, token: string) {
   const formData = new FormData();
   formData.append("file", file);
   formData.append("ttlMinutes", ttlMinutes.toString());
 
   const response = await fetch("/api/files", {
     method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
     body: formData,
   });
 
@@ -349,8 +392,12 @@ async function uploadFile(file: File, ttlMinutes: number) {
 }
 
 // Получение информации о файле
-async function getFileInfo(id: string) {
-  const response = await fetch(`/api/files/${id}`);
+async function getFileInfo(id: string, token: string) {
+  const response = await fetch(`/api/files/${id}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
   return response.json();
 }
 
@@ -369,22 +416,25 @@ function downloadFile(id: string, filename: string) {
 import requests
 
 # Загрузка файла
-def upload_file(file_path: str, ttl_minutes: int):
+def upload_file(file_path: str, ttl_minutes: int, token: str):
+    headers = {'Authorization': f'Bearer {token}'}
     with open(file_path, 'rb') as f:
         files = {'file': f}
         data = {'ttlMinutes': ttl_minutes}
         response = requests.post('http://localhost:3000/api/files',
-                               files=files, data=data)
+                               files=files, data=data, headers=headers)
     return response.json()
 
 # Получение информации о файле
-def get_file_info(file_id: str):
-    response = requests.get(f'http://localhost:3000/api/files/{file_id}')
+def get_file_info(file_id: str, token: str):
+    headers = {'Authorization': f'Bearer {token}'}
+    response = requests.get(f'http://localhost:3000/api/files/{file_id}', headers=headers)
     return response.json()
 
 # Скачивание файла
-def download_file(file_id: str, save_path: str):
-    response = requests.get(f'http://localhost:3000/files/{file_id}')
+def download_file(file_id: str, save_path: str, token: str):
+    headers = {'Authorization': f'Bearer {token}'}
+    response = requests.get(f'http://localhost:3000/files/{file_id}', headers=headers)
     with open(save_path, 'wb') as f:
         f.write(response.content)
 ```
@@ -393,18 +443,22 @@ def download_file(file_id: str, save_path: str):
 
 ```bash
 # Загрузка файла
-curl -X POST http://localhost:3000/api/files \
+curl -H "Authorization: Bearer your-secret-token" \
+  -X POST http://localhost:3000/api/files \
   -F "file=@document.pdf" \
   -F "ttlMinutes=60"
 
 # Получение информации
-curl http://localhost:3000/api/files/550e8400-e29b-41d4-a716-446655440000
+curl -H "Authorization: Bearer your-secret-token" \
+  http://localhost:3000/api/files/550e8400-e29b-41d4-a716-446655440000
 
 # Скачивание файла
-curl -O http://localhost:3000/files/550e8400-e29b-41d4-a716-446655440000
+curl -H "Authorization: Bearer your-secret-token" \
+  -O http://localhost:3000/files/550e8400-e29b-41d4-a716-446655440000
 
 # Удаление файла
-curl -X DELETE http://localhost:3000/api/files/550e8400-e29b-41d4-a716-446655440000
+curl -H "Authorization: Bearer your-secret-token" \
+  -X DELETE http://localhost:3000/api/files/550e8400-e29b-41d4-a716-446655440000
 
 # Проверка состояния
 curl http://localhost:3000/api/health
@@ -414,9 +468,9 @@ curl http://localhost:3000/api/health
 
 ### Ограничения
 
-- Максимальный размер файла: 10MB
+- Максимальный размер файла: 10MB (настраивается через `FILE_MAX_SIZE_MB`)
 - Максимальное количество файлов: 10000
-- Максимальный TTL: 7 дней
+- Максимальный TTL: 7 дней (10080 минут, настраивается через `TTL_MAX_MINUTES`)
 - Минимальный TTL: 1 минута
 
 ### Рекомендации
