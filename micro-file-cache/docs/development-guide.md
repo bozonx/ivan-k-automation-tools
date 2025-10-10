@@ -65,11 +65,11 @@ micro-file-cache/
 
 ### REST API
 
-- `POST /api/files` - загрузка файла с указанием TTL
-- `GET /api/files/:id` - получение информации о файле
-- `GET /files/:id` - скачивание файла (статический маршрут)
-- `DELETE /api/files/:id` - удаление файла
-- `GET /api/health` - проверка состояния сервиса
+- `POST /api/v1/files` - загрузка файла с указанием TTL
+- `GET /api/v1/files/:id` - получение информации о файле
+- `GET /api/v1/files/:id/download` - скачивание файла
+- `DELETE /api/v1/files/:id` - удаление файла
+- `GET /api/v1/health` - проверка состояния сервиса
 
 ## Модели данных
 
@@ -285,7 +285,7 @@ describe("FilesService", () => {
 - Используйте безопасные имена файлов
 - Валидируйте все входные данные
 - Реализуйте Bearer токен аутентификацию
-- Защищайте все API endpoints (кроме /api/health)
+- Защищайте все API endpoints (кроме /api/v1/health)
 
 ## Развертывание
 

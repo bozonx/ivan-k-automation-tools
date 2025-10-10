@@ -110,7 +110,7 @@ CLEANUP_INTERVAL=60000
 #### Загрузка файла
 
 ```http
-POST /api/files
+POST /api/v1/files
 Content-Type: multipart/form-data
 
 file: <file>
@@ -121,7 +121,7 @@ ttlMinutes: <number>
 
 ```bash
 curl -H "Authorization: Bearer your-secret-token" \
-  -X POST http://localhost:3000/api/files \
+  -X POST http://localhost:3000/api/v1/files \
   -F "file=@document.pdf" \
   -F "ttlMinutes=60"
 ```
@@ -133,7 +133,7 @@ curl -H "Authorization: Bearer your-secret-token" \
   "success": true,
   "data": {
     "id": "550e8400-e29b-41d4-a716-446655440000",
-    "url": "http://localhost:3000/files/550e8400-e29b-41d4-a716-446655440000",
+    "url": "http://localhost:3000/api/v1/files/550e8400-e29b-41d4-a716-446655440000/download",
     "originalName": "document.pdf",
     "size": 1024000,
     "mimeType": "application/pdf",
@@ -148,25 +148,25 @@ curl -H "Authorization: Bearer your-secret-token" \
 #### Получение информации о файле
 
 ```http
-GET /api/files/:id
+GET /api/v1/files/:id
 ```
 
 #### Скачивание файла
 
 ```http
-GET /files/:id
+GET /api/v1/files/:id/download
 ```
 
 #### Удаление файла
 
 ```http
-DELETE /api/files/:id
+DELETE /api/v1/files/:id
 ```
 
 #### Проверка состояния сервиса
 
 ```http
-GET /api/health
+GET /api/v1/health
 ```
 
 **Ответ:**
@@ -211,7 +211,7 @@ async function uploadFile(file: File, ttlMinutes: number, token: string) {
   formData.append("file", file);
   formData.append("ttlMinutes", ttlMinutes.toString());
 
-  const response = await fetch("/api/files", {
+  const response = await fetch("/api/v1/files", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -225,7 +225,7 @@ async function uploadFile(file: File, ttlMinutes: number, token: string) {
 // Скачивание файла
 function downloadFile(id: string, filename: string) {
   const link = document.createElement("a");
-  link.href = `/files/${id}`;
+  link.href = `/api/v1/files/${id}/download`;
   link.download = filename;
   link.click();
 }
@@ -242,14 +242,14 @@ def upload_file(file_path: str, ttl_minutes: int, token: str):
     with open(file_path, 'rb') as f:
         files = {'file': f}
         data = {'ttlMinutes': ttl_minutes}
-        response = requests.post('http://localhost:3000/api/files',
+        response = requests.post('http://localhost:3000/api/v1/files',
                                files=files, data=data, headers=headers)
     return response.json()
 
 # Скачивание файла
 def download_file(file_id: str, save_path: str, token: str):
     headers = {'Authorization': f'Bearer {token}'}
-    response = requests.get(f'http://localhost:3000/files/{file_id}', headers=headers)
+    response = requests.get(f'http://localhost:3000/api/v1/files/{file_id}/download', headers=headers)
     with open(save_path, 'wb') as f:
         f.write(response.content)
 ```
@@ -259,21 +259,21 @@ def download_file(file_id: str, save_path: str, token: str):
 ```bash
 # Загрузка файла
 curl -H "Authorization: Bearer your-secret-token" \
-  -X POST http://localhost:3000/api/files \
+  -X POST http://localhost:3000/api/v1/files \
   -F "file=@document.pdf" \
   -F "ttlMinutes=60"
 
 # Получение информации
 curl -H "Authorization: Bearer your-secret-token" \
-  http://localhost:3000/api/files/550e8400-e29b-41d4-a716-446655440000
+  http://localhost:3000/api/v1/files/550e8400-e29b-41d4-a716-446655440000
 
 # Скачивание файла
 curl -H "Authorization: Bearer your-secret-token" \
-  -O http://localhost:3000/files/550e8400-e29b-41d4-a716-446655440000
+  -O http://localhost:3000/api/v1/files/550e8400-e29b-41d4-a716-446655440000/download
 
 # Удаление файла
 curl -H "Authorization: Bearer your-secret-token" \
-  -X DELETE http://localhost:3000/api/files/550e8400-e29b-41d4-a716-446655440000
+  -X DELETE http://localhost:3000/api/v1/files/550e8400-e29b-41d4-a716-446655440000
 ```
 
 ## Разработка
@@ -340,7 +340,7 @@ pnpm run test:cov
 
 ### Health Check
 
-Сервис предоставляет endpoint `/api/health` для мониторинга состояния:
+Сервис предоставляет endpoint `/api/v1/health` для мониторинга состояния:
 
 - Статус сервиса
 - Время работы

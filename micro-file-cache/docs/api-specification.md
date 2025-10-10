@@ -84,7 +84,7 @@ curl -X POST http://localhost:3000/api/files \
 
 ### 1. Загрузка файла
 
-**POST** `/api/files`
+**POST** `/api/v1/files`
 
 Загружает файл в кэш с указанием времени жизни.
 
@@ -106,7 +106,7 @@ curl -X POST http://localhost:3000/api/files \
 
 ```bash
 curl -H "Authorization: Bearer your-secret-token" \
-  -X POST http://localhost:3000/api/files \
+  -X POST http://localhost:3000/api/v1/files \
   -F "file=@document.pdf" \
   -F "ttlMinutes=60"
 ```
@@ -118,7 +118,7 @@ curl -H "Authorization: Bearer your-secret-token" \
   "success": true,
   "data": {
     "id": "550e8400-e29b-41d4-a716-446655440000",
-    "url": "http://localhost:3000/files/550e8400-e29b-41d4-a716-446655440000",
+    "url": "http://localhost:3000/api/v1/files/550e8400-e29b-41d4-a716-446655440000/download",
     "originalName": "document.pdf",
     "size": 1024000,
     "mimeType": "application/pdf",
@@ -144,7 +144,7 @@ curl -H "Authorization: Bearer your-secret-token" \
 
 ### 2. Получение информации о файле
 
-**GET** `/api/files/:id`
+**GET** `/api/v1/files/:id`
 
 Возвращает метаданные файла по его ID.
 
@@ -158,7 +158,7 @@ curl -H "Authorization: Bearer your-secret-token" \
 
 ```bash
 curl -H "Authorization: Bearer your-secret-token" \
-  http://localhost:3000/api/files/550e8400-e29b-41d4-a716-446655440000
+  http://localhost:3000/api/v1/files/550e8400-e29b-41d4-a716-446655440000
 ```
 
 #### Пример ответа
@@ -174,7 +174,6 @@ curl -H "Authorization: Bearer your-secret-token" \
     "uploadedAt": "2024-01-15T10:30:00.000Z",
     "expiresAt": "2024-01-15T11:30:00.000Z",
     "ttlMinutes": 60,
-    "isExpired": false,
     "remainingMinutes": 45
   },
   "message": "File information retrieved",
@@ -192,7 +191,7 @@ curl -H "Authorization: Bearer your-secret-token" \
 
 ### 3. Скачивание файла
 
-**GET** `/files/:id`
+**GET** `/api/v1/files/:id/download`
 
 Возвращает файл для скачивания.
 
@@ -206,7 +205,7 @@ curl -H "Authorization: Bearer your-secret-token" \
 
 ```bash
 curl -H "Authorization: Bearer your-secret-token" \
-  -O http://localhost:3000/files/550e8400-e29b-41d4-a716-446655440000
+  -O http://localhost:3000/api/v1/files/550e8400-e29b-41d4-a716-446655440000/download
 ```
 
 #### Ответ
@@ -225,7 +224,7 @@ curl -H "Authorization: Bearer your-secret-token" \
 
 ### 4. Удаление файла
 
-**DELETE** `/api/files/:id`
+**DELETE** `/api/v1/files/:id`
 
 Удаляет файл из кэша.
 
@@ -239,7 +238,7 @@ curl -H "Authorization: Bearer your-secret-token" \
 
 ```bash
 curl -H "Authorization: Bearer your-secret-token" \
-  -X DELETE http://localhost:3000/api/files/550e8400-e29b-41d4-a716-446655440000
+  -X DELETE http://localhost:3000/api/v1/files/550e8400-e29b-41d4-a716-446655440000
 ```
 
 #### Пример ответа
@@ -267,14 +266,14 @@ curl -H "Authorization: Bearer your-secret-token" \
 
 ### 5. Проверка состояния сервиса
 
-**GET** `/api/health`
+**GET** `/api/v1/health`
 
 Возвращает информацию о состоянии сервиса.
 
 #### Пример запроса
 
 ```bash
-curl http://localhost:3000/api/health
+curl http://localhost:3000/api/v1/health
 ```
 
 #### Пример ответа
@@ -316,7 +315,6 @@ interface FileInfo {
   uploadedAt: string; // ISO-8601 дата загрузки
   expiresAt: string; // ISO-8601 дата истечения
   ttlMinutes: number; // TTL в минутах
-  isExpired?: boolean; // Флаг истечения (только для GET)
   remainingMinutes?: number; // Оставшееся время в минутах (только для GET)
 }
 ```
@@ -380,7 +378,7 @@ async function uploadFile(file: File, ttlMinutes: number, token: string) {
   formData.append("file", file);
   formData.append("ttlMinutes", ttlMinutes.toString());
 
-  const response = await fetch("/api/files", {
+  const response = await fetch("/api/v1/files", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -393,7 +391,7 @@ async function uploadFile(file: File, ttlMinutes: number, token: string) {
 
 // Получение информации о файле
 async function getFileInfo(id: string, token: string) {
-  const response = await fetch(`/api/files/${id}`, {
+  const response = await fetch(`/api/v1/files/${id}`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -404,7 +402,7 @@ async function getFileInfo(id: string, token: string) {
 // Скачивание файла
 function downloadFile(id: string, filename: string) {
   const link = document.createElement("a");
-  link.href = `/files/${id}`;
+  link.href = `/api/v1/files/${id}/download`;
   link.download = filename;
   link.click();
 }
@@ -421,20 +419,20 @@ def upload_file(file_path: str, ttl_minutes: int, token: str):
     with open(file_path, 'rb') as f:
         files = {'file': f}
         data = {'ttlMinutes': ttl_minutes}
-        response = requests.post('http://localhost:3000/api/files',
+        response = requests.post('http://localhost:3000/api/v1/files',
                                files=files, data=data, headers=headers)
     return response.json()
 
 # Получение информации о файле
 def get_file_info(file_id: str, token: str):
     headers = {'Authorization': f'Bearer {token}'}
-    response = requests.get(f'http://localhost:3000/api/files/{file_id}', headers=headers)
+    response = requests.get(f'http://localhost:3000/api/v1/files/{file_id}', headers=headers)
     return response.json()
 
 # Скачивание файла
 def download_file(file_id: str, save_path: str, token: str):
     headers = {'Authorization': f'Bearer {token}'}
-    response = requests.get(f'http://localhost:3000/files/{file_id}', headers=headers)
+    response = requests.get(f'http://localhost:3000/api/v1/files/{file_id}/download', headers=headers)
     with open(save_path, 'wb') as f:
         f.write(response.content)
 ```
@@ -444,24 +442,24 @@ def download_file(file_id: str, save_path: str, token: str):
 ```bash
 # Загрузка файла
 curl -H "Authorization: Bearer your-secret-token" \
-  -X POST http://localhost:3000/api/files \
+  -X POST http://localhost:3000/api/v1/files \
   -F "file=@document.pdf" \
   -F "ttlMinutes=60"
 
 # Получение информации
 curl -H "Authorization: Bearer your-secret-token" \
-  http://localhost:3000/api/files/550e8400-e29b-41d4-a716-446655440000
+  http://localhost:3000/api/v1/files/550e8400-e29b-41d4-a716-446655440000
 
 # Скачивание файла
 curl -H "Authorization: Bearer your-secret-token" \
-  -O http://localhost:3000/files/550e8400-e29b-41d4-a716-446655440000
+  -O http://localhost:3000/api/v1/files/550e8400-e29b-41d4-a716-446655440000/download
 
 # Удаление файла
 curl -H "Authorization: Bearer your-secret-token" \
-  -X DELETE http://localhost:3000/api/files/550e8400-e29b-41d4-a716-446655440000
+  -X DELETE http://localhost:3000/api/v1/files/550e8400-e29b-41d4-a716-446655440000
 
 # Проверка состояния
-curl http://localhost:3000/api/health
+curl http://localhost:3000/api/v1/health
 ```
 
 ## Ограничения и рекомендации

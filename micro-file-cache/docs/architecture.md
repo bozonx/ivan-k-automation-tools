@@ -404,7 +404,7 @@ interface PerformanceMetrics {
 
    - Bearer токен аутентификация
    - Валидация токенов на всех защищенных endpoints
-   - Защита всех API endpoints (кроме /api/health)
+   - Защита всех API endpoints (кроме /api/v1/health)
 
 2. **Валидация файлов**:
 
