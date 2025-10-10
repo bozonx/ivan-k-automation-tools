@@ -22,12 +22,14 @@
 ## Технологии
 
 ### Основной стек
+
 - **Node.js** - среда выполнения
 - **TypeScript** - язык программирования
 - **NestJS** - фреймворк для создания масштабируемых серверных приложений
 - **Fastify** - HTTP адаптер (высокая производительность)
 
 ### Дополнительные пакеты
+
 - **fs-extra** - расширенная работа с файловой системой
 - **file-type** - безопасное определение MIME типа файлов
 - **dayjs** - удобная работа с датами и временем
@@ -101,7 +103,8 @@ docker-compose up -d
 | Переменная         | По умолчанию                            | Описание                                      |
 | ------------------ | --------------------------------------- | --------------------------------------------- |
 | `NODE_ENV`         | `development`                           | Режим работы приложения                       |
-| `PORT`             | `3000`                                  | Порт для HTTP сервера                         |
+| `LISTEN_HOST`      | `localhost`                             | Хост для HTTP сервера                         |
+| `LISTEN_PORT`      | `80`                                    | Порт для HTTP сервера                         |
 | `AUTH_TOKEN`       | -                                       | Bearer токен для аутентификации (опционально) |
 | `STORAGE_DIR`      | `../test-data/micro-file-cache/storage` | Директория для хранения файлов                |
 | `DATA_DIR`         | `../test-data/micro-file-cache/data`    | Директория для метаданных                     |
@@ -113,7 +116,8 @@ docker-compose up -d
 
 ```bash
 NODE_ENV=production
-PORT=3000
+LISTEN_HOST=0.0.0.0
+LISTEN_PORT=80
 AUTH_TOKEN=your-secret-token
 STORAGE_DIR=/app/storage
 DATA_DIR=/app/data
@@ -227,11 +231,11 @@ GET /api/v1/health
 // Загрузка файла
 async function uploadFile(file: File, ttlMinutes: number, token: string) {
   const formData = new FormData();
-  formData.append("file", file);
-  formData.append("ttlMinutes", ttlMinutes.toString());
+  formData.append('file', file);
+  formData.append('ttlMinutes', ttlMinutes.toString());
 
-  const response = await fetch("/api/v1/files", {
-    method: "POST",
+  const response = await fetch('/api/v1/files', {
+    method: 'POST',
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -243,7 +247,7 @@ async function uploadFile(file: File, ttlMinutes: number, token: string) {
 
 // Скачивание файла
 function downloadFile(id: string, filename: string) {
-  const link = document.createElement("a");
+  const link = document.createElement('a');
   link.href = `/api/v1/files/${id}/download`;
   link.download = filename;
   link.click();
@@ -348,20 +352,22 @@ pnpm run format
 ### Ключевые особенности реализации
 
 #### Безопасное определение типов файлов
+
 Сервис использует пакет `file-type` для определения MIME типа файла по содержимому, а не по расширению:
 
 ```typescript
-import { fileTypeFromBuffer } from "file-type";
+import { fileTypeFromBuffer } from 'file-type';
 
 const mimeType = await fileTypeFromBuffer(buffer);
 // Безопасно определяет тип даже если файл переименован
 ```
 
 #### Упрощенная работа с файлами
+
 Использование `fs-extra` упрощает операции с файловой системой:
 
 ```typescript
-import * as fs from "fs-extra";
+import * as fs from 'fs-extra';
 
 // Автоматически создает директории
 await fs.ensureDir(path);
@@ -371,25 +377,27 @@ await fs.remove(filePath);
 ```
 
 #### Удобная работа с датами
+
 Пакет `dayjs` обеспечивает простую работу с датами и временем:
 
 ```typescript
-import dayjs from "dayjs";
+import dayjs from 'dayjs';
 
-const expiration = dayjs().add(ttlMinutes, "minute").utc().toISOString();
+const expiration = dayjs().add(ttlMinutes, 'minute').utc().toISOString();
 const isExpired = dayjs().utc().isAfter(dayjs(expiresAt).utc());
 ```
 
 #### Комплексное тестирование
+
 `supertest` позволяет тестировать API endpoints как настоящие HTTP запросы:
 
 ```typescript
-import * as request from "supertest";
+import * as request from 'supertest';
 
 await request(app.getHttpServer())
-  .post("/api/v1/files")
-  .attach("file", buffer, "test.txt")
-  .field("ttlMinutes", "60")
+  .post('/api/v1/files')
+  .attach('file', buffer, 'test.txt')
+  .field('ttlMinutes', '60')
   .expect(201);
 ```
 

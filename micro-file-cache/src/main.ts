@@ -4,17 +4,16 @@ import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
-  const app = await NestFactory.create<NestFastifyApplication>(
-    AppModule,
-    new FastifyAdapter(),
-  );
+  const app = await NestFactory.create<NestFastifyApplication>(AppModule, new FastifyAdapter());
 
   // Глобальная валидация
-  app.useGlobalPipes(new ValidationPipe({
-    transform: true,
-    whitelist: true,
-    forbidNonWhitelisted: true,
-  }));
+  app.useGlobalPipes(
+    new ValidationPipe({
+      transform: true,
+      whitelist: true,
+      forbidNonWhitelisted: true,
+    }),
+  );
 
   // CORS настройки
   app.enableCors({
@@ -22,9 +21,10 @@ async function bootstrap() {
     credentials: true,
   });
 
-  const port = process.env.PORT || 3000;
-  await app.listen(port, '0.0.0.0');
-  console.log(`Application is running on: http://localhost:${port}`);
+  const port = process.env.LISTEN_PORT || 80;
+  const host = process.env.LISTEN_HOST || 'localhost';
+  await app.listen(port, host);
+  console.log(`Application is running on: http://${host}:${port}`);
 }
 
 bootstrap();

@@ -50,7 +50,7 @@ graph TB
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: ".env",
+      envFilePath: '.env',
     }),
     FilesModule,
     StorageModule,
@@ -136,10 +136,7 @@ export class AppModule {}
 ```typescript
 class FilesService {
   // Загрузка файла с дедупликацией
-  async uploadFile(
-    file: Express.Multer.File,
-    ttlMinutes: number
-  ): Promise<UploadResponse>;
+  async uploadFile(file: Express.Multer.File, ttlMinutes: number): Promise<UploadResponse>;
 
   // Получение информации о файле
   async getFileInfo(id: string): Promise<FileInfo>;
@@ -165,41 +162,41 @@ class FilesService {
 **Основные методы**:
 
 ```typescript
-import * as fs from "fs-extra";
-import * as path from "path";
-import { fileTypeFromBuffer } from "file-type";
+import * as fs from 'fs-extra';
+import * as path from 'path';
+import { fileTypeFromBuffer } from 'file-type';
 
 class StorageService {
   // Сохранение файла с использованием fs-extra
   async saveFile(buffer: Buffer, originalName: string, uuid: string): Promise<string> {
     const date = new Date();
     const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+
     // Создание директории в формате YYYY-MM
     const dir = path.join(this.storageDir, `${year}-${month}`);
-    
+
     // Автоматически создает директории если их нет
     await fs.ensureDir(dir);
-    
+
     // Создание безопасного имени файла
     const shortName = this.createShortFilename(originalName);
     const extension = path.extname(originalName);
     const filename = `${shortName}-${uuid}${extension}`;
-    
+
     const filePath = path.join(dir, filename);
     await fs.writeFile(filePath, buffer);
-    
+
     return path.relative(this.storageDir, filePath);
   }
 
   // Создание короткого имени файла (до 30 символов)
   private createShortFilename(originalName: string): string {
     const nameWithoutExt = path.parse(originalName).name;
-    
+
     // Замена неправильных символов на _
     const sanitized = nameWithoutExt.replace(/[^a-zA-Z0-9\-_]/g, '_');
-    
+
     // Обрезка до 30 символов
     return sanitized.substring(0, 30);
   }
@@ -207,19 +204,19 @@ class StorageService {
   // Получение файла с проверкой существования
   async getFile(filePath: string): Promise<Buffer> {
     const fullPath = path.join(this.storageDir, filePath);
-    
+
     // Проверяет существование файла перед чтением
     if (!(await fs.pathExists(fullPath))) {
-      throw new NotFoundException("File not found");
+      throw new NotFoundException('File not found');
     }
-    
+
     return await fs.readFile(fullPath);
   }
 
   // Безопасное удаление файла
   async deleteFile(filePath: string): Promise<void> {
     const fullPath = path.join(this.storageDir, filePath);
-    
+
     // Безопасное удаление - не выбросит ошибку если файл не существует
     await fs.remove(fullPath);
   }
@@ -227,7 +224,7 @@ class StorageService {
   // Определение MIME типа по содержимому файла
   async getFileMimeType(buffer: Buffer): Promise<string> {
     const type = await fileTypeFromBuffer(buffer);
-    return type?.mime || "application/octet-stream";
+    return type?.mime || 'application/octet-stream';
   }
 
   // Сохранение метаданных
@@ -257,8 +254,8 @@ class StorageService {
 **Основные методы**:
 
 ```typescript
-import dayjs from "dayjs";
-import utc from "dayjs/plugin/utc";
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
 
 dayjs.extend(utc);
 
@@ -268,17 +265,17 @@ class CleanupService {
     const startTime = dayjs().utc();
     const expiredFiles = await this.findExpiredFiles();
     const deletedCount = await this.removeExpiredFiles(expiredFiles);
-    
+
     const endTime = dayjs().utc();
-    const duration = endTime.diff(startTime, "millisecond");
-    
+    const duration = endTime.diff(startTime, 'millisecond');
+
     this.logger.log(`Cleanup completed: ${deletedCount} files deleted in ${duration}ms`);
-    
+
     return {
       deletedCount,
       duration,
       lastRun: startTime.toISOString(),
-      nextRun: dayjs().add(1, "minute").utc().toISOString()
+      nextRun: dayjs().add(1, 'minute').utc().toISOString(),
     };
   }
 
@@ -286,7 +283,7 @@ class CleanupService {
   private isFileExpired(fileInfo: FileInfo): boolean {
     const now = dayjs().utc();
     const expiration = dayjs(fileInfo.expiresAt).utc();
-    
+
     return now.isAfter(expiration);
   }
 
@@ -294,8 +291,8 @@ class CleanupService {
   private async findExpiredFiles(): Promise<FileInfo[]> {
     const allFiles = await this.storageService.getAllMetadata();
     const now = dayjs().utc();
-    
-    return Object.values(allFiles).filter(fileInfo => {
+
+    return Object.values(allFiles).filter((fileInfo) => {
       const expiration = dayjs(fileInfo.expiresAt).utc();
       return now.isAfter(expiration);
     });
@@ -304,19 +301,19 @@ class CleanupService {
   // Удаление устаревших файлов
   private async removeExpiredFiles(expiredFiles: FileInfo[]): Promise<number> {
     let deletedCount = 0;
-    
+
     for (const fileInfo of expiredFiles) {
       try {
         await this.storageService.deleteFile(fileInfo.path);
         await this.storageService.deleteMetadata(fileInfo.id);
         deletedCount++;
-        
+
         this.logger.log(`Deleted expired file: ${fileInfo.originalName} (${fileInfo.id})`);
       } catch (error) {
         this.logger.error(`Failed to delete file ${fileInfo.id}: ${error.message}`);
       }
     }
-    
+
     return deletedCount;
   }
 }
@@ -336,10 +333,10 @@ async handleCleanup() {
 ### Алгоритм хеширования
 
 ```typescript
-import { createHash } from "crypto";
+import { createHash } from 'crypto';
 
 function calculateFileHash(buffer: Buffer): string {
-  return createHash("sha256").update(buffer).digest("hex");
+  return createHash('sha256').update(buffer).digest('hex');
 }
 ```
 
@@ -371,6 +368,7 @@ storage/
 - `EXT` - оригинальное расширение файла
 
 **Примеры именования**:
+
 - `very-long-document-name-that-exceeds-30-chars-uuid-123.pdf`
 - `my_file_with_spaces-uuid-456.jpg`
 - `special@chars#file-uuid-789.txt`
@@ -397,13 +395,11 @@ storage/
 ### Типы ошибок
 
 1. **Валидационные ошибки**:
-
    - Некорректный размер файла
    - Неподдерживаемый MIME тип
    - Некорректный TTL
 
 2. **Ошибки файловой системы**:
-
    - Недостаток места на диске
    - Ошибки чтения/записи
    - Отсутствие директорий
@@ -447,7 +443,8 @@ async uploadFile(file: Express.Multer.File, ttlMinutes: number) {
 
 ```typescript
 interface AppConfig {
-  port: number;
+  listenHost: string;
+  listenPort: number;
   authToken?: string;
   storageDir: string;
   dataDir: string;
@@ -462,8 +459,12 @@ interface AppConfig {
 ```typescript
 @Injectable()
 export class ConfigService {
-  get port(): number {
-    return parseInt(process.env.PORT || "3000", 10);
+  get listenHost(): string {
+    return process.env.LISTEN_HOST || 'localhost';
+  }
+
+  get listenPort(): number {
+    return parseInt(process.env.LISTEN_PORT || '80', 10);
   }
 
   get authToken(): string | undefined {
@@ -471,23 +472,23 @@ export class ConfigService {
   }
 
   get storageDir(): string {
-    return process.env.STORAGE_DIR || "../test-data/micro-file-cache/storage";
+    return process.env.STORAGE_DIR || '../test-data/micro-file-cache/storage';
   }
 
   get dataDir(): string {
-    return process.env.DATA_DIR || "../test-data/micro-file-cache/data";
+    return process.env.DATA_DIR || '../test-data/micro-file-cache/data';
   }
 
   get maxFileSizeMB(): number {
-    return parseInt(process.env.FILE_MAX_SIZE_MB || "10", 10); // 10MB
+    return parseInt(process.env.FILE_MAX_SIZE_MB || '10', 10); // 10MB
   }
 
   get ttlMaxMinutes(): number {
-    return parseInt(process.env.TTL_MAX_MINUTES || "10080", 10); // 7 дней
+    return parseInt(process.env.TTL_MAX_MINUTES || '10080', 10); // 7 дней
   }
 
   get cleanupInterval(): number {
-    return parseInt(process.env.CLEANUP_INTERVAL || "60000", 10); // 1 минута
+    return parseInt(process.env.CLEANUP_INTERVAL || '60000', 10); // 1 минута
   }
 }
 ```
@@ -520,18 +521,15 @@ interface PerformanceMetrics {
 ### Меры безопасности
 
 1. **Аутентификация**:
-
    - Bearer токен аутентификация
    - Валидация токенов на всех защищенных endpoints
    - Защита всех API endpoints (кроме /api/v1/health)
 
 2. **Валидация файлов**:
-
    - Ограничение размера файлов
    - Проверка расширений
 
 3. **Безопасные имена файлов**:
-
    - Использование UUID вместо оригинальных имен
    - Санитизация путей
    - Предотвращение path traversal
@@ -546,7 +544,7 @@ interface PerformanceMetrics {
 ```typescript
 // Защита от path traversal
 function sanitizePath(path: string): string {
-  return path.replace(/\.\./g, "").replace(/\/+/g, "/");
+  return path.replace(/\.\./g, '').replace(/\/+/g, '/');
 }
 
 // Валидация TTL
@@ -584,14 +582,14 @@ function validateTTL(ttlMinutes: number, maxTTL: number): boolean {
 
 ```typescript
 // files.controller.e2e-spec.ts
-import { Test, TestingModule } from "@nestjs/testing";
-import { INestApplication } from "@nestjs/common";
-import * as request from "supertest";
-import { AppModule } from "../src/app.module";
+import { Test, TestingModule } from '@nestjs/testing';
+import { INestApplication } from '@nestjs/common';
+import * as request from 'supertest';
+import { AppModule } from '../src/app.module';
 
-describe("FilesController (e2e)", () => {
+describe('FilesController (e2e)', () => {
   let app: INestApplication;
-  const authToken = "test-token";
+  const authToken = 'test-token';
 
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -606,48 +604,48 @@ describe("FilesController (e2e)", () => {
     await app.close();
   });
 
-  describe("POST /api/v1/files", () => {
-    it("should upload file successfully", () => {
+  describe('POST /api/v1/files', () => {
+    it('should upload file successfully', () => {
       return request(app.getHttpServer())
-        .post("/api/v1/files")
-        .set("Authorization", `Bearer ${authToken}`)
-        .attach("file", Buffer.from("test content"), "test.txt")
-        .field("ttlMinutes", "60")
+        .post('/api/v1/files')
+        .set('Authorization', `Bearer ${authToken}`)
+        .attach('file', Buffer.from('test content'), 'test.txt')
+        .field('ttlMinutes', '60')
         .expect(201)
         .expect((res) => {
           expect(res.body.success).toBe(true);
-          expect(res.body.data).toHaveProperty("id");
-          expect(res.body.data.originalName).toBe("test.txt");
+          expect(res.body.data).toHaveProperty('id');
+          expect(res.body.data.originalName).toBe('test.txt');
           expect(res.body.data.ttlMinutes).toBe(60);
         });
     });
 
-    it("should handle file type detection", () => {
+    it('should handle file type detection', () => {
       // Создаем PDF файл для тестирования file-type
-      const pdfBuffer = Buffer.from("%PDF-1.4\n1 0 obj\n<<\n/Type /Catalog\n>>\nendobj");
-      
+      const pdfBuffer = Buffer.from('%PDF-1.4\n1 0 obj\n<<\n/Type /Catalog\n>>\nendobj');
+
       return request(app.getHttpServer())
-        .post("/api/v1/files")
-        .set("Authorization", `Bearer ${authToken}`)
-        .attach("file", pdfBuffer, "document.pdf")
-        .field("ttlMinutes", "60")
+        .post('/api/v1/files')
+        .set('Authorization', `Bearer ${authToken}`)
+        .attach('file', pdfBuffer, 'document.pdf')
+        .field('ttlMinutes', '60')
         .expect(201)
         .expect((res) => {
-          expect(res.body.data.mimeType).toBe("application/pdf");
+          expect(res.body.data.mimeType).toBe('application/pdf');
         });
     });
   });
 
-  describe("GET /api/v1/files/:id/download", () => {
-    it("should download file with correct headers", () => {
+  describe('GET /api/v1/files/:id/download', () => {
+    it('should download file with correct headers', () => {
       return request(app.getHttpServer())
         .get(`/api/v1/files/${fileId}/download`)
-        .set("Authorization", `Bearer ${authToken}`)
+        .set('Authorization', `Bearer ${authToken}`)
         .expect(200)
-        .expect("Content-Type", /text\/plain/)
-        .expect("Content-Disposition", /attachment/)
+        .expect('Content-Type', /text\/plain/)
+        .expect('Content-Disposition', /attachment/)
         .expect((res) => {
-          expect(res.text).toBe("test download content");
+          expect(res.text).toBe('test download content');
         });
     });
   });
@@ -658,20 +656,20 @@ describe("FilesController (e2e)", () => {
 
 ```typescript
 // cleanup.service.spec.ts
-import dayjs from "dayjs";
-import utc from "dayjs/plugin/utc";
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
 
 dayjs.extend(utc);
 
-describe("CleanupService", () => {
+describe('CleanupService', () => {
   let service: CleanupService;
 
-  it("should correctly identify expired files", () => {
+  it('should correctly identify expired files', () => {
     const now = dayjs().utc();
     const expiredFile: FileInfo = {
-      id: "test-id",
-      originalName: "test.txt",
-      expiresAt: now.subtract(1, "minute").toISOString(), // Истек минуту назад
+      id: 'test-id',
+      originalName: 'test.txt',
+      expiresAt: now.subtract(1, 'minute').toISOString(), // Истек минуту назад
       // ... остальные поля
     };
 
@@ -679,12 +677,12 @@ describe("CleanupService", () => {
     expect(isExpired).toBe(true);
   });
 
-  it("should not mark non-expired files as expired", () => {
+  it('should not mark non-expired files as expired', () => {
     const now = dayjs().utc();
     const validFile: FileInfo = {
-      id: "test-id",
-      originalName: "test.txt",
-      expiresAt: now.add(1, "hour").toISOString(), // Истечет через час
+      id: 'test-id',
+      originalName: 'test.txt',
+      expiresAt: now.add(1, 'hour').toISOString(), // Истечет через час
       // ... остальные поля
     };
 
@@ -701,7 +699,7 @@ describe("CleanupService", () => {
 ```typescript
 interface LogEntry {
   timestamp: string;
-  level: "info" | "warn" | "error";
+  level: 'info' | 'warn' | 'error';
   message: string;
   context?: any;
   userId?: string;
