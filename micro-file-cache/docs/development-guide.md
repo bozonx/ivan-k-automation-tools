@@ -110,7 +110,7 @@ interface FileInfo {
       "uploadedAt": "2024-01-15T10:30:00.000Z",
       "expiresAt": "2024-01-15T11:30:00.000Z",
       "ttlMinutes": 60,
-      "path": "2024/01/15/file-uuid-1.pdf"
+      "path": "2024-01/example-pdf-uuid-1.pdf"
     }
   }
 }
@@ -179,21 +179,37 @@ import * as fs from "fs-extra";
 import * as path from "path";
 
 export class StorageService {
-  async saveFile(buffer: Buffer, filename: string): Promise<string> {
+  async saveFile(buffer: Buffer, originalName: string, uuid: string): Promise<string> {
     const date = new Date();
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
     
-    const dir = path.join(this.storageDir, year.toString(), month, day);
+    // Создание директории в формате YYYY-MM
+    const dir = path.join(this.storageDir, `${year}-${month}`);
     
     // Автоматически создает директории если их нет
     await fs.ensureDir(dir);
+    
+    // Создание безопасного имени файла
+    const shortName = this.createShortFilename(originalName);
+    const extension = path.extname(originalName);
+    const filename = `${shortName}-${uuid}${extension}`;
     
     const filePath = path.join(dir, filename);
     await fs.writeFile(filePath, buffer);
     
     return path.relative(this.storageDir, filePath);
+  }
+
+  // Создание короткого имени файла (до 30 символов)
+  private createShortFilename(originalName: string): string {
+    const nameWithoutExt = path.parse(originalName).name;
+    
+    // Замена неправильных символов на _
+    const sanitized = nameWithoutExt.replace(/[^a-zA-Z0-9\-_]/g, '_');
+    
+    // Обрезка до 30 символов
+    return sanitized.substring(0, 30);
   }
 
   async deleteFile(filePath: string): Promise<void> {

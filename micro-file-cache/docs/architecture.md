@@ -171,21 +171,37 @@ import { fileTypeFromBuffer } from "file-type";
 
 class StorageService {
   // Сохранение файла с использованием fs-extra
-  async saveFile(buffer: Buffer, filename: string): Promise<string> {
+  async saveFile(buffer: Buffer, originalName: string, uuid: string): Promise<string> {
     const date = new Date();
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
     
-    const dir = path.join(this.storageDir, year.toString(), month, day);
+    // Создание директории в формате YYYY-MM
+    const dir = path.join(this.storageDir, `${year}-${month}`);
     
     // Автоматически создает директории если их нет
     await fs.ensureDir(dir);
+    
+    // Создание безопасного имени файла
+    const shortName = this.createShortFilename(originalName);
+    const extension = path.extname(originalName);
+    const filename = `${shortName}-${uuid}${extension}`;
     
     const filePath = path.join(dir, filename);
     await fs.writeFile(filePath, buffer);
     
     return path.relative(this.storageDir, filePath);
+  }
+
+  // Создание короткого имени файла (до 30 символов)
+  private createShortFilename(originalName: string): string {
+    const nameWithoutExt = path.parse(originalName).name;
+    
+    // Замена неправильных символов на _
+    const sanitized = nameWithoutExt.replace(/[^a-zA-Z0-9\-_]/g, '_');
+    
+    // Обрезка до 30 символов
+    return sanitized.substring(0, 30);
   }
 
   // Получение файла с проверкой существования
@@ -339,16 +355,25 @@ function calculateFileHash(buffer: Buffer): string {
 
 ```
 storage/
-├── 2024/
-│   ├── 01/
-│   │   ├── 15/
-│   │   │   ├── file-uuid-1.pdf
-│   │   │   └── file-uuid-2.jpg
-│   │   └── 16/
-│   │       └── file-uuid-3.txt
-│   └── 02/
+├── 2024-01/
+│   ├── document-pdf-uuid-1.pdf
+│   ├── image-jpg-uuid-2.jpg
+│   └── text-file-uuid-3.txt
+├── 2024-02/
+│   └── another-file-uuid-4.docx
 └── data.json
 ```
+
+**Формат именования файлов**: `<SHORT_FILENAME>-<UUID>.<EXT>`
+
+- `SHORT_FILENAME` - обрезанное до 30 символов оригинальное имя файла с заменой неправильных символов на `_`
+- `UUID` - уникальный идентификатор файла
+- `EXT` - оригинальное расширение файла
+
+**Примеры именования**:
+- `very-long-document-name-that-exceeds-30-chars-uuid-123.pdf`
+- `my_file_with_spaces-uuid-456.jpg`
+- `special@chars#file-uuid-789.txt`
 
 ## Система очистки
 
