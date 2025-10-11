@@ -169,24 +169,10 @@ export class StorageService {
         const existingFile = await this.findFileByHash(hash);
         if (existingFile) {
           // Если файл уже существует и дедупликация включена,
-          // создаем новую запись с новым ID, но используем тот же файл
-          const newFileId = uuidv4();
-          const newFileInfo: FileInfo = {
-            ...existingFile,
-            id: newFileId,
-            originalName: file.originalname, // Используем новое имя файла
-            uploadedAt: new Date(),
-            expiresAt: dayjs().add(ttl, 'seconds').toDate(),
-            ttl,
-            metadata: { ...existingFile.metadata, ...metadata },
-          };
-
-          // Обновляем метаданные с новым файлом
-          await this.updateMetadata(newFileInfo, 'add');
-
+          // возвращаем существующий файл с тем же ID
           return {
             success: true,
-            data: newFileInfo,
+            data: existingFile,
           };
         }
       }

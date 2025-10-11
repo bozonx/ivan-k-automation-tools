@@ -160,7 +160,7 @@ describe('StorageService', () => {
       const mockFile = {
         originalname: 'test.txt',
         mimetype: 'text/plain',
-        size: 100,
+        size: 12, // Реальный размер буфера "test content"
         buffer: Buffer.from('test content'),
         path: '/tmp/test.txt',
       };
@@ -180,7 +180,7 @@ describe('StorageService', () => {
       expect(result.data.id).toBeDefined();
       expect(result.data.originalName).toBe('test.txt');
       expect(result.data.mimeType).toBe('text/plain');
-      expect(result.data.size).toBe(100);
+      expect(result.data.size).toBe(12);
       expect(result.data.ttl).toBe(3600);
       expect(result.data.metadata).toEqual({ description: 'Test file' });
     });
@@ -238,7 +238,7 @@ describe('StorageService', () => {
       const mockFile = {
         originalname: 'test.txt',
         mimetype: 'text/plain', // Не разрешенный тип
-        size: 100,
+        size: 12, // Реальный размер буфера "test content"
         buffer: Buffer.from('test content'),
         path: '/tmp/test.txt',
       };
@@ -290,7 +290,7 @@ describe('StorageService', () => {
       const mockFile = {
         originalname: 'test.txt',
         mimetype: 'text/plain',
-        size: 100,
+        size: 12, // Реальный размер буфера "test content"
         buffer: Buffer.from('test content'),
         path: '/tmp/test.txt',
       };
@@ -319,7 +319,7 @@ describe('StorageService', () => {
       const mockFile = {
         originalname: 'test.txt',
         mimetype: 'text/plain',
-        size: 100,
+        size: 12, // Реальный размер буфера "test content"
         buffer: Buffer.from('test content'),
         path: '/tmp/test.txt',
       };
@@ -368,7 +368,7 @@ describe('StorageService', () => {
       const mockFile = {
         originalname: 'test.txt',
         mimetype: 'text/plain',
-        size: 100,
+        size: 12, // Реальный размер буфера "test content"
         buffer: Buffer.from('test content'),
         path: '/tmp/test.txt',
       };
@@ -395,7 +395,7 @@ describe('StorageService', () => {
       const mockFile = {
         originalname: 'test.txt',
         mimetype: 'text/plain',
-        size: 100,
+        size: 12, // Реальный размер буфера "test content"
         buffer: Buffer.from('test content'),
         path: '/tmp/test.txt',
       };
@@ -426,7 +426,7 @@ describe('StorageService', () => {
       const mockFile = {
         originalname: 'test.txt',
         mimetype: 'text/plain',
-        size: 100,
+        size: 12, // Реальный размер буфера "test content"
         buffer: Buffer.from('test content'),
         path: '/tmp/test.txt',
       };
@@ -468,21 +468,21 @@ describe('StorageService', () => {
         {
           originalname: 'test1.txt',
           mimetype: 'text/plain',
-          size: 100,
+          size: 8, // Реальный размер "content1"
           buffer: Buffer.from('content1'),
           path: '/tmp/test1.txt',
         },
         {
           originalname: 'test2.jpg',
           mimetype: 'image/jpeg',
-          size: 200,
+          size: 8, // Реальный размер "content2"
           buffer: Buffer.from('content2'),
           path: '/tmp/test2.jpg',
         },
         {
           originalname: 'test3.txt',
           mimetype: 'text/plain',
-          size: 300,
+          size: 8, // Реальный размер "content3"
           buffer: Buffer.from('content3'),
           path: '/tmp/test3.txt',
         },
@@ -504,11 +504,11 @@ describe('StorageService', () => {
 
     it('should search files by size range', async () => {
       // Act
-      const result = await service.searchFiles({ minSize: 150, maxSize: 250 });
+      const result = await service.searchFiles({ minSize: 7, maxSize: 9 });
 
       // Assert
-      expect(result.files).toHaveLength(1);
-      expect(result.files[0].size).toBe(200);
+      expect(result.files).toHaveLength(3); // Все файлы имеют размер 8
+      expect(result.files[0].size).toBe(8);
     });
 
     it('should search files with pagination', async () => {
@@ -549,21 +549,21 @@ describe('StorageService', () => {
         {
           originalname: 'test1.txt',
           mimetype: 'text/plain',
-          size: 100,
+          size: 8, // Реальный размер "content1"
           buffer: Buffer.from('content1'),
           path: '/tmp/test1.txt',
         },
         {
           originalname: 'test2.txt',
           mimetype: 'text/plain',
-          size: 200,
+          size: 8, // Реальный размер "content2"
           buffer: Buffer.from('content2'),
           path: '/tmp/test2.jpg',
         },
         {
           originalname: 'test3.jpg',
           mimetype: 'image/jpeg',
-          size: 300,
+          size: 8, // Реальный размер "content3"
           buffer: Buffer.from('content3'),
           path: '/tmp/test3.txt',
         },
@@ -578,7 +578,7 @@ describe('StorageService', () => {
 
       // Assert
       expect(stats.totalFiles).toBe(3);
-      expect(stats.totalSize).toBe(600);
+      expect(stats.totalSize).toBe(24); // 3 файла по 8 байт каждый
       expect(stats.filesByMimeType['text/plain']).toBe(3); // Все файлы определяются как text/plain
       expect(Object.keys(stats.filesByDate)).toHaveLength(1);
     });
@@ -619,7 +619,7 @@ describe('StorageService', () => {
       const mockFile = {
         originalname: 'test.txt',
         mimetype: 'text/plain',
-        size: 100,
+        size: 12, // Реальный размер буфера "test content"
         buffer: Buffer.from('test content'),
         path: '/tmp/test.txt',
       };

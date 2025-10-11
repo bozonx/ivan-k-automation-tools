@@ -101,9 +101,9 @@ export class ValidationUtil {
       errors.push('Original filename is required');
     }
 
-    // Проверяем размер файла (должен быть неотрицательным числом)
-    if (typeof file.size !== 'number' || file.size < 0) {
-      errors.push('File size must be a non-negative number');
+    // Проверяем размер файла (должен быть положительным числом)
+    if (typeof file.size !== 'number' || file.size <= 0) {
+      errors.push('File size must be a positive number');
     } else if (file.size > this.MAX_FILE_SIZE) {
       errors.push(`File size exceeds maximum allowed size of ${this.MAX_FILE_SIZE} bytes`);
     }
@@ -170,8 +170,8 @@ export class ValidationUtil {
       errors.push('File ID cannot be empty');
     } else if (id.length > 255) {
       errors.push('File ID is too long');
-    } else if (!this.isValidUUID(id)) {
-      errors.push('File ID must be a valid UUID');
+    } else if (!/^[a-zA-Z0-9_-]+$/.test(id)) {
+      errors.push('File ID must contain only alphanumeric characters, hyphens, and underscores');
     }
 
     return {
@@ -283,8 +283,8 @@ export class ValidationUtil {
       errors.push('MIME type is required');
     }
 
-    if (typeof fileInfo.size !== 'number' || fileInfo.size < 0) {
-      errors.push('Size must be a non-negative number');
+    if (typeof fileInfo.size !== 'number' || fileInfo.size <= 0) {
+      errors.push('Size must be a positive number');
     }
 
     if (!fileInfo.hash || typeof fileInfo.hash !== 'string') {

@@ -313,7 +313,7 @@ describe('ValidationUtil', () => {
       const result = ValidationUtil.validateFileInfo(fileInfo);
 
       expect(result.isValid).toBe(false);
-      expect(result.errors).toContain('Size must be a non-negative number');
+      expect(result.errors).toContain('Size must be a positive number');
     });
 
     it('should reject file info with invalid dates', () => {
