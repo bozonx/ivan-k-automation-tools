@@ -7,6 +7,7 @@ import { HealthController } from './common/controllers/health.controller';
 import { StorageTestController } from './common/controllers/storage-test.controller';
 import { StorageModule } from './modules/storage/storage.module';
 import { FilesModule } from './modules/files/files.module';
+import { CleanupModule } from './modules/cleanup/cleanup.module';
 import { GlobalValidationPipe } from './common/pipes/validation.pipe';
 
 @Module({
@@ -26,6 +27,9 @@ import { GlobalValidationPipe } from './common/pipes/validation.pipe';
 
     // Модуль для работы с файлами (бизнес-логика)
     FilesModule,
+
+    // Модуль для автоматической очистки устаревших файлов
+    CleanupModule,
   ],
   controllers: [HealthController, StorageTestController],
   providers: [
