@@ -763,5 +763,449 @@ describe('FilesService', () => {
       expect(typeof result.file.isExpired).toBe('boolean');
       expect(typeof result.file.timeRemaining).toBe('number');
     });
+
+    it('should handle FileInfo with string dates', async () => {
+      // Arrange
+      const fileInfoWithStringDates = {
+        ...mockFileInfo,
+        uploadedAt: mockFileInfo.uploadedAt.toISOString(),
+        expiresAt: mockFileInfo.expiresAt.toISOString(),
+      };
+
+      const fileId = 'test-file-id';
+
+      (ValidationUtil.validateFileId as jest.Mock).mockReturnValue({
+        isValid: true,
+        errors: [],
+      });
+
+      storageService.getFileInfo.mockResolvedValue({
+        success: true,
+        data: fileInfoWithStringDates,
+      });
+
+      // Act
+      const result = await service.getFileInfo({ fileId });
+
+      // Assert
+      expect(result.file.uploadedAt).toBe(fileInfoWithStringDates.uploadedAt);
+      expect(result.file.expiresAt).toBe(fileInfoWithStringDates.expiresAt);
+    });
+  });
+
+  describe('validateUploadParams', () => {
+    it('should normalize TTL to default value when not provided', async () => {
+      // Arrange
+      const uploadParams = {
+        file: mockUploadedFile,
+        // ttl не указан
+      };
+
+      (ValidationUtil.validateUploadedFile as jest.Mock).mockReturnValue({
+        isValid: true,
+        errors: [],
+      });
+
+      (ValidationUtil.validateTTL as jest.Mock).mockReturnValue({
+        isValid: true,
+        errors: [],
+      });
+
+      (ValidationUtil.validateMetadata as jest.Mock).mockReturnValue({
+        isValid: true,
+        errors: [],
+      });
+
+      storageService.saveFile.mockResolvedValue({
+        success: true,
+        data: mockFileInfo,
+      });
+
+      // Act
+      await service.uploadFile(uploadParams);
+
+      // Assert
+      expect(storageService.saveFile).toHaveBeenCalledWith({
+        file: mockUploadedFile,
+        ttl: undefined, // TTL не был передан, поэтому остается undefined
+        metadata: {},
+      });
+    });
+
+    it('should normalize metadata to empty object when not provided', async () => {
+      // Arrange
+      const uploadParams = {
+        file: mockUploadedFile,
+        ttl: 3600,
+        // metadata не указан
+      };
+
+      (ValidationUtil.validateUploadedFile as jest.Mock).mockReturnValue({
+        isValid: true,
+        errors: [],
+      });
+
+      (ValidationUtil.validateTTL as jest.Mock).mockReturnValue({
+        isValid: true,
+        errors: [],
+      });
+
+      (ValidationUtil.validateMetadata as jest.Mock).mockReturnValue({
+        isValid: true,
+        errors: [],
+      });
+
+      storageService.saveFile.mockResolvedValue({
+        success: true,
+        data: mockFileInfo,
+      });
+
+      // Act
+      await service.uploadFile(uploadParams);
+
+      // Assert
+      expect(storageService.saveFile).toHaveBeenCalledWith({
+        file: mockUploadedFile,
+        ttl: 3600,
+        metadata: {},
+      });
+    });
+
+    it('should handle custom filename in metadata', async () => {
+      // Arrange
+      const uploadParams = {
+        file: mockUploadedFile,
+        ttl: 3600,
+        metadata: { description: 'Test file' },
+        customFilename: 'custom-name.txt',
+      };
+
+      (ValidationUtil.validateUploadedFile as jest.Mock).mockReturnValue({
+        isValid: true,
+        errors: [],
+      });
+
+      (ValidationUtil.validateTTL as jest.Mock).mockReturnValue({
+        isValid: true,
+        errors: [],
+      });
+
+      (ValidationUtil.validateMetadata as jest.Mock).mockReturnValue({
+        isValid: true,
+        errors: [],
+      });
+
+      storageService.saveFile.mockResolvedValue({
+        success: true,
+        data: mockFileInfo,
+      });
+
+      // Act
+      await service.uploadFile(uploadParams);
+
+      // Assert
+      expect(storageService.saveFile).toHaveBeenCalledWith({
+        file: mockUploadedFile,
+        ttl: 3600,
+        metadata: { description: 'Test file', customFilename: 'custom-name.txt' },
+      });
+    });
+  });
+
+  describe('deleteFile with force option', () => {
+    it('should delete expired file when force is true', async () => {
+      // Arrange
+      const fileId = 'expired-file-id';
+
+      (ValidationUtil.validateFileId as jest.Mock).mockReturnValue({
+        isValid: true,
+        errors: [],
+      });
+
+      storageService.getFileInfo.mockResolvedValue({
+        success: false,
+        error: 'File with ID expired-file-id has expired',
+      });
+
+      storageService.deleteFile.mockResolvedValue({
+        success: true,
+        data: mockFileInfo,
+      });
+
+      // Act
+      const result = await service.deleteFile({ fileId, force: true });
+
+      // Assert
+      expect(result).toBeDefined();
+      expect(result.fileId).toBe(mockFileInfo.id);
+      expect(result.message).toBe('File deleted successfully');
+
+      expect(storageService.getFileInfo).toHaveBeenCalledWith(fileId);
+      expect(storageService.deleteFile).toHaveBeenCalledWith(fileId);
+    });
+
+    it('should throw NotFoundException for expired file when force is false', async () => {
+      // Arrange
+      const fileId = 'expired-file-id';
+
+      (ValidationUtil.validateFileId as jest.Mock).mockReturnValue({
+        isValid: true,
+        errors: [],
+      });
+
+      storageService.getFileInfo.mockResolvedValue({
+        success: false,
+        error: 'File with ID expired-file-id has expired',
+      });
+
+      // Act & Assert
+      await expect(service.deleteFile({ fileId, force: false })).rejects.toThrow(NotFoundException);
+      expect(storageService.deleteFile).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('downloadFile with includeExpired option', () => {
+    it('should download expired file when includeExpired is true', async () => {
+      // Arrange
+      const fileId = 'expired-file-id';
+      const fileBuffer = Buffer.from('test content');
+
+      (ValidationUtil.validateFileId as jest.Mock).mockReturnValue({
+        isValid: true,
+        errors: [],
+      });
+
+      storageService.getFileInfo.mockResolvedValue({
+        success: true,
+        data: mockFileInfo,
+      });
+
+      storageService.readFile.mockResolvedValue({
+        success: true,
+        data: fileBuffer,
+      });
+
+      // Act
+      const result = await service.downloadFile({ fileId, includeExpired: true });
+
+      // Assert
+      expect(result).toBeDefined();
+      expect(result.buffer).toEqual(fileBuffer);
+      expect(result.fileInfo).toEqual(mockFileInfo);
+
+      expect(storageService.getFileInfo).toHaveBeenCalledWith(fileId);
+      expect(storageService.readFile).toHaveBeenCalledWith(fileId);
+    });
+
+    it('should throw NotFoundException for expired file when includeExpired is false', async () => {
+      // Arrange
+      const fileId = 'expired-file-id';
+
+      (ValidationUtil.validateFileId as jest.Mock).mockReturnValue({
+        isValid: true,
+        errors: [],
+      });
+
+      storageService.getFileInfo.mockResolvedValue({
+        success: false,
+        error: 'File with ID expired-file-id has expired',
+      });
+
+      // Act & Assert
+      await expect(service.downloadFile({ fileId, includeExpired: false })).rejects.toThrow(
+        NotFoundException,
+      );
+      expect(storageService.readFile).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('listFiles with various filters', () => {
+    it('should list files with all filter options', async () => {
+      // Arrange
+      const searchParams = {
+        mimeType: 'text/plain',
+        minSize: 100,
+        maxSize: 1000,
+        uploadedAfter: new Date('2024-01-01'),
+        uploadedBefore: new Date('2024-12-31'),
+        expiredOnly: false,
+        limit: 5,
+        offset: 0,
+      };
+
+      const mockSearchResult = {
+        files: [mockFileInfo],
+        total: 1,
+        params: searchParams,
+      };
+
+      storageService.searchFiles.mockResolvedValue(mockSearchResult);
+
+      // Act
+      const result = await service.listFiles(searchParams);
+
+      // Assert
+      expect(result).toBeDefined();
+      expect(result.files).toHaveLength(1);
+      expect(result.total).toBe(1);
+      expect(result.pagination).toBeDefined();
+      expect(result.pagination.page).toBe(1);
+      expect(result.pagination.limit).toBe(5);
+      expect(result.pagination.totalPages).toBe(1);
+      expect(result.pagination.hasNext).toBe(false);
+      expect(result.pagination.hasPrev).toBe(false);
+
+      expect(storageService.searchFiles).toHaveBeenCalledWith(searchParams);
+    });
+
+    it('should handle pagination correctly', async () => {
+      // Arrange
+      const searchParams = {
+        limit: 3,
+        offset: 6,
+      };
+
+      const mockSearchResult = {
+        files: [mockFileInfo],
+        total: 10,
+        params: searchParams,
+      };
+
+      storageService.searchFiles.mockResolvedValue(mockSearchResult);
+
+      // Act
+      const result = await service.listFiles(searchParams);
+
+      // Assert
+      expect(result.pagination.page).toBe(3); // (6 / 3) + 1
+      expect(result.pagination.limit).toBe(3);
+      expect(result.pagination.totalPages).toBe(4); // Math.ceil(10 / 3)
+      expect(result.pagination.hasNext).toBe(true);
+      expect(result.pagination.hasPrev).toBe(true);
+    });
+  });
+
+  describe('error handling', () => {
+    it('should handle unexpected errors in uploadFile', async () => {
+      // Arrange
+      const uploadParams = {
+        file: mockUploadedFile,
+        ttl: 3600,
+      };
+
+      (ValidationUtil.validateUploadedFile as jest.Mock).mockReturnValue({
+        isValid: true,
+        errors: [],
+      });
+
+      (ValidationUtil.validateTTL as jest.Mock).mockReturnValue({
+        isValid: true,
+        errors: [],
+      });
+
+      (ValidationUtil.validateMetadata as jest.Mock).mockReturnValue({
+        isValid: true,
+        errors: [],
+      });
+
+      storageService.saveFile.mockRejectedValue(new Error('Unexpected error'));
+
+      // Act & Assert
+      await expect(service.uploadFile(uploadParams)).rejects.toThrow(InternalServerErrorException);
+    });
+
+    it('should handle unexpected errors in getFileInfo', async () => {
+      // Arrange
+      const fileId = 'test-file-id';
+
+      (ValidationUtil.validateFileId as jest.Mock).mockReturnValue({
+        isValid: true,
+        errors: [],
+      });
+
+      storageService.getFileInfo.mockRejectedValue(new Error('Unexpected error'));
+
+      // Act & Assert
+      await expect(service.getFileInfo({ fileId })).rejects.toThrow(InternalServerErrorException);
+    });
+
+    it('should handle unexpected errors in downloadFile', async () => {
+      // Arrange
+      const fileId = 'test-file-id';
+
+      (ValidationUtil.validateFileId as jest.Mock).mockReturnValue({
+        isValid: true,
+        errors: [],
+      });
+
+      storageService.getFileInfo.mockRejectedValue(new Error('Unexpected error'));
+
+      // Act & Assert
+      await expect(service.downloadFile({ fileId })).rejects.toThrow(InternalServerErrorException);
+    });
+
+    it('should handle unexpected errors in deleteFile', async () => {
+      // Arrange
+      const fileId = 'test-file-id';
+
+      (ValidationUtil.validateFileId as jest.Mock).mockReturnValue({
+        isValid: true,
+        errors: [],
+      });
+
+      storageService.getFileInfo.mockRejectedValue(new Error('Unexpected error'));
+
+      // Act & Assert
+      await expect(service.deleteFile({ fileId })).rejects.toThrow(InternalServerErrorException);
+    });
+
+    it('should handle unexpected errors in listFiles', async () => {
+      // Arrange
+      const searchParams = { limit: 10 };
+
+      storageService.searchFiles.mockRejectedValue(new Error('Unexpected error'));
+
+      // Act & Assert
+      await expect(service.listFiles(searchParams)).rejects.toThrow(InternalServerErrorException);
+    });
+
+    it('should handle unexpected errors in getFileStats', async () => {
+      // Arrange
+      storageService.getFileStats.mockRejectedValue(new Error('Unexpected error'));
+
+      // Act & Assert
+      await expect(service.getFileStats()).rejects.toThrow(InternalServerErrorException);
+    });
+  });
+
+  describe('fileExists edge cases', () => {
+    it('should return false when storage service throws error', async () => {
+      // Arrange
+      const fileId = 'test-file-id';
+
+      storageService.getFileInfo.mockRejectedValue(new Error('Storage error'));
+
+      // Act
+      const result = await service.fileExists(fileId);
+
+      // Assert
+      expect(result).toBe(false);
+    });
+
+    it('should return false when file exists but expired and includeExpired is false', async () => {
+      // Arrange
+      const fileId = 'expired-file-id';
+
+      storageService.getFileInfo.mockResolvedValue({
+        success: false,
+        error: 'File with ID expired-file-id has expired',
+      });
+
+      // Act
+      const result = await service.fileExists(fileId, false);
+
+      // Assert
+      expect(result).toBe(false);
+    });
   });
 });

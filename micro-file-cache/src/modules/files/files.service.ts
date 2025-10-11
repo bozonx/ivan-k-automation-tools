@@ -312,13 +312,15 @@ export class FilesService {
         if (fileResult.error?.includes('not found')) {
           throw new NotFoundException(`File with ID ${params.fileId} not found`);
         }
-        if (fileResult.error?.includes('expired') && !params.force) {
-          throw new NotFoundException(`File with ID ${params.fileId} has expired`);
+        if (fileResult.error?.includes('expired')) {
+          if (!params.force) {
+            throw new NotFoundException(`File with ID ${params.fileId} has expired`);
+          }
+          // Если force=true, продолжаем с удалением даже для истекших файлов
+        } else {
+          throw new InternalServerErrorException(`Failed to get file info: ${fileResult.error}`);
         }
-        throw new InternalServerErrorException(`Failed to get file info: ${fileResult.error}`);
       }
-
-      const fileInfo = fileResult.data as FileInfo;
 
       // Удаление файла через StorageService
       const deleteResult = await this.storageService.deleteFile(params.fileId);
@@ -327,6 +329,7 @@ export class FilesService {
         throw new InternalServerErrorException(`Failed to delete file: ${deleteResult.error}`);
       }
 
+      const fileInfo = deleteResult.data as FileInfo;
       const executionTime = Date.now() - startTime;
       this.logger.log(`File deleted successfully: ${fileInfo.id} (${executionTime}ms)`);
 
