@@ -91,7 +91,7 @@
     "coverageDirectory": "coverage",
     "testEnvironment": "node",
     "transformIgnorePatterns": [
-      "node_modules/(?!(file-type|strtok3|peek-readable)/)"
+      "node_modules/(?!(file-type|strtok3|peek-readable|token-types|@tokenizer)/)"
     ]
   },
   "keywords": [

@@ -5,6 +5,7 @@ import { getConfig } from './config/app.config';
 import { HealthController } from './common/controllers/health.controller';
 import { StorageTestController } from './common/controllers/storage-test.controller';
 import { StorageModule } from './modules/storage/storage.module';
+import { FilesModule } from './modules/files/files.module';
 
 @Module({
   imports: [
@@ -20,6 +21,9 @@ import { StorageModule } from './modules/storage/storage.module';
 
     // Модуль для работы с файловым хранилищем
     StorageModule,
+
+    // Модуль для работы с файлами (бизнес-логика)
+    FilesModule,
   ],
   controllers: [HealthController, StorageTestController],
   providers: [],
