@@ -5,7 +5,7 @@ import {
   NotFoundException,
   InternalServerErrorException,
 } from '@nestjs/common';
-import * as dayjs from 'dayjs';
+import dayjs from 'dayjs';
 
 import { FilesService } from '../../src/modules/files/files.service';
 import { StorageService } from '../../src/modules/storage/storage.service';

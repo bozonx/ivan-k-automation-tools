@@ -16,6 +16,12 @@ jest.mock('file-type', () => ({
   }),
 }));
 
+// Мокаем fs-extra для тестов
+jest.mock('fs-extra', () => ({
+  ...jest.requireActual('fs-extra'),
+  readFileSync: jest.fn(),
+}));
+
 // Мокаем dayjs для тестов
 jest.mock('dayjs', () => {
   const mockDayjs = jest.fn(() => ({
@@ -82,6 +88,10 @@ describe('StorageService', () => {
     if (await fs.pathExists(testStoragePath)) {
       await fs.remove(testStoragePath);
     }
+
+    // Очищаем все моки после каждого теста
+    jest.clearAllMocks();
+    jest.restoreAllMocks();
   });
 
   it('should be defined', () => {
@@ -351,7 +361,7 @@ describe('StorageService', () => {
       };
 
       // Мокаем чтение файла как успешное, но файл истек
-      jest.spyOn(fs, 'readFileSync').mockReturnValue(JSON.stringify(expiredFileInfo));
+      (fs.readFileSync as jest.Mock).mockReturnValue(JSON.stringify(expiredFileInfo));
 
       // Act
       const result = await service.getFileInfo(fileId);
@@ -529,7 +539,7 @@ describe('StorageService', () => {
       };
 
       // Мокаем чтение метаданных
-      jest.spyOn(fs, 'readFileSync').mockReturnValue(JSON.stringify([expiredFileInfo]));
+      (fs.readFileSync as jest.Mock).mockReturnValue(JSON.stringify([expiredFileInfo]));
 
       // Act
       const result = await service.searchFiles({ expiredOnly: true });
