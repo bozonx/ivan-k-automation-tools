@@ -27,9 +27,8 @@ export class FilenameUtil {
    * @returns безопасное имя файла
    */
   static generateSafeFilename(originalName: string, hash: string): string {
-    if (!originalName || typeof originalName !== 'string') {
-      // Если имя файла не предоставлено, используем дефолтное имя
-      originalName = 'file';
+    if (!originalName || typeof originalName !== 'string' || originalName.trim() === '') {
+      throw new Error('Original filename must be a non-empty string');
     }
 
     if (!HashUtil.isValidHash(hash)) {

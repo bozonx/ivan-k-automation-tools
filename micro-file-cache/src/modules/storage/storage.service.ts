@@ -61,6 +61,13 @@ export class StorageService {
   }
 
   /**
+   * Публичный метод для получения конфигурации (для тестов)
+   */
+  public getConfigForTesting(): StorageConfig {
+    return this.getConfig();
+  }
+
+  /**
    * Инициализация хранилища
    */
   private async initializeStorage(): Promise<void> {
@@ -134,11 +141,10 @@ export class StorageService {
       const hash = HashUtil.hashBuffer(fileBuffer);
 
       // Проверяем дедупликацию
-      if (config.enableDeduplication && !allowDuplicate) {
+      if (config.enableDeduplication && allowDuplicate !== false) {
         const existingFile = await this.findFileByHash(hash);
         if (existingFile) {
-          // Увеличиваем счетчик ссылок на существующий файл
-          await this.incrementFileReference(existingFile.id);
+          // Возвращаем существующий файл без создания нового
           return {
             success: true,
             data: existingFile,

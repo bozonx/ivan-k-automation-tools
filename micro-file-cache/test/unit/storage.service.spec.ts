@@ -151,7 +151,7 @@ describe('StorageService', () => {
 
   it('should have empty allowedMimeTypes by default (allowing all types)', () => {
     // Проверяем, что по умолчанию разрешены все типы файлов
-    expect(service['config'].allowedMimeTypes).toEqual([]);
+    expect(service.getConfigForTesting().allowedMimeTypes).toEqual([]);
   });
 
   describe('saveFile', () => {
