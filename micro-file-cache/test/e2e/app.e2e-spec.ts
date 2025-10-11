@@ -234,13 +234,13 @@ describe('AppController (e2e)', () => {
 
     it('should list files', async () => {
       // Загружаем несколько файлов
-      await request(app.getHttpServer())
+      const response1 = await request(app.getHttpServer())
         .post('/api/v1/files')
         .set('Authorization', `Bearer ${config.validToken}`)
         .attach('file', Buffer.from('test file 1'), 'test1.txt')
         .expect(201);
 
-      await request(app.getHttpServer())
+      const response2 = await request(app.getHttpServer())
         .post('/api/v1/files')
         .set('Authorization', `Bearer ${config.validToken}`)
         .attach('file', Buffer.from('test file 2'), 'test2.txt')
@@ -385,7 +385,7 @@ describe('AppController (e2e)', () => {
 
     it('should handle allowDuplicate parameter', async () => {
       // Загружаем первый файл
-      await request(app.getHttpServer())
+      const response1 = await request(app.getHttpServer())
         .post('/api/v1/files')
         .set('Authorization', `Bearer ${config.validToken}`)
         .attach('file', Buffer.from('same content'), 'test1.txt')
@@ -393,14 +393,17 @@ describe('AppController (e2e)', () => {
         .expect(201);
 
       // Загружаем второй файл с тем же содержимым
-      const response = await request(app.getHttpServer())
+      const response2 = await request(app.getHttpServer())
         .post('/api/v1/files')
         .set('Authorization', `Bearer ${config.validToken}`)
         .attach('file', Buffer.from('same content'), 'test2.txt')
         .field('allowDuplicate', 'true')
         .expect(201);
 
-      expect(response.body.file.originalName).toBe('test2.txt');
+      // Файлы должны иметь разные ID, но одинаковый хеш
+      expect(response1.body.file.id).not.toBe(response2.body.file.id);
+      expect(response1.body.file.hash).toBe(response2.body.file.hash);
+      expect(response2.body.file.originalName).toBe('test2.txt');
     });
   });
 

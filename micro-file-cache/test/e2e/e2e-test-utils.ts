@@ -111,7 +111,8 @@ export async function cleanupTestApp(
  */
 export async function clearTestStorage(testStoragePath: string): Promise<void> {
   if (await fs.pathExists(testStoragePath)) {
-    await fs.emptyDir(testStoragePath);
+    await fs.remove(testStoragePath);
+    await fs.ensureDir(testStoragePath);
   }
 }
 

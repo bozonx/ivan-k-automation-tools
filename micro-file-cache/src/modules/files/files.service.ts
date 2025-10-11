@@ -114,6 +114,7 @@ export class FilesService {
         file: validatedParams.file,
         ttl: validatedParams.ttl,
         metadata: validatedParams.metadata,
+        allowDuplicate: validatedParams.allowDuplicate,
       };
 
       // Если указано кастомное имя файла, добавляем его в метаданные

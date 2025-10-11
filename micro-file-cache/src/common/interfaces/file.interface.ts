@@ -101,6 +101,9 @@ export interface CreateFileParams {
 
   /** Дополнительные метаданные */
   metadata?: Record<string, any>;
+
+  /** Разрешить дубликаты файлов */
+  allowDuplicate?: boolean;
 }
 
 /**

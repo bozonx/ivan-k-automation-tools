@@ -101,7 +101,7 @@ export class StorageService {
    */
   async saveFile(params: CreateFileParams): Promise<FileOperationResult> {
     try {
-      const { file, ttl, metadata = {} } = params;
+      const { file, ttl, metadata = {}, allowDuplicate = true } = params;
       const config = this.getConfig();
 
       // Инициализируем хранилище если оно еще не инициализировано
@@ -134,7 +134,7 @@ export class StorageService {
       const hash = HashUtil.hashBuffer(fileBuffer);
 
       // Проверяем дедупликацию
-      if (config.enableDeduplication) {
+      if (config.enableDeduplication && !allowDuplicate) {
         const existingFile = await this.findFileByHash(hash);
         if (existingFile) {
           // Увеличиваем счетчик ссылок на существующий файл
@@ -533,7 +533,7 @@ export class StorageService {
 
       // Записываем во временный файл
       const jsonContent = JSON.stringify(metadata, null, 2);
-      fs.writeFileSync(tempPath, jsonContent, 'utf8');
+      await fs.writeFile(tempPath, jsonContent, 'utf8');
 
       // Проверяем, что временный файл был создан
       if (!(await fs.pathExists(tempPath))) {
