@@ -12,16 +12,14 @@ import {
   Body,
   Query,
   Res,
-  UseInterceptors,
+  Req,
   BadRequestException,
   NotFoundException,
   InternalServerErrorException,
   HttpStatus,
   HttpCode,
 } from '@nestjs/common';
-import { UploadedFile } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
-import { Response } from 'express';
+import { FastifyReply, FastifyRequest } from 'fastify';
 import {
   ApiTags,
   ApiOperation,
@@ -62,7 +60,6 @@ export class FilesController {
    */
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  @UseInterceptors(FileInterceptor('file'))
   @ApiOperation({
     summary: 'Upload file',
     description: 'Загружает файл в хранилище с автоматической дедупликацией',
@@ -133,21 +130,40 @@ export class FilesController {
     status: 500,
     description: 'Internal server error',
   })
-  async uploadFile(
-    @UploadedFile() file: UploadedFileInterface,
-    @Body() uploadDto: UploadFileDto,
-  ): Promise<UploadFileResponseDto> {
-    if (!file) {
-      throw new BadRequestException('No file provided');
-    }
-
+  async uploadFile(@Req() request: FastifyRequest): Promise<UploadFileResponseDto> {
     try {
+      // Получаем данные из multipart формы
+      const data = await (request as any).file();
+
+      if (!data) {
+        throw new BadRequestException('No file provided');
+      }
+
+      // Получаем дополнительные параметры из полей формы
+      const ttl = data.fields.ttl ? parseInt(data.fields.ttl.value as string) : 3600;
+      const metadata = data.fields.metadata ? JSON.parse(data.fields.metadata.value as string) : {};
+      const allowDuplicate = data.fields.allowDuplicate
+        ? data.fields.allowDuplicate.value === 'true'
+        : true;
+      const customFilename = data.fields.customFilename
+        ? (data.fields.customFilename.value as string)
+        : undefined;
+
+      // Создаем объект файла в формате, ожидаемом сервисом
+      const file: UploadedFileInterface = {
+        originalname: data.filename,
+        mimetype: data.mimetype,
+        size: data.file.bytesRead,
+        buffer: await data.toBuffer(),
+        path: '',
+      };
+
       const result = await this.filesService.uploadFile({
         file,
-        ttl: uploadDto.ttl,
-        metadata: uploadDto.metadata,
-        allowDuplicate: uploadDto.allowDuplicate,
-        customFilename: uploadDto.customFilename,
+        ttl,
+        metadata,
+        allowDuplicate,
+        customFilename,
       });
 
       return result;
@@ -290,7 +306,7 @@ export class FilesController {
   async downloadFile(
     @Param('id') fileId: string,
     @Query('includeExpired') includeExpired: boolean,
-    @Res() res: Response,
+    @Res() res: FastifyReply,
   ): Promise<void> {
     try {
       const result = await this.filesService.downloadFile({
@@ -301,14 +317,12 @@ export class FilesController {
       const { buffer, fileInfo } = result;
 
       // Устанавливаем заголовки для скачивания
-      res.set({
-        'Content-Type': fileInfo.mimeType,
-        'Content-Length': fileInfo.size.toString(),
-        'Content-Disposition': `attachment; filename="${fileInfo.originalName}"`,
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        Pragma: 'no-cache',
-        Expires: '0',
-      });
+      res.header('Content-Type', fileInfo.mimeType);
+      res.header('Content-Length', fileInfo.size.toString());
+      res.header('Content-Disposition', `attachment; filename="${fileInfo.originalName}"`);
+      res.header('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.header('Pragma', 'no-cache');
+      res.header('Expires', '0');
 
       // Отправляем файл
       res.send(buffer);

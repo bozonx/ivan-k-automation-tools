@@ -462,18 +462,24 @@ export class FilesService {
    * Преобразование FileInfo в FileResponseDto
    */
   private convertToFileResponseDto(fileInfo: FileInfo): FileResponseDto {
+    // Преобразуем даты в объекты Date, если они являются строками
+    const uploadedAt =
+      typeof fileInfo.uploadedAt === 'string' ? new Date(fileInfo.uploadedAt) : fileInfo.uploadedAt;
+    const expiresAt =
+      typeof fileInfo.expiresAt === 'string' ? new Date(fileInfo.expiresAt) : fileInfo.expiresAt;
+
     return {
       id: fileInfo.id,
       originalName: fileInfo.originalName,
       mimeType: fileInfo.mimeType,
       size: fileInfo.size,
-      uploadedAt: fileInfo.uploadedAt.toISOString(),
+      uploadedAt: uploadedAt.toISOString(),
       ttl: fileInfo.ttl,
-      expiresAt: fileInfo.expiresAt.toISOString(),
+      expiresAt: expiresAt.toISOString(),
       metadata: fileInfo.metadata,
       hash: fileInfo.hash,
-      isExpired: dayjs().isAfter(dayjs(fileInfo.expiresAt)),
-      timeRemaining: Math.max(0, Math.floor((fileInfo.expiresAt.getTime() - Date.now()) / 1000)),
+      isExpired: dayjs().isAfter(dayjs(expiresAt)),
+      timeRemaining: Math.max(0, Math.floor((expiresAt.getTime() - Date.now()) / 1000)),
     };
   }
 
