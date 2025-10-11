@@ -11,7 +11,7 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import * as dayjs from 'dayjs';
+import dayjs from 'dayjs';
 
 import { StorageService } from '../storage/storage.service';
 import { ValidationUtil } from '../../common/utils/validation.util';

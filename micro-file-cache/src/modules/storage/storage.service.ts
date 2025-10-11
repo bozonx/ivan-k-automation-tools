@@ -7,7 +7,7 @@ import { ConfigService } from '@nestjs/config';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import { fileTypeFromBuffer } from 'file-type';
-import * as dayjs from 'dayjs';
+import dayjs from 'dayjs';
 import { v4 as uuidv4 } from 'uuid';
 
 import {

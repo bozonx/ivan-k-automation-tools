@@ -43,7 +43,7 @@
 
 - Node.js 22 LTS
 - pnpm (рекомендуется) или npm
-- Docker (опционально)
+- Docker (для контейнеризации)
 
 ### Установка
 
@@ -372,6 +372,24 @@ pnpm run lint
 # Форматирование кода
 pnpm run format
 ```
+
+### Docker
+
+```bash
+# Продакшн режим с Docker Compose
+docker-compose up -d
+
+# Режим разработки
+docker-compose --profile dev up -d micro-file-cache-dev
+
+# Проверка статуса
+docker-compose ps
+
+# Остановка
+docker-compose down
+```
+
+Подробная документация по Docker: [DOCKER_USAGE.md](./DOCKER_USAGE.md)
 
 ### Ключевые особенности реализации
 

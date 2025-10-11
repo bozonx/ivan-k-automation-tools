@@ -1,0 +1,82 @@
+services:
+  # Основной сервис micro-file-cache
+  micro-file-cache:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: micro-file-cache
+    ports:
+      - '3000:80'
+    env_file:
+      - env.docker
+    volumes:
+      # Монтируем директорию для хранения файлов
+      - file_cache_storage:/app/storage
+      # Монтируем логи (опционально)
+      - file_cache_logs:/app/logs
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "require('http').get('http://localhost:80/api/v1/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) }).on('error', () => process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - micro-file-cache-network
+
+  # Сервис для разработки (с hot reload)
+  micro-file-cache-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: micro-file-cache-dev
+    ports:
+      - '3001:3000'
+    environment:
+      - NODE_ENV=development
+      - LISTEN_HOST=0.0.0.0
+      - LISTEN_PORT=3000
+      - AUTH_ENABLED=false
+      - STORAGE_PATH=/app/storage
+      - MAX_FILE_SIZE=104857600
+      - ALLOWED_MIME_TYPES=
+      - DATE_FORMAT=YYYY-MM
+      - ENABLE_DEDUPLICATION=true
+      - TTL_MAX_MINUTES=10080
+      - CLEANUP_INTERVAL=60000
+      - LOG_LEVEL=debug
+      - MAX_FILES_COUNT=1000
+      - MAX_STORAGE_SIZE=1073741824
+    volumes:
+      # Монтируем исходный код для hot reload
+      - .:/app
+      - /app/node_modules
+      - file_cache_storage_dev:/app/storage
+    command: pnpm run start:dev
+    restart: unless-stopped
+    networks:
+      - micro-file-cache-network
+    profiles:
+      - dev
+
+volumes:
+  # Постоянное хранилище для продакшн данных
+  file_cache_storage:
+    driver: local
+  # Постоянное хранилище для логов
+  file_cache_logs:
+    driver: local
+  # Хранилище для разработки
+  file_cache_storage_dev:
+    driver: local
+
+networks:
+  micro-file-cache-network:
+    driver: bridge
