@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { APP_PIPE } from '@nestjs/core';
+import { APP_PIPE, APP_GUARD } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
 import { getConfig } from './config/app.config';
@@ -9,6 +9,7 @@ import { StorageModule } from './modules/storage/storage.module';
 import { FilesModule } from './modules/files/files.module';
 import { CleanupModule } from './modules/cleanup/cleanup.module';
 import { GlobalValidationPipe } from './common/pipes/validation.pipe';
+import { AuthGuard } from './common/guards/auth.guard';
 
 @Module({
   imports: [
@@ -37,6 +38,11 @@ import { GlobalValidationPipe } from './common/pipes/validation.pipe';
     {
       provide: APP_PIPE,
       useClass: GlobalValidationPipe,
+    },
+    // Глобальный guard аутентификации
+    {
+      provide: APP_GUARD,
+      useClass: AuthGuard,
     },
   ],
 })

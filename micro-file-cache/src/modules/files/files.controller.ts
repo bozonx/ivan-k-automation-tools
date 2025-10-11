@@ -27,8 +27,8 @@ import {
   ApiConsumes,
   ApiParam,
   ApiQuery,
-  ApiBearerAuth,
   ApiBody,
+  ApiBearerAuth,
 } from '@nestjs/swagger';
 
 import { FilesService } from './files.service';
@@ -50,7 +50,7 @@ import { UploadedFile as UploadedFileInterface } from '../../common/interfaces/f
  */
 @ApiTags('Files')
 @Controller('files')
-@ApiBearerAuth() // Требует Bearer токен для всех endpoints
+@ApiBearerAuth() // Swagger документация для Bearer аутентификации
 export class FilesController {
   constructor(private readonly filesService: FilesService) {}
 
@@ -117,10 +117,6 @@ export class FilesController {
         errorCode: { type: 'string', example: 'VALIDATION_ERROR' },
       },
     },
-  })
-  @ApiResponse({
-    status: 401,
-    description: 'Unauthorized - invalid or missing token',
   })
   @ApiResponse({
     status: 413,
@@ -206,10 +202,6 @@ export class FilesController {
     description: 'Bad request - invalid file ID',
   })
   @ApiResponse({
-    status: 401,
-    description: 'Unauthorized - invalid or missing token',
-  })
-  @ApiResponse({
     status: 404,
     description: 'File not found or expired',
   })
@@ -292,10 +284,6 @@ export class FilesController {
     description: 'Bad request - invalid file ID',
   })
   @ApiResponse({
-    status: 401,
-    description: 'Unauthorized - invalid or missing token',
-  })
-  @ApiResponse({
     status: 404,
     description: 'File not found or expired',
   })
@@ -368,10 +356,6 @@ export class FilesController {
   @ApiResponse({
     status: 400,
     description: 'Bad request - invalid file ID',
-  })
-  @ApiResponse({
-    status: 401,
-    description: 'Unauthorized - invalid or missing token',
   })
   @ApiResponse({
     status: 404,
@@ -475,10 +459,6 @@ export class FilesController {
     type: ListFilesResponseDto,
   })
   @ApiResponse({
-    status: 401,
-    description: 'Unauthorized - invalid or missing token',
-  })
-  @ApiResponse({
     status: 500,
     description: 'Internal server error',
   })
@@ -523,10 +503,6 @@ export class FilesController {
     status: 200,
     description: 'Statistics retrieved successfully',
     type: FileStatsResponseDto,
-  })
-  @ApiResponse({
-    status: 401,
-    description: 'Unauthorized - invalid or missing token',
   })
   @ApiResponse({
     status: 500,
@@ -578,10 +554,6 @@ export class FilesController {
   @ApiResponse({
     status: 400,
     description: 'Bad request - invalid file ID',
-  })
-  @ApiResponse({
-    status: 401,
-    description: 'Unauthorized - invalid or missing token',
   })
   @ApiResponse({
     status: 500,
