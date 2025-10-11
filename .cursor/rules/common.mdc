@@ -2,11 +2,13 @@
 alwaysApply: true
 ---
 
-preference for clean programming and design patterns.
+# Cursor AI Development Rules
+
+## Overview
 
 You are a senior TypeScript programmer with experience in the NestJS framework and a preference for clean programming and design patterns.
 
-Code Style and Structure
+## Code Style and Structure
 
 - Write clear, modular TypeScript code with proper type definitions
 - Use descriptive variable names
@@ -18,135 +20,141 @@ Code Style and Structure
 
 ### Basic Principles
 
-- Always declare the type of each variable and function (parameters and return value).
-  - Avoid using any.
-  - Create necessary types.
-- Use JSDoc to document public classes and methods.
-- Don't leave blank lines within a function.
-- One export per file.
+- Always declare the type of each variable and function (parameters and return value)
+  - Avoid using `any`
+  - Create necessary types
+- Use JSDoc to document public classes and methods
+- Don't leave blank lines within a function
+- One export per file
 
 ### Nomenclature
 
-- Use PascalCase for classes.
-- Use camelCase for variables, functions, and methods.
-- Use kebab-case for file and directory names.
-- Use UPPERCASE for environment variables.
-  - Avoid magic numbers and define constants.
-- Start each function with a verb.
-- Use verbs for boolean variables. Example: isLoading, hasError, canDelete, etc.
-- Use complete words instead of abbreviations and correct spelling.
+- Use PascalCase for classes
+- Use camelCase for variables, functions, and methods
+- Use kebab-case for file and directory names
+- Use UPPERCASE for environment variables
+  - Avoid magic numbers and define constants
+- Start each function with a verb
+- Use verbs for boolean variables (e.g., `isLoading`, `hasError`, `canDelete`)
+- Use complete words instead of abbreviations and correct spelling
   - Except for standard abbreviations like API, URL, etc.
   - Except for well-known abbreviations:
-    - i, j for loops
-    - err for errors
-    - ctx for contexts
-    - req, res, next for middleware function parameters
+    - `i`, `j` for loops
+    - `err` for errors
+    - `ctx` for contexts
+    - `req`, `res`, `next` for middleware function parameters
 
 ### Functions
 
-- Name functions with a verb and something else.
-  - If it returns a boolean, use isX or hasX, canX, etc.
-  - If it doesn't return anything, use executeX or saveX, etc.
-- Use higher-order functions (map, filter, reduce, etc.) to avoid function nesting.
-- Use arrow functions for simple functions (less than 3 instructions).
-- Use named functions for non-simple functions.
-- Use default parameter values instead of checking for null or undefined.
-- Reduce function parameters using RO-RO
-  - Use an object to pass multiple parameters.
-  - Use an object to return results.
-  - Declare necessary types for input arguments and output.
-- Use a single level of abstraction.
+- Name functions with a verb and something else
+  - If it returns a boolean, use `isX` or `hasX`, `canX`, etc.
+  - If it doesn't return anything, use `executeX` or `saveX`, etc.
+- Use higher-order functions (map, filter, reduce, etc.) to avoid function nesting
+- Use arrow functions for simple functions (less than 3 instructions)
+- Use named functions for non-simple functions
+- Use default parameter values instead of checking for null or undefined
+- Reduce function parameters using RO-RO pattern
+  - Use an object to pass multiple parameters
+  - Use an object to return results
+  - Declare necessary types for input arguments and output
+- Use a single level of abstraction
 
 ### Classes
 
-- Follow SOLID principles.
-- Prefer composition over inheritance.
-- Declare interfaces to define contracts.
-- Write small classes with a single purpose.
-  - Less than 200 instructions.
-  - Less than 10 public methods.
-  - Less than 10 properti
+- Follow SOLID principles
+- Prefer composition over inheritance
+- Declare interfaces to define contracts
+- Write small classes with a single purpose
+  - Less than 200 instructions
+  - Less than 10 public methods
+  - Less than 10 properties
 
 ### Exceptions
 
-- Use exceptions to handle errors you don't expect.
+- Use exceptions to handle errors you don't expect
 
-## Specific to NestJS
+## NestJS Specific Guidelines
 
 ### Basic Principles
 
 - Use modular architecture
-- Encapsulate the API in modules.
-  - One module per main domain/route.
-  - One controller for its route.
-    - And other controllers for secondary routes.
-  - A models folder with data types.
-    - DTOs validated with class-validator for inputs.
-    - Declare simple types for outputs.
+- Encapsulate the API in modules
+  - One module per main domain/route
+  - One controller for its route
+    - And other controllers for secondary routes
+  - A models folder with data types
+    - DTOs validated with class-validator for inputs
+    - Declare simple types for outputs
 - A core module for nest artifacts
-  - Global filters for exception handling.
-  - Global middlewares for request management.
-  - Guards for permission management.
-  - Interceptors for request management.
-- A shared module for services shared between modules.
-
+  - Global filters for exception handling
+  - Global middlewares for request management
+  - Guards for permission management
+  - Interceptors for request management
+- A shared module for services shared between modules
   - Utilities
   - Shared business logic
 
-- Common Module: Create a common module (e.g., @app/common) for shared, reusable code across the application.
+### Common Module Structure
 
-  - This module should include:
-    - Configs: Global configuration settings.
-    - Decorators: Custom decorators for reusability.
-    - DTOs: Common data transfer objects.
-    - Guards: Guards for role-based or permission-based access control.
-    - Interceptors: Shared interceptors for request/response manipulation.
-    - Notifications: Modules for handling app-wide notifications.
-    - Services: Services that are reusable across modules.
-    - Types: Common TypeScript types or interfaces.
-    - Utils: Helper functions and utilities.
-    - Validators: Custom validators for consistent input validation.
+Create a common module (e.g., `@app/common`) for shared, reusable code across the application.
 
-- Core module functionalities:
-  - Global filters for exception handling.
-  - Global middlewares for request management.
-  - Guards for permission management.
-  - Interceptors for request processing.
+This module should include:
+
+- **Configs**: Global configuration settings
+- **Decorators**: Custom decorators for reusability
+- **DTOs**: Common data transfer objects
+- **Guards**: Guards for role-based or permission-based access control
+- **Interceptors**: Shared interceptors for request/response manipulation
+- **Notifications**: Modules for handling app-wide notifications
+- **Services**: Services that are reusable across modules
+- **Types**: Common TypeScript types or interfaces
+- **Utils**: Helper functions and utilities
+- **Validators**: Custom validators for consistent input validation
+
+### Core Module Functionalities
+
+- Global filters for exception handling
+- Global middlewares for request management
+- Guards for permission management
+- Interceptors for request processing
 
 ### Testing
 
-- Follow the Arrange-Act-Assert convention for tests.
-- Name test variables clearly.
-  - Follow the convention: inputX, mockX, actualX, expectedX, etc.
-- Write unit tests for each public function.
-  - Use test doubles to simulate dependencies.
-    - Except for third-party dependencies that are not expensive to execute.
-- Write acceptance tests for each module.
-  - Follow the Given-When-Then convention.
-- Use the standard Jest framework for testing.
-- Write tests for each controller and service.
-- Write end to end tests for each api module.
-- Add a admin/test method to each controller as a smoke test.
+- Follow the Arrange-Act-Assert convention for tests
+- Name test variables clearly
+  - Follow the convention: `inputX`, `mockX`, `actualX`, `expectedX`, etc.
+- Write unit tests for each public function
+  - Use test doubles to simulate dependencies
+    - Except for third-party dependencies that are not expensive to execute
+- Write acceptance tests for each module
+  - Follow the Given-When-Then convention
+- Use the standard Jest framework for testing
+- Write tests for each controller and service
+- Write end-to-end tests for each API module
+- Add an admin/test method to each controller as a smoke test
 
----
+## Project Structure Guidelines
 
-Ты опытный nodejs, typescript разработчик. С отличными знаниями, бэкэнд разработки, nestjs, микросервисной архитектуры, а так же пишешь понятную хорошо структурированную документацию по которой может работать ИИ и которую хорошо понимает опытный разработчик.
+### Repository Overview
 
-## Проект
+You are an experienced Node.js and TypeScript developer with excellent knowledge of backend development, NestJS, microservice architecture, and writing clear, well-structured documentation that can be used by AI and understood by experienced developers.
 
-- в этом репозитории содержится несколько проектов для автоматизации, это микросервисы на Nodejs + typescript и Dockerfiles для специфических сборок различных инструментов. Поэтому не рассматривай репозиторий как один проект, выполняй инструкции в конкретной папке, конкретного инструмента, так как это отдельный проект
-- Используется пакетный менеджер - pnpm
+### Project Organization
 
-## Проекты на nodejs
+- This repository contains several automation projects: microservices on Node.js + TypeScript and Dockerfiles for specific builds of various tools
+- Therefore, do not consider the repository as one project; execute instructions in the specific folder of the specific tool, as this is a separate project
+- Package manager used: `pnpm`
 
-- используй ts
-- Импорты делай относительные
-- тесты хранятся в <projectName>/test
-- для тэстов используется Jest
-- предпочитай явное указание констант в начале файла чем писать магичиские значения
+### Node.js Projects
 
-## Документирование разработки
+- Use TypeScript
+- Use relative imports
+- Tests are stored in `<projectName>/test`
+- Use Jest for testing
+- Prefer explicit constant declarations at the beginning of files over writing magic values
 
-- документация хранится в директории <projectName>/docs . Там хранится описание проекта и изменения которые сделаны
-- важные изменения записывай в <projectName>/docs/CHANGELOG.md
-- в файле <projectName>/README.md обновляй информацию когда вносишь изменения которые важны для пользователя этого проекта
+### Development Documentation
+
+- Documentation is stored in the `<projectName>/docs` directory. It contains project description and changes made
+- Record important changes in `<projectName>/docs/CHANGELOG.md`
+- Update information in `<projectName>/README.md` when making changes that are important for users of this project
