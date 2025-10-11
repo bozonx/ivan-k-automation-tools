@@ -35,7 +35,7 @@ export class StorageService {
 
   constructor(private readonly configService: ConfigService) {
     this.config = {
-      basePath: this.configService.get<string>('STORAGE_BASE_PATH', './storage'),
+      basePath: this.configService.get<string>('STORAGE_PATH', './storage'),
       maxFileSize: this.configService.get<number>('MAX_FILE_SIZE', 100 * 1024 * 1024), // 100MB
       allowedMimeTypes: this.configService.get<string[]>('ALLOWED_MIME_TYPES', []), // Пустой массив = разрешены все типы
       dateFormat: this.configService.get<string>('DATE_FORMAT', 'YYYY-MM'),

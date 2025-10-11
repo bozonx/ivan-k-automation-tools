@@ -122,7 +122,7 @@ pnpm run test:e2e -- --testTimeout=60000
 
 - `AUTH_ENABLED=true` - Включение аутентификации
 - `AUTH_SECRET_KEY` - Секретный ключ для аутентификации
-- `STORAGE_BASE_PATH` - Путь к хранилищу файлов
+- `STORAGE_PATH` - Путь к хранилищу файлов
 
 ### Настройка Jest
 
