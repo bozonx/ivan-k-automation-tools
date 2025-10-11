@@ -10,16 +10,13 @@ import { AppModule } from '../../src/app.module';
 import { getConfig } from '../../src/config/app.config';
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import * as dotenv from 'dotenv';
 
 describe('Simple E2E Test', () => {
   let app: INestApplication;
   let testStoragePath: string;
 
   beforeAll(async () => {
-    // Загружаем тестовую конфигурацию
-    const testEnvPath = path.join(__dirname, '..', '..', 'env.test');
-    dotenv.config({ path: testEnvPath });
+    // Тестовая конфигурация уже загружена автоматически через setup.ts
 
     // Создаем временную директорию для тестов в корне репозитория
     testStoragePath = path.join(

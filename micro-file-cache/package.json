@@ -78,6 +78,9 @@
       "<rootDir>/test/**/*.spec.ts",
       "<rootDir>/src/**/*.spec.ts"
     ],
+    "setupFilesAfterEnv": [
+      "<rootDir>/test/setup.ts"
+    ],
     "transform": {
       "^.+\\.(t|j)s$": [
         "ts-jest",

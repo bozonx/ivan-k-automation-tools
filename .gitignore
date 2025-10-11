@@ -1,5 +1,8 @@
 test-data/
 dist/
+storage/
+temp-test-storage/
+temp-storage-*/
 
 # Logs
 logs

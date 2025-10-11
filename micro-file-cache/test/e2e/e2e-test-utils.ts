@@ -10,7 +10,6 @@ import { AppModule } from '../../src/app.module';
 import { getConfig } from '../../src/config/app.config';
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import * as dotenv from 'dotenv';
 
 /**
  * Интерфейс для конфигурации тестового приложения
@@ -31,9 +30,7 @@ export async function createTestApp(
   testName: string,
   authEnabled: boolean = true,
 ): Promise<{ app: INestApplication; config: TestAppConfig }> {
-  // Загружаем тестовую конфигурацию
-  const testEnvPath = path.join(__dirname, '..', '..', 'env.test');
-  dotenv.config({ path: testEnvPath });
+  // Тестовая конфигурация уже загружена автоматически через setup.ts
 
   // Создаем временную директорию для тестов в корне репозитория
   const testStoragePath = path.join(
