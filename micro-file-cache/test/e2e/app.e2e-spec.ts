@@ -59,6 +59,16 @@ describe('AppController (e2e)', () => {
 
     app = moduleFixture.createNestApplication<NestFastifyApplication>(new FastifyAdapter());
 
+    // Регистрируем multipart для загрузки файлов
+    await (app as NestFastifyApplication).register(require('@fastify/multipart'), {
+      limits: {
+        fileSize: config.storage.maxFileSize,
+      },
+    });
+
+    // Устанавливаем глобальный префикс для API (как в main.ts)
+    app.setGlobalPrefix(config.server.apiPrefix + '/' + config.server.apiVersion);
+
     // Настраиваем глобальные пайпы
     app.useGlobalPipes(
       new ValidationPipe({

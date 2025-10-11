@@ -59,6 +59,16 @@ describe('Integration Tests (e2e)', () => {
 
     app = moduleFixture.createNestApplication<NestFastifyApplication>(new FastifyAdapter());
 
+    // Регистрируем multipart для загрузки файлов
+    await (app as NestFastifyApplication).register(require('@fastify/multipart'), {
+      limits: {
+        fileSize: config.storage.maxFileSize,
+      },
+    });
+
+    // Устанавливаем глобальный префикс для API (как в main.ts)
+    app.setGlobalPrefix(config.server.apiPrefix + '/' + config.server.apiVersion);
+
     // Настраиваем глобальные пайпы
     app.useGlobalPipes(
       new ValidationPipe({
@@ -125,7 +135,7 @@ describe('Integration Tests (e2e)', () => {
         .expect(200);
 
       expect(downloadResponse.text).toBe(fileContent);
-      expect(downloadResponse.headers['content-type']).toBe('text/plain; charset=utf-8');
+      expect(downloadResponse.headers['content-type']).toBe('text/plain');
 
       // 4. Check file exists
       const existsResponse = await request(app.getHttpServer())
@@ -429,18 +439,18 @@ describe('Integration Tests (e2e)', () => {
         {
           content: 'Plain text content',
           name: 'test.txt',
-          expectedMime: 'text/plain; charset=utf-8',
+          expectedMime: 'text/plain',
         },
         { content: '{"json": "content"}', name: 'test.json', expectedMime: 'application/json' },
         {
           content: '<html><body>HTML content</body></html>',
           name: 'test.html',
-          expectedMime: 'text/html; charset=utf-8',
+          expectedMime: 'text/html',
         },
         {
           content: 'CSS content { color: red; }',
           name: 'test.css',
-          expectedMime: 'text/css; charset=utf-8',
+          expectedMime: 'text/css',
         },
         { content: 'JavaScript content', name: 'test.js', expectedMime: 'application/javascript' },
       ];

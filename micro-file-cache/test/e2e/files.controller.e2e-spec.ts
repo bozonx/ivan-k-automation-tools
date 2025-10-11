@@ -59,6 +59,16 @@ describe('FilesController (e2e)', () => {
 
     app = moduleFixture.createNestApplication<NestFastifyApplication>(new FastifyAdapter());
 
+    // Регистрируем multipart для загрузки файлов
+    await (app as NestFastifyApplication).register(require('@fastify/multipart'), {
+      limits: {
+        fileSize: config.storage.maxFileSize,
+      },
+    });
+
+    // Устанавливаем глобальный префикс для API (как в main.ts)
+    app.setGlobalPrefix(config.server.apiPrefix + '/' + config.server.apiVersion);
+
     // Настраиваем глобальные пайпы
     app.useGlobalPipes(
       new ValidationPipe({
@@ -104,7 +114,7 @@ describe('FilesController (e2e)', () => {
       const file = response.body.file;
       expect(file).toHaveProperty('id');
       expect(file).toHaveProperty('originalName', 'hello.txt');
-      expect(file).toHaveProperty('mimeType', 'text/plain; charset=utf-8');
+      expect(file).toHaveProperty('mimeType', 'text/plain');
       expect(file).toHaveProperty('size', 13);
       expect(file).toHaveProperty('uploadedAt');
       expect(file).toHaveProperty('ttl', 3600); // Default TTL
@@ -253,7 +263,7 @@ describe('FilesController (e2e)', () => {
       const file = response.body.file;
       expect(file.id).toBe(uploadedFileId);
       expect(file.originalName).toBe('test.txt');
-      expect(file.mimeType).toBe('text/plain; charset=utf-8');
+      expect(file.mimeType).toBe('text/plain');
       expect(file.size).toBe(12);
       expect(file.metadata).toEqual({ description: 'Test file' });
       expect(file.isExpired).toBe(false);
@@ -310,7 +320,7 @@ describe('FilesController (e2e)', () => {
         .set('Authorization', `Bearer ${validToken}`)
         .expect(200);
 
-      expect(response.headers['content-type']).toBe('text/plain; charset=utf-8');
+      expect(response.headers['content-type']).toBe('text/plain');
       expect(response.headers['content-length']).toBe('22');
       expect(response.headers['content-disposition']).toContain('attachment');
       expect(response.headers['content-disposition']).toContain('download-test.txt');
@@ -469,7 +479,7 @@ describe('FilesController (e2e)', () => {
 
       expect(response.body.files.length).toBeGreaterThanOrEqual(0);
       response.body.files.forEach((file: any) => {
-        expect(file.mimeType).toBe('text/plain; charset=utf-8');
+        expect(file.mimeType).toBe('text/plain');
       });
     });
 

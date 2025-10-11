@@ -51,8 +51,9 @@ export class StorageService {
    */
   private async initializeStorage(): Promise<void> {
     try {
-      // Создаем базовую директорию если она не существует
-      await fs.ensureDir(this.config.basePath);
+      // Создаем базовую директорию если она не существует (используем абсолютный путь)
+      const baseDir = path.resolve(this.config.basePath);
+      await fs.ensureDir(baseDir);
 
       // Создаем файл метаданных если он не существует
       if (!(await fs.pathExists(this.metadataPath))) {
@@ -441,6 +442,21 @@ export class StorageService {
       return metadata as StorageMetadata;
     } catch (error) {
       this.logger.error('Failed to load metadata', error);
+
+      // Если JSON файл поврежден, пересоздаем его
+      if (error.message.includes('JSON') || error.message.includes('Unexpected')) {
+        this.logger.warn('Metadata file is corrupted, recreating...');
+        try {
+          await fs.remove(this.metadataPath);
+          await this.initializeStorage();
+          const metadata = await fs.readJson(this.metadataPath);
+          return metadata as StorageMetadata;
+        } catch (recreateError) {
+          this.logger.error('Failed to recreate metadata file', recreateError);
+          throw new Error(`Failed to recreate metadata: ${recreateError.message}`);
+        }
+      }
+
       throw new Error(`Failed to load metadata: ${error.message}`);
     }
   }
@@ -463,7 +479,24 @@ export class StorageService {
       }
 
       metadata.lastUpdated = new Date();
-      await fs.writeJson(this.metadataPath, metadata, { spaces: 2 });
+
+      // Атомарная запись: сначала записываем во временный файл, затем переименовываем
+      const tempPath = this.metadataPath + '.tmp';
+
+      // Убеждаемся, что директория существует (используем абсолютный путь)
+      const metadataDir = path.resolve(path.dirname(this.metadataPath));
+      await fs.ensureDir(metadataDir);
+
+      // Также убеждаемся, что базовая директория storage существует
+      const baseDir = path.resolve(this.config.basePath);
+      await fs.ensureDir(baseDir);
+
+      // Убеждаемся, что временный файл создается в той же директории
+      const tempDir = path.resolve(path.dirname(tempPath));
+      await fs.ensureDir(tempDir);
+
+      await fs.writeJson(tempPath, metadata, { spaces: 2 });
+      await fs.move(tempPath, this.metadataPath, { overwrite: true });
     } catch (error) {
       this.logger.error('Failed to update metadata', error);
       throw new Error(`Failed to update metadata: ${error.message}`);

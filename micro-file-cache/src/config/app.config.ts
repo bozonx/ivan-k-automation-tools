@@ -196,6 +196,7 @@ export const defaultConfig: AppConfig = {
       'text/csv',
       'application/zip',
       'application/x-zip-compressed',
+      'application/octet-stream',
     ],
     dateFormat: 'YYYY-MM',
     enableDeduplication: true,

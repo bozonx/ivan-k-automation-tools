@@ -28,7 +28,8 @@ export class FilenameUtil {
    */
   static generateSafeFilename(originalName: string, hash: string): string {
     if (!originalName || typeof originalName !== 'string') {
-      throw new Error('Original filename must be a non-empty string');
+      // Если имя файла не предоставлено, используем дефолтное имя
+      originalName = 'file';
     }
 
     if (!HashUtil.isValidHash(hash)) {
@@ -107,6 +108,12 @@ export class FilenameUtil {
     // Если имя стало пустым, используем "file"
     if (!sanitized) {
       sanitized = 'file';
+    }
+
+    // Ограничиваем длину имени файла (оставляем место для хеша и расширения)
+    const maxLength = 200; // Оставляем место для хеша (8 символов) + подчеркивание + расширение
+    if (sanitized.length > maxLength) {
+      sanitized = sanitized.substring(0, maxLength);
     }
 
     return sanitized;

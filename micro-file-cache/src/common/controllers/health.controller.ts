@@ -3,7 +3,7 @@ import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { HealthResponse, HealthCheck } from '../interfaces/api.interface';
 import { getConfig } from '../../config/app.config';
 import * as os from 'os';
-import * as fs from 'fs/promises';
+import * as fs from 'fs-extra';
 import * as path from 'path';
 
 /**
@@ -104,6 +104,9 @@ export class HealthController {
     const storagePath = config.storage.basePath;
 
     try {
+      // Создаем директорию хранилища если её нет
+      await fs.ensureDir(storagePath);
+
       // Проверяем доступность директории хранилища
       await fs.access(storagePath);
 
