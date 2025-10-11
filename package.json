@@ -1,13 +1,13 @@
 {
   "name": "ivan-k-automation-tools",
   "version": "0.1.0",
-  "description": "",
+  "description": "Набор микросервисов и инструментов для автоматизации",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "packageManager": "pnpm@10.13.1"
 }
