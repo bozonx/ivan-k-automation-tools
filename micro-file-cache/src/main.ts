@@ -21,6 +21,13 @@ async function bootstrap() {
       }),
     );
 
+    // Регистрируем multipart для загрузки файлов
+    await app.register(require('@fastify/multipart'), {
+      limits: {
+        fileSize: config.storage.maxFileSize,
+      },
+    });
+
     // Настройка глобальных фильтров и пайпов
     app.useGlobalFilters(new GlobalExceptionFilter());
 

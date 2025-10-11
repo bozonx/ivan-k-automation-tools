@@ -7,7 +7,7 @@ import { ConfigService } from '@nestjs/config';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import { fileTypeFromBuffer } from 'file-type';
-import dayjs from 'dayjs';
+import * as dayjs from 'dayjs';
 import { v4 as uuidv4 } from 'uuid';
 
 import {
@@ -89,8 +89,8 @@ export class StorageService {
         };
       }
 
-      // Читаем содержимое файла
-      const fileBuffer = await fs.readFile(file.path);
+      // Читаем содержимое файла (из buffer или из path)
+      const fileBuffer = file.buffer || (await fs.readFile(file.path));
 
       // Определяем MIME тип файла
       const detectedType = await fileTypeFromBuffer(fileBuffer);
@@ -157,8 +157,10 @@ export class StorageService {
       // Обновляем метаданные хранилища
       await this.updateMetadata(fileInfo, 'add');
 
-      // Удаляем временный файл
-      await fs.remove(file.path);
+      // Удаляем временный файл только если он был загружен через path
+      if (file.path && !file.buffer) {
+        await fs.remove(file.path);
+      }
 
       this.logger.log(`File saved successfully: ${fileId}`);
       return {
