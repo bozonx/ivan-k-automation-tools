@@ -94,6 +94,22 @@ export class StorageService {
         };
         await fs.writeJson(this.metadataPath, initialMetadata, { spaces: 2 });
         this.logger.log('Storage initialized with empty metadata');
+      } else {
+        // Проверяем, что существующий файл валиден
+        try {
+          await fs.readJson(this.metadataPath);
+        } catch (error) {
+          this.logger.warn('Existing metadata file is corrupted, recreating...');
+          await fs.remove(this.metadataPath);
+          const initialMetadata: StorageMetadata = {
+            version: '1.0.0',
+            lastUpdated: new Date(),
+            totalFiles: 0,
+            totalSize: 0,
+            files: {},
+          };
+          await fs.writeJson(this.metadataPath, initialMetadata, { spaces: 2 });
+        }
       }
 
       this.logger.log(`Storage initialized at: ${config.basePath}`);
@@ -114,16 +130,24 @@ export class StorageService {
       // Инициализируем хранилище если оно еще не инициализировано
       await this.initializeStorage();
 
-      // Валидация размера файла
-      if (file.size > config.maxFileSize) {
-        return {
-          success: false,
-          error: `File size ${file.size} exceeds maximum allowed size ${config.maxFileSize}`,
-        };
-      }
+      // Убеждаемся, что директория существует
+      await fs.ensureDir(config.basePath);
+
+      // Валидация размера файла будет выполнена после чтения буфера
 
       // Читаем содержимое файла (из buffer или из path)
       const fileBuffer = file.buffer || (await fs.readFile(file.path));
+
+      // Используем реальный размер буфера вместо переданного размера
+      const actualFileSize = fileBuffer.length;
+
+      // Валидация размера файла
+      if (actualFileSize > config.maxFileSize) {
+        return {
+          success: false,
+          error: `File size ${actualFileSize} exceeds maximum allowed size ${config.maxFileSize}`,
+        };
+      }
 
       // Определяем MIME тип файла
       const detectedType = await fileTypeFromBuffer(fileBuffer);
@@ -144,10 +168,25 @@ export class StorageService {
       if (config.enableDeduplication && allowDuplicate !== false) {
         const existingFile = await this.findFileByHash(hash);
         if (existingFile) {
-          // Возвращаем существующий файл без создания нового
+          // Если файл уже существует и дедупликация включена,
+          // создаем новую запись с новым ID, но используем тот же файл
+          const newFileId = uuidv4();
+          const newFileInfo: FileInfo = {
+            ...existingFile,
+            id: newFileId,
+            originalName: file.originalname, // Используем новое имя файла
+            uploadedAt: new Date(),
+            expiresAt: dayjs().add(ttl, 'seconds').toDate(),
+            ttl,
+            metadata: { ...existingFile.metadata, ...metadata },
+          };
+
+          // Обновляем метаданные с новым файлом
+          await this.updateMetadata(newFileInfo, 'add');
+
           return {
             success: true,
-            data: existingFile,
+            data: newFileInfo,
           };
         }
       }
@@ -174,7 +213,7 @@ export class StorageService {
         originalName: file.originalname,
         storedName: storedFilename,
         mimeType,
-        size: file.size,
+        size: actualFileSize,
         hash,
         uploadedAt: new Date(),
         ttl,
@@ -462,12 +501,12 @@ export class StorageService {
    */
   private async loadMetadata(): Promise<StorageMetadata> {
     try {
-      // Инициализируем хранилище если оно еще не инициализировано
-      await this.initializeStorage();
-
       // Получаем конфигурацию для правильного пути
       const config = this.getConfig();
       const metadataPath = path.join(config.basePath, 'data.json');
+
+      // Убеждаемся, что директория существует
+      await fs.ensureDir(config.basePath);
 
       // Проверяем и инициализируем хранилище если необходимо
       if (!(await fs.pathExists(metadataPath))) {
@@ -479,13 +518,25 @@ export class StorageService {
     } catch (error) {
       this.logger.error('Failed to load metadata', error);
 
-      // Если JSON файл поврежден, пересоздаем его
-      if (error.message.includes('JSON') || error.message.includes('Unexpected')) {
-        this.logger.warn('Metadata file is corrupted, recreating...');
+      // Если JSON файл поврежден или не существует, пересоздаем его
+      if (
+        error.message.includes('JSON') ||
+        error.message.includes('Unexpected') ||
+        error.code === 'ENOENT'
+      ) {
+        this.logger.warn('Metadata file is corrupted or missing, recreating...');
         try {
           const config = this.getConfig();
           const metadataPath = path.join(config.basePath, 'data.json');
-          await fs.remove(metadataPath);
+
+          // Убеждаемся, что директория существует
+          await fs.ensureDir(config.basePath);
+
+          // Удаляем файл если он существует
+          if (await fs.pathExists(metadataPath)) {
+            await fs.remove(metadataPath);
+          }
+
           await this.initializeStorage();
           const metadata = await fs.readJson(metadataPath);
           return metadata as StorageMetadata;
@@ -507,6 +558,10 @@ export class StorageService {
       // Инициализируем хранилище если оно еще не инициализировано
       await this.initializeStorage();
 
+      // Убеждаемся, что директория существует
+      const config = this.getConfig();
+      await fs.ensureDir(config.basePath);
+
       const metadata = await this.loadMetadata();
 
       if (operation === 'add') {
@@ -521,8 +576,7 @@ export class StorageService {
 
       metadata.lastUpdated = new Date();
 
-      // Получаем конфигурацию для правильного пути
-      const config = this.getConfig();
+      // Получаем путь к файлу метаданных
       const metadataPath = path.join(config.basePath, 'data.json');
 
       // Убеждаемся, что директория существует
@@ -530,12 +584,10 @@ export class StorageService {
       await fs.ensureDir(metadataDir);
 
       // Атомарная запись: сначала записываем во временный файл, затем переименовываем
-      const tempPath = path.join(metadataDir, 'data.json.tmp');
-
-      // Убеждаемся, что временный файл не существует
-      if (await fs.pathExists(tempPath)) {
-        await fs.remove(tempPath);
-      }
+      const tempPath = path.join(
+        metadataDir,
+        `data.json.tmp.${Date.now()}.${Math.random().toString(36).substr(2, 9)}`,
+      );
 
       // Записываем во временный файл
       const jsonContent = JSON.stringify(metadata, null, 2);

@@ -43,6 +43,7 @@ import {
 } from './dto/file-response.dto';
 import { HealthResponseDto } from './dto/health-response.dto';
 import { UploadedFile as UploadedFileInterface } from '../../common/interfaces/file.interface';
+import { ValidationUtil } from '../../common/utils/validation.util';
 
 /**
  * Контроллер для работы с файлами
@@ -137,7 +138,16 @@ export class FilesController {
 
       // Получаем дополнительные параметры из полей формы
       const ttl = data.fields.ttl ? parseInt(data.fields.ttl.value as string) : 3600;
-      const metadata = data.fields.metadata ? JSON.parse(data.fields.metadata.value as string) : {};
+
+      let metadata = {};
+      if (data.fields.metadata) {
+        try {
+          metadata = JSON.parse(data.fields.metadata.value as string);
+        } catch (error) {
+          throw new BadRequestException('Invalid metadata JSON format');
+        }
+      }
+
       const allowDuplicate = data.fields.allowDuplicate
         ? data.fields.allowDuplicate.value === 'true'
         : true;
@@ -146,11 +156,12 @@ export class FilesController {
         : undefined;
 
       // Создаем объект файла в формате, ожидаемом сервисом
+      const fileBuffer = await data.toBuffer();
       const file: UploadedFileInterface = {
-        originalname: data.filename,
-        mimetype: data.mimetype,
-        size: data.file.bytesRead,
-        buffer: await data.toBuffer(),
+        originalname: data.filename || 'unknown',
+        mimetype: data.mimetype || 'application/octet-stream',
+        size: fileBuffer.length,
+        buffer: fileBuffer,
         path: '',
       };
 
@@ -564,6 +575,14 @@ export class FilesController {
     @Query('includeExpired') includeExpired?: boolean,
   ): Promise<{ exists: boolean; fileId: string; isExpired?: boolean }> {
     try {
+      // Валидация ID файла
+      const idValidation = ValidationUtil.validateFileId(fileId);
+      if (!idValidation.isValid) {
+        throw new BadRequestException(
+          `File ID validation failed: ${idValidation.errors.join(', ')}`,
+        );
+      }
+
       const exists = await this.filesService.fileExists(fileId, includeExpired === true);
 
       // Если файл существует, получаем дополнительную информацию

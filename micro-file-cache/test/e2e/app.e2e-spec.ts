@@ -313,11 +313,11 @@ describe('AppController (e2e)', () => {
         .expect(404);
     });
 
-    it('should return 404 for invalid file ID format', () => {
+    it('should return 400 for invalid file ID format', () => {
       return request(app.getHttpServer())
         .get('/api/v1/files/invalid-id')
         .set('Authorization', `Bearer ${config.validToken}`)
-        .expect(404);
+        .expect(400);
     });
 
     it('should return 400 for upload without file', () => {
@@ -337,13 +337,13 @@ describe('AppController (e2e)', () => {
         .expect(400);
     });
 
-    it('should return 500 for invalid metadata JSON', () => {
+    it('should return 400 for invalid metadata JSON', () => {
       return request(app.getHttpServer())
         .post('/api/v1/files')
         .set('Authorization', `Bearer ${config.validToken}`)
         .attach('file', Buffer.from('test'), 'test.txt')
         .field('metadata', 'invalid json')
-        .expect(500);
+        .expect(400);
     });
   });
 
