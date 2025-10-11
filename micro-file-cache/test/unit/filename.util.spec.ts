@@ -1,3 +1,4 @@
+/// <reference types="jest" />
 import { FilenameUtil } from '../../src/common/utils/filename.util';
 
 describe('FilenameUtil', () => {
