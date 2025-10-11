@@ -30,9 +30,7 @@ export async function createTestApp(
   testName: string,
   authEnabled: boolean = true,
 ): Promise<{ app: INestApplication; config: TestAppConfig }> {
-  // Тестовая конфигурация уже загружена автоматически через setup.ts
-
-  // Создаем временную директорию для тестов в корне репозитория
+  // Создаем временную директорию для тестов
   const testStoragePath = path.join(
     __dirname,
     '..',
@@ -44,32 +42,18 @@ export async function createTestApp(
   );
   await fs.ensureDir(testStoragePath);
 
-  // Получаем конфигурацию для тестов
+  // Получаем конфигурацию (env.test уже загружен через setup.ts)
   const config = getConfig();
   const validToken = config.auth.secretKey || 'test-secret-key';
 
+  // Переопределяем переменные окружения для тестов
+  process.env.STORAGE_PATH = testStoragePath;
+  process.env.AUTH_ENABLED = authEnabled.toString();
+  process.env.AUTH_SECRET_KEY = validToken;
+
   const moduleFixture: TestingModule = await Test.createTestingModule({
     imports: [AppModule],
-  })
-    .overrideProvider('ConfigService')
-    .useValue({
-      get: (key: string) => {
-        const testConfig = {
-          ...config,
-          storage: {
-            ...config.storage,
-            basePath: testStoragePath,
-          },
-          auth: {
-            ...config.auth,
-            enabled: authEnabled,
-            secretKey: validToken,
-          },
-        };
-        return testConfig[key] || config[key];
-      },
-    })
-    .compile();
+  }).compile();
 
   const app = moduleFixture.createNestApplication<NestFastifyApplication>(new FastifyAdapter());
 

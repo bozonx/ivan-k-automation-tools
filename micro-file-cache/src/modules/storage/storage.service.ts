@@ -30,20 +30,34 @@ import { FilenameUtil } from '../../common/utils/filename.util';
 @Injectable()
 export class StorageService {
   private readonly logger = new Logger(StorageService.name);
-  private readonly config: StorageConfig;
-  private readonly metadataPath: string;
+  private config: StorageConfig;
+  private metadataPath: string;
 
   constructor(private readonly configService: ConfigService) {
-    this.config = {
-      basePath: this.configService.get<string>('STORAGE_PATH', './storage'),
-      maxFileSize: this.configService.get<number>('MAX_FILE_SIZE', 100 * 1024 * 1024), // 100MB
-      allowedMimeTypes: this.configService.get<string[]>('ALLOWED_MIME_TYPES', []), // Пустой массив = разрешены все типы
-      dateFormat: this.configService.get<string>('DATE_FORMAT', 'YYYY-MM'),
-      enableDeduplication: this.configService.get<boolean>('ENABLE_DEDUPLICATION', true),
-    };
+    // Инициализация конфигурации будет выполнена при первом обращении к сервису
+    // Это позволяет переопределить конфигурацию в тестах
+  }
 
-    this.metadataPath = path.join(this.config.basePath, 'data.json');
-    // Инициализация будет выполнена при первом обращении к сервису
+  /**
+   * Получение конфигурации с ленивой инициализацией
+   */
+  private getConfig(): StorageConfig {
+    if (!this.config) {
+      // Получаем базовый путь и преобразуем его в абсолютный
+      const basePath = this.configService.get<string>('STORAGE_PATH', './storage');
+      const absoluteBasePath = path.isAbsolute(basePath) ? basePath : path.resolve(basePath);
+
+      this.config = {
+        basePath: absoluteBasePath,
+        maxFileSize: this.configService.get<number>('MAX_FILE_SIZE', 100 * 1024 * 1024), // 100MB
+        allowedMimeTypes: this.configService.get<string[]>('ALLOWED_MIME_TYPES', []), // Пустой массив = разрешены все типы
+        dateFormat: this.configService.get<string>('DATE_FORMAT', 'YYYY-MM'),
+        enableDeduplication: this.configService.get<boolean>('ENABLE_DEDUPLICATION', true),
+      };
+
+      this.metadataPath = path.join(this.config.basePath, 'data.json');
+    }
+    return this.config;
   }
 
   /**
@@ -51,9 +65,16 @@ export class StorageService {
    */
   private async initializeStorage(): Promise<void> {
     try {
+      const config = this.getConfig();
+
       // Создаем базовую директорию если она не существует (используем абсолютный путь)
-      const baseDir = path.resolve(this.config.basePath);
+      const baseDir = path.resolve(config.basePath);
       await fs.ensureDir(baseDir);
+
+      // Убеждаемся, что metadataPath инициализирован
+      if (!this.metadataPath) {
+        this.metadataPath = path.join(config.basePath, 'data.json');
+      }
 
       // Создаем файл метаданных если он не существует
       if (!(await fs.pathExists(this.metadataPath))) {
@@ -68,7 +89,7 @@ export class StorageService {
         this.logger.log('Storage initialized with empty metadata');
       }
 
-      this.logger.log(`Storage initialized at: ${this.config.basePath}`);
+      this.logger.log(`Storage initialized at: ${config.basePath}`);
     } catch (error) {
       this.logger.error('Failed to initialize storage', error);
       throw new Error(`Storage initialization failed: ${error.message}`);
@@ -81,12 +102,16 @@ export class StorageService {
   async saveFile(params: CreateFileParams): Promise<FileOperationResult> {
     try {
       const { file, ttl, metadata = {} } = params;
+      const config = this.getConfig();
+
+      // Инициализируем хранилище если оно еще не инициализировано
+      await this.initializeStorage();
 
       // Валидация размера файла
-      if (file.size > this.config.maxFileSize) {
+      if (file.size > config.maxFileSize) {
         return {
           success: false,
-          error: `File size ${file.size} exceeds maximum allowed size ${this.config.maxFileSize}`,
+          error: `File size ${file.size} exceeds maximum allowed size ${config.maxFileSize}`,
         };
       }
 
@@ -98,10 +123,7 @@ export class StorageService {
       const mimeType = detectedType?.mime || file.mimetype;
 
       // Проверяем разрешенные MIME типы (только если список не пустой)
-      if (
-        this.config.allowedMimeTypes.length > 0 &&
-        !this.config.allowedMimeTypes.includes(mimeType)
-      ) {
+      if (config.allowedMimeTypes.length > 0 && !config.allowedMimeTypes.includes(mimeType)) {
         return {
           success: false,
           error: `MIME type ${mimeType} is not allowed`,
@@ -112,7 +134,7 @@ export class StorageService {
       const hash = HashUtil.hashBuffer(fileBuffer);
 
       // Проверяем дедупликацию
-      if (this.config.enableDeduplication) {
+      if (config.enableDeduplication) {
         const existingFile = await this.findFileByHash(hash);
         if (existingFile) {
           // Увеличиваем счетчик ссылок на существующий файл
@@ -130,8 +152,8 @@ export class StorageService {
       const storedFilename = `${fileId}_${safeFilename}`;
 
       // Создаем директорию по дате
-      const dateDir = dayjs().format(this.config.dateFormat);
-      const fileDir = path.join(this.config.basePath, dateDir);
+      const dateDir = dayjs().format(config.dateFormat);
+      const fileDir = path.join(config.basePath, dateDir);
       await fs.ensureDir(fileDir);
 
       // Путь к файлу в хранилище
@@ -394,9 +416,10 @@ export class StorageService {
   async getStorageHealth(): Promise<StorageHealth> {
     try {
       const metadata = await this.loadMetadata();
+      const config = this.getConfig();
 
       // Получаем информацию о диске через fs.stat
-      await fs.stat(this.config.basePath);
+      await fs.stat(config.basePath);
 
       // Для упрощения используем приблизительные значения
       // В реальном проекте можно использовать библиотеку для получения информации о диске
@@ -433,12 +456,19 @@ export class StorageService {
    */
   private async loadMetadata(): Promise<StorageMetadata> {
     try {
+      // Инициализируем хранилище если оно еще не инициализировано
+      await this.initializeStorage();
+
+      // Получаем конфигурацию для правильного пути
+      const config = this.getConfig();
+      const metadataPath = path.join(config.basePath, 'data.json');
+
       // Проверяем и инициализируем хранилище если необходимо
-      if (!(await fs.pathExists(this.metadataPath))) {
+      if (!(await fs.pathExists(metadataPath))) {
         await this.initializeStorage();
       }
 
-      const metadata = await fs.readJson(this.metadataPath);
+      const metadata = await fs.readJson(metadataPath);
       return metadata as StorageMetadata;
     } catch (error) {
       this.logger.error('Failed to load metadata', error);
@@ -447,9 +477,11 @@ export class StorageService {
       if (error.message.includes('JSON') || error.message.includes('Unexpected')) {
         this.logger.warn('Metadata file is corrupted, recreating...');
         try {
-          await fs.remove(this.metadataPath);
+          const config = this.getConfig();
+          const metadataPath = path.join(config.basePath, 'data.json');
+          await fs.remove(metadataPath);
           await this.initializeStorage();
-          const metadata = await fs.readJson(this.metadataPath);
+          const metadata = await fs.readJson(metadataPath);
           return metadata as StorageMetadata;
         } catch (recreateError) {
           this.logger.error('Failed to recreate metadata file', recreateError);
@@ -466,6 +498,9 @@ export class StorageService {
    */
   private async updateMetadata(fileInfo: FileInfo, operation: 'add' | 'remove'): Promise<void> {
     try {
+      // Инициализируем хранилище если оно еще не инициализировано
+      await this.initializeStorage();
+
       const metadata = await this.loadMetadata();
 
       if (operation === 'add') {
@@ -480,23 +515,33 @@ export class StorageService {
 
       metadata.lastUpdated = new Date();
 
-      // Атомарная запись: сначала записываем во временный файл, затем переименовываем
-      const tempPath = this.metadataPath + '.tmp';
+      // Получаем конфигурацию для правильного пути
+      const config = this.getConfig();
+      const metadataPath = path.join(config.basePath, 'data.json');
 
-      // Убеждаемся, что директория существует (используем абсолютный путь)
-      const metadataDir = path.resolve(path.dirname(this.metadataPath));
+      // Убеждаемся, что директория существует
+      const metadataDir = path.dirname(metadataPath);
       await fs.ensureDir(metadataDir);
 
-      // Также убеждаемся, что базовая директория storage существует
-      const baseDir = path.resolve(this.config.basePath);
-      await fs.ensureDir(baseDir);
+      // Атомарная запись: сначала записываем во временный файл, затем переименовываем
+      const tempPath = path.join(metadataDir, 'data.json.tmp');
 
-      // Убеждаемся, что временный файл создается в той же директории
-      const tempDir = path.resolve(path.dirname(tempPath));
-      await fs.ensureDir(tempDir);
+      // Убеждаемся, что временный файл не существует
+      if (await fs.pathExists(tempPath)) {
+        await fs.remove(tempPath);
+      }
 
-      await fs.writeJson(tempPath, metadata, { spaces: 2 });
-      await fs.move(tempPath, this.metadataPath, { overwrite: true });
+      // Записываем во временный файл
+      const jsonContent = JSON.stringify(metadata, null, 2);
+      fs.writeFileSync(tempPath, jsonContent, 'utf8');
+
+      // Проверяем, что временный файл был создан
+      if (!(await fs.pathExists(tempPath))) {
+        throw new Error(`Failed to create temporary metadata file: ${tempPath}`);
+      }
+
+      // Атомарно переименовываем временный файл в основной
+      await fs.move(tempPath, metadataPath, { overwrite: true });
     } catch (error) {
       this.logger.error('Failed to update metadata', error);
       throw new Error(`Failed to update metadata: ${error.message}`);

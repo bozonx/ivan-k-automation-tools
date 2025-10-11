@@ -11,97 +11,46 @@ import { AppModule } from '../../src/app.module';
 import { getConfig } from '../../src/config/app.config';
 import * as fs from 'fs-extra';
 import * as path from 'path';
+import {
+  createTestApp,
+  cleanupTestApp,
+  clearTestStorage,
+  createTestFile,
+  createTestBinaryFile,
+  createTestPngFile,
+  createTestJsonFile,
+  createTestHtmlFile,
+  createTestCssFile,
+  createTestJsFile,
+  createTestMetadata,
+  expectFileStructure,
+  expectPaginationStructure,
+  expectStatsStructure,
+} from './e2e-test-utils';
 
 describe('FilesController (e2e)', () => {
   let app: INestApplication;
-  let testStoragePath: string;
-  let validToken: string;
+  let config: any;
 
   beforeAll(async () => {
-    // Создаем временную директорию для тестов
-    testStoragePath = path.join(
-      __dirname,
-      '..',
-      '..',
-      '..',
-      'test-data',
-      'micro-file-cache',
-      'temp-storage-files',
-    );
-    await fs.ensureDir(testStoragePath);
-
-    // Получаем конфигурацию для тестов
-    const config = getConfig();
-    validToken = config.auth.secretKey || 'test-secret-key-12345678901234567890';
-
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    })
-      .overrideProvider('ConfigService')
-      .useValue({
-        get: (key: string) => {
-          const testConfig = {
-            ...config,
-            storage: {
-              ...config.storage,
-              basePath: testStoragePath,
-            },
-            auth: {
-              ...config.auth,
-              enabled: true,
-              secretKey: validToken,
-            },
-          };
-          return testConfig[key] || config[key];
-        },
-      })
-      .compile();
-
-    app = moduleFixture.createNestApplication<NestFastifyApplication>(new FastifyAdapter());
-
-    // Регистрируем multipart для загрузки файлов
-    await (app as NestFastifyApplication).register(require('@fastify/multipart'), {
-      limits: {
-        fileSize: config.storage.maxFileSize,
-      },
-    });
-
-    // Устанавливаем глобальный префикс для API (как в main.ts)
-    app.setGlobalPrefix(config.server.apiPrefix + '/' + config.server.apiVersion);
-
-    // Настраиваем глобальные пайпы
-    app.useGlobalPipes(
-      new ValidationPipe({
-        transform: true,
-        whitelist: true,
-        forbidNonWhitelisted: true,
-      }),
-    );
-
-    await app.init();
-    await app.getHttpAdapter().getInstance().ready();
+    const testApp = await createTestApp('files-controller');
+    app = testApp.app;
+    config = testApp.config;
   });
 
   afterAll(async () => {
-    // Очищаем временную директорию
-    if (await fs.pathExists(testStoragePath)) {
-      await fs.remove(testStoragePath);
-    }
-    await app.close();
+    await cleanupTestApp(app, config.testStoragePath);
   });
 
   beforeEach(async () => {
-    // Очищаем хранилище перед каждым тестом
-    if (await fs.pathExists(testStoragePath)) {
-      await fs.emptyDir(testStoragePath);
-    }
+    await clearTestStorage(config.testStoragePath);
   });
 
   describe('POST /api/v1/files - Upload File', () => {
     it('should upload a text file successfully', async () => {
       const response = await request(app.getHttpServer())
         .post('/api/v1/files')
-        .set('Authorization', `Bearer ${validToken}`)
+        .set('Authorization', `Bearer ${config.validToken}`)
         .attach('file', Buffer.from('Hello, World!'), 'hello.txt')
         .expect(201);
 
@@ -128,7 +77,7 @@ describe('FilesController (e2e)', () => {
     it('should upload a file with custom TTL', async () => {
       const response = await request(app.getHttpServer())
         .post('/api/v1/files')
-        .set('Authorization', `Bearer ${validToken}`)
+        .set('Authorization', `Bearer ${config.validToken}`)
         .attach('file', Buffer.from('Test content'), 'test.txt')
         .field('ttl', '7200') // 2 hours
         .expect(201);
@@ -146,7 +95,7 @@ describe('FilesController (e2e)', () => {
 
       const response = await request(app.getHttpServer())
         .post('/api/v1/files')
-        .set('Authorization', `Bearer ${validToken}`)
+        .set('Authorization', `Bearer ${config.validToken}`)
         .attach('file', Buffer.from('Test content'), 'test.txt')
         .field('metadata', JSON.stringify(metadata))
         .expect(201);
@@ -157,7 +106,7 @@ describe('FilesController (e2e)', () => {
     it('should upload a file with custom filename', async () => {
       const response = await request(app.getHttpServer())
         .post('/api/v1/files')
-        .set('Authorization', `Bearer ${validToken}`)
+        .set('Authorization', `Bearer ${config.validToken}`)
         .attach('file', Buffer.from('Test content'), 'original.txt')
         .field('customFilename', 'custom-name.txt')
         .expect(201);
@@ -171,7 +120,7 @@ describe('FilesController (e2e)', () => {
       // Загружаем первый файл
       const response1 = await request(app.getHttpServer())
         .post('/api/v1/files')
-        .set('Authorization', `Bearer ${validToken}`)
+        .set('Authorization', `Bearer ${config.validToken}`)
         .attach('file', Buffer.from(content), 'file1.txt')
         .field('allowDuplicate', 'true')
         .expect(201);
@@ -179,7 +128,7 @@ describe('FilesController (e2e)', () => {
       // Загружаем второй файл с тем же содержимым
       const response2 = await request(app.getHttpServer())
         .post('/api/v1/files')
-        .set('Authorization', `Bearer ${validToken}`)
+        .set('Authorization', `Bearer ${config.validToken}`)
         .attach('file', Buffer.from(content), 'file2.txt')
         .field('allowDuplicate', 'true')
         .expect(201);
@@ -192,7 +141,7 @@ describe('FilesController (e2e)', () => {
     it('should reject upload without file', () => {
       return request(app.getHttpServer())
         .post('/api/v1/files')
-        .set('Authorization', `Bearer ${validToken}`)
+        .set('Authorization', `Bearer ${config.validToken}`)
         .field('ttl', '3600')
         .expect(400)
         .expect((res) => {
@@ -203,7 +152,7 @@ describe('FilesController (e2e)', () => {
     it('should reject upload with invalid TTL (too small)', () => {
       return request(app.getHttpServer())
         .post('/api/v1/files')
-        .set('Authorization', `Bearer ${validToken}`)
+        .set('Authorization', `Bearer ${config.validToken}`)
         .attach('file', Buffer.from('test'), 'test.txt')
         .field('ttl', '30') // Less than 60 seconds
         .expect(400);
@@ -212,7 +161,7 @@ describe('FilesController (e2e)', () => {
     it('should reject upload with invalid TTL (too large)', () => {
       return request(app.getHttpServer())
         .post('/api/v1/files')
-        .set('Authorization', `Bearer ${validToken}`)
+        .set('Authorization', `Bearer ${config.validToken}`)
         .attach('file', Buffer.from('test'), 'test.txt')
         .field('ttl', '2592001') // More than 30 days
         .expect(400);
@@ -221,7 +170,7 @@ describe('FilesController (e2e)', () => {
     it('should reject upload with invalid metadata JSON', () => {
       return request(app.getHttpServer())
         .post('/api/v1/files')
-        .set('Authorization', `Bearer ${validToken}`)
+        .set('Authorization', `Bearer ${config.validToken}`)
         .attach('file', Buffer.from('test'), 'test.txt')
         .field('metadata', 'invalid json')
         .expect(400);
@@ -242,7 +191,7 @@ describe('FilesController (e2e)', () => {
       // Загружаем файл для тестирования
       const response = await request(app.getHttpServer())
         .post('/api/v1/files')
-        .set('Authorization', `Bearer ${validToken}`)
+        .set('Authorization', `Bearer ${config.validToken}`)
         .attach('file', Buffer.from('Test content'), 'test.txt')
         .field('metadata', JSON.stringify({ description: 'Test file' }))
         .expect(201);
@@ -253,7 +202,7 @@ describe('FilesController (e2e)', () => {
     it('should get file information successfully', async () => {
       const response = await request(app.getHttpServer())
         .get(`/api/v1/files/${uploadedFileId}`)
-        .set('Authorization', `Bearer ${validToken}`)
+        .set('Authorization', `Bearer ${config.validToken}`)
         .expect(200);
 
       expect(response.body).toHaveProperty('file');
@@ -272,7 +221,7 @@ describe('FilesController (e2e)', () => {
     it('should get file info with includeExpired=true', async () => {
       const response = await request(app.getHttpServer())
         .get(`/api/v1/files/${uploadedFileId}`)
-        .set('Authorization', `Bearer ${validToken}`)
+        .set('Authorization', `Bearer ${config.validToken}`)
         .query({ includeExpired: 'true' })
         .expect(200);
 
@@ -283,14 +232,14 @@ describe('FilesController (e2e)', () => {
       const nonExistentId = 'f47ac10b-58cc-4372-a567-0e02b2c3d479';
       return request(app.getHttpServer())
         .get(`/api/v1/files/${nonExistentId}`)
-        .set('Authorization', `Bearer ${validToken}`)
+        .set('Authorization', `Bearer ${config.validToken}`)
         .expect(404);
     });
 
     it('should return 400 for invalid file ID format', () => {
       return request(app.getHttpServer())
         .get('/api/v1/files/invalid-id')
-        .set('Authorization', `Bearer ${validToken}`)
+        .set('Authorization', `Bearer ${config.validToken}`)
         .expect(400);
     });
 
@@ -307,7 +256,7 @@ describe('FilesController (e2e)', () => {
       fileContent = 'Download test content';
       const response = await request(app.getHttpServer())
         .post('/api/v1/files')
-        .set('Authorization', `Bearer ${validToken}`)
+        .set('Authorization', `Bearer ${config.validToken}`)
         .attach('file', Buffer.from(fileContent), 'download-test.txt')
         .expect(201);
 
@@ -317,7 +266,7 @@ describe('FilesController (e2e)', () => {
     it('should download file successfully', async () => {
       const response = await request(app.getHttpServer())
         .get(`/api/v1/files/${uploadedFileId}/download`)
-        .set('Authorization', `Bearer ${validToken}`)
+        .set('Authorization', `Bearer ${config.validToken}`)
         .expect(200);
 
       expect(response.headers['content-type']).toBe('text/plain');
@@ -333,7 +282,7 @@ describe('FilesController (e2e)', () => {
     it('should download file with includeExpired=true', async () => {
       const response = await request(app.getHttpServer())
         .get(`/api/v1/files/${uploadedFileId}/download`)
-        .set('Authorization', `Bearer ${validToken}`)
+        .set('Authorization', `Bearer ${config.validToken}`)
         .query({ includeExpired: 'true' })
         .expect(200);
 
@@ -344,14 +293,14 @@ describe('FilesController (e2e)', () => {
       const nonExistentId = 'f47ac10b-58cc-4372-a567-0e02b2c3d479';
       return request(app.getHttpServer())
         .get(`/api/v1/files/${nonExistentId}/download`)
-        .set('Authorization', `Bearer ${validToken}`)
+        .set('Authorization', `Bearer ${config.validToken}`)
         .expect(404);
     });
 
     it('should return 400 for invalid file ID format', () => {
       return request(app.getHttpServer())
         .get('/api/v1/files/invalid-id/download')
-        .set('Authorization', `Bearer ${validToken}`)
+        .set('Authorization', `Bearer ${config.validToken}`)
         .expect(400);
     });
 
@@ -368,7 +317,7 @@ describe('FilesController (e2e)', () => {
     beforeEach(async () => {
       const response = await request(app.getHttpServer())
         .post('/api/v1/files')
-        .set('Authorization', `Bearer ${validToken}`)
+        .set('Authorization', `Bearer ${config.validToken}`)
         .attach('file', Buffer.from('Delete test content'), 'delete-test.txt')
         .expect(201);
 
@@ -378,7 +327,7 @@ describe('FilesController (e2e)', () => {
     it('should delete file successfully', async () => {
       const response = await request(app.getHttpServer())
         .delete(`/api/v1/files/${uploadedFileId}`)
-        .set('Authorization', `Bearer ${validToken}`)
+        .set('Authorization', `Bearer ${config.validToken}`)
         .expect(200);
 
       expect(response.body).toHaveProperty('fileId', uploadedFileId);
@@ -388,14 +337,14 @@ describe('FilesController (e2e)', () => {
       // Проверяем, что файл действительно удален
       await request(app.getHttpServer())
         .get(`/api/v1/files/${uploadedFileId}`)
-        .set('Authorization', `Bearer ${validToken}`)
+        .set('Authorization', `Bearer ${config.validToken}`)
         .expect(404);
     });
 
     it('should delete file with force=true', async () => {
       const response = await request(app.getHttpServer())
         .delete(`/api/v1/files/${uploadedFileId}`)
-        .set('Authorization', `Bearer ${validToken}`)
+        .set('Authorization', `Bearer ${config.validToken}`)
         .query({ force: 'true' })
         .expect(200);
 
@@ -406,14 +355,14 @@ describe('FilesController (e2e)', () => {
       const nonExistentId = 'f47ac10b-58cc-4372-a567-0e02b2c3d479';
       return request(app.getHttpServer())
         .delete(`/api/v1/files/${nonExistentId}`)
-        .set('Authorization', `Bearer ${validToken}`)
+        .set('Authorization', `Bearer ${config.validToken}`)
         .expect(404);
     });
 
     it('should return 400 for invalid file ID format', () => {
       return request(app.getHttpServer())
         .delete('/api/v1/files/invalid-id')
-        .set('Authorization', `Bearer ${validToken}`)
+        .set('Authorization', `Bearer ${config.validToken}`)
         .expect(400);
     });
 
@@ -434,7 +383,7 @@ describe('FilesController (e2e)', () => {
       for (const file of files) {
         await request(app.getHttpServer())
           .post('/api/v1/files')
-          .set('Authorization', `Bearer ${validToken}`)
+          .set('Authorization', `Bearer ${config.validToken}`)
           .attach('file', Buffer.from(file.content), file.name)
           .field('metadata', JSON.stringify(file.metadata))
           .expect(201);
@@ -444,7 +393,7 @@ describe('FilesController (e2e)', () => {
     it('should list all files', async () => {
       const response = await request(app.getHttpServer())
         .get('/api/v1/files')
-        .set('Authorization', `Bearer ${validToken}`)
+        .set('Authorization', `Bearer ${config.validToken}`)
         .expect(200);
 
       expect(response.body).toHaveProperty('files');
@@ -458,7 +407,7 @@ describe('FilesController (e2e)', () => {
     it('should support pagination', async () => {
       const response = await request(app.getHttpServer())
         .get('/api/v1/files')
-        .set('Authorization', `Bearer ${validToken}`)
+        .set('Authorization', `Bearer ${config.validToken}`)
         .query({ limit: 2, offset: 0 })
         .expect(200);
 
@@ -473,7 +422,7 @@ describe('FilesController (e2e)', () => {
     it('should filter by MIME type', async () => {
       const response = await request(app.getHttpServer())
         .get('/api/v1/files')
-        .set('Authorization', `Bearer ${validToken}`)
+        .set('Authorization', `Bearer ${config.validToken}`)
         .query({ mimeType: 'text/plain; charset=utf-8' })
         .expect(200);
 
@@ -486,7 +435,7 @@ describe('FilesController (e2e)', () => {
     it('should filter by file size range', async () => {
       const response = await request(app.getHttpServer())
         .get('/api/v1/files')
-        .set('Authorization', `Bearer ${validToken}`)
+        .set('Authorization', `Bearer ${config.validToken}`)
         .query({ minSize: 10, maxSize: 20 })
         .expect(200);
 
@@ -504,7 +453,7 @@ describe('FilesController (e2e)', () => {
 
       const response = await request(app.getHttpServer())
         .get('/api/v1/files')
-        .set('Authorization', `Bearer ${validToken}`)
+        .set('Authorization', `Bearer ${config.validToken}`)
         .query({
           uploadedAfter: yesterday.toISOString(),
           uploadedBefore: tomorrow.toISOString(),
@@ -517,7 +466,7 @@ describe('FilesController (e2e)', () => {
     it('should show only expired files when requested', async () => {
       const response = await request(app.getHttpServer())
         .get('/api/v1/files')
-        .set('Authorization', `Bearer ${validToken}`)
+        .set('Authorization', `Bearer ${config.validToken}`)
         .query({ expiredOnly: 'true' })
         .expect(200);
 
@@ -535,13 +484,13 @@ describe('FilesController (e2e)', () => {
       // Загружаем файлы для статистики
       await request(app.getHttpServer())
         .post('/api/v1/files')
-        .set('Authorization', `Bearer ${validToken}`)
+        .set('Authorization', `Bearer ${config.validToken}`)
         .attach('file', Buffer.from('Stats test 1'), 'stats1.txt')
         .expect(201);
 
       await request(app.getHttpServer())
         .post('/api/v1/files')
-        .set('Authorization', `Bearer ${validToken}`)
+        .set('Authorization', `Bearer ${config.validToken}`)
         .attach('file', Buffer.from('Stats test 2'), 'stats2.txt')
         .expect(201);
     });
@@ -549,7 +498,7 @@ describe('FilesController (e2e)', () => {
     it('should get file statistics', async () => {
       const response = await request(app.getHttpServer())
         .get('/api/v1/files/stats')
-        .set('Authorization', `Bearer ${validToken}`)
+        .set('Authorization', `Bearer ${config.validToken}`)
         .expect(200);
 
       expect(response.body).toHaveProperty('stats');
@@ -578,7 +527,7 @@ describe('FilesController (e2e)', () => {
     beforeEach(async () => {
       const response = await request(app.getHttpServer())
         .post('/api/v1/files')
-        .set('Authorization', `Bearer ${validToken}`)
+        .set('Authorization', `Bearer ${config.validToken}`)
         .attach('file', Buffer.from('Existence test'), 'exists-test.txt')
         .expect(201);
 
@@ -588,7 +537,7 @@ describe('FilesController (e2e)', () => {
     it('should check file existence successfully', async () => {
       const response = await request(app.getHttpServer())
         .get(`/api/v1/files/${uploadedFileId}/exists`)
-        .set('Authorization', `Bearer ${validToken}`)
+        .set('Authorization', `Bearer ${config.validToken}`)
         .expect(200);
 
       expect(response.body).toHaveProperty('exists', true);
@@ -599,7 +548,7 @@ describe('FilesController (e2e)', () => {
     it('should check file existence with includeExpired=true', async () => {
       const response = await request(app.getHttpServer())
         .get(`/api/v1/files/${uploadedFileId}/exists`)
-        .set('Authorization', `Bearer ${validToken}`)
+        .set('Authorization', `Bearer ${config.validToken}`)
         .query({ includeExpired: 'true' })
         .expect(200);
 
@@ -611,7 +560,7 @@ describe('FilesController (e2e)', () => {
       const nonExistentId = 'f47ac10b-58cc-4372-a567-0e02b2c3d479';
       const response = await request(app.getHttpServer())
         .get(`/api/v1/files/${nonExistentId}/exists`)
-        .set('Authorization', `Bearer ${validToken}`)
+        .set('Authorization', `Bearer ${config.validToken}`)
         .expect(200);
 
       expect(response.body).toHaveProperty('exists', false);
@@ -622,7 +571,7 @@ describe('FilesController (e2e)', () => {
     it('should return 400 for invalid file ID format', () => {
       return request(app.getHttpServer())
         .get('/api/v1/files/invalid-id/exists')
-        .set('Authorization', `Bearer ${validToken}`)
+        .set('Authorization', `Bearer ${config.validToken}`)
         .expect(400);
     });
 
@@ -638,7 +587,7 @@ describe('FilesController (e2e)', () => {
 
       const response = await request(app.getHttpServer())
         .post('/api/v1/files')
-        .set('Authorization', `Bearer ${validToken}`)
+        .set('Authorization', `Bearer ${config.validToken}`)
         .attach('file', largeContent, 'large-file.txt')
         .expect(201);
 
@@ -648,7 +597,7 @@ describe('FilesController (e2e)', () => {
     it('should handle files with special characters in name', async () => {
       const response = await request(app.getHttpServer())
         .post('/api/v1/files')
-        .set('Authorization', `Bearer ${validToken}`)
+        .set('Authorization', `Bearer ${config.validToken}`)
         .attach('file', Buffer.from('Special chars test'), 'файл с пробелами & символами.txt')
         .expect(201);
 
@@ -658,7 +607,7 @@ describe('FilesController (e2e)', () => {
     it('should handle empty files', async () => {
       const response = await request(app.getHttpServer())
         .post('/api/v1/files')
-        .set('Authorization', `Bearer ${validToken}`)
+        .set('Authorization', `Bearer ${config.validToken}`)
         .attach('file', Buffer.from(''), 'empty.txt')
         .expect(201);
 
@@ -669,7 +618,7 @@ describe('FilesController (e2e)', () => {
       const longName = 'a'.repeat(255) + '.txt';
       const response = await request(app.getHttpServer())
         .post('/api/v1/files')
-        .set('Authorization', `Bearer ${validToken}`)
+        .set('Authorization', `Bearer ${config.validToken}`)
         .attach('file', Buffer.from('Long name test'), longName)
         .expect(201);
 
@@ -680,7 +629,7 @@ describe('FilesController (e2e)', () => {
       const uploadPromises = Array.from({ length: 5 }, (_, i) =>
         request(app.getHttpServer())
           .post('/api/v1/files')
-          .set('Authorization', `Bearer ${validToken}`)
+          .set('Authorization', `Bearer ${config.validToken}`)
           .attach('file', Buffer.from(`Concurrent test ${i}`), `concurrent-${i}.txt`),
       );
 

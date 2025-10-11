@@ -3,98 +3,26 @@
  * Тестирует сложные сценарии использования и интеграцию между модулями
  */
 
-import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication, ValidationPipe } from '@nestjs/common';
-import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
+import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
-import { AppModule } from '../../src/app.module';
-import { getConfig } from '../../src/config/app.config';
-import * as fs from 'fs-extra';
-import * as path from 'path';
+import { createTestApp, cleanupTestApp, clearTestStorage } from './e2e-test-utils';
 
 describe('Integration Tests (e2e)', () => {
   let app: INestApplication;
-  let testStoragePath: string;
-  let validToken: string;
+  let config: any;
 
   beforeAll(async () => {
-    // Создаем временную директорию для тестов
-    testStoragePath = path.join(
-      __dirname,
-      '..',
-      '..',
-      '..',
-      'test-data',
-      'micro-file-cache',
-      'temp-storage-integration',
-    );
-    await fs.ensureDir(testStoragePath);
-
-    // Получаем конфигурацию для тестов
-    const config = getConfig();
-    validToken = config.auth.secretKey || 'test-secret-key-12345678901234567890';
-
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    })
-      .overrideProvider('ConfigService')
-      .useValue({
-        get: (key: string) => {
-          const testConfig = {
-            ...config,
-            storage: {
-              ...config.storage,
-              basePath: testStoragePath,
-            },
-            auth: {
-              ...config.auth,
-              enabled: true,
-              secretKey: validToken,
-            },
-          };
-          return testConfig[key] || config[key];
-        },
-      })
-      .compile();
-
-    app = moduleFixture.createNestApplication<NestFastifyApplication>(new FastifyAdapter());
-
-    // Регистрируем multipart для загрузки файлов
-    await (app as NestFastifyApplication).register(require('@fastify/multipart'), {
-      limits: {
-        fileSize: config.storage.maxFileSize,
-      },
-    });
-
-    // Устанавливаем глобальный префикс для API (как в main.ts)
-    app.setGlobalPrefix(config.server.apiPrefix + '/' + config.server.apiVersion);
-
-    // Настраиваем глобальные пайпы
-    app.useGlobalPipes(
-      new ValidationPipe({
-        transform: true,
-        whitelist: true,
-        forbidNonWhitelisted: true,
-      }),
-    );
-
-    await app.init();
-    await app.getHttpAdapter().getInstance().ready();
+    const testApp = await createTestApp('integration');
+    app = testApp.app;
+    config = testApp.config;
   });
 
   afterAll(async () => {
-    // Очищаем временную директорию
-    if (await fs.pathExists(testStoragePath)) {
-      await fs.remove(testStoragePath);
-    }
-    await app.close();
+    await cleanupTestApp(app, config.testStoragePath);
   });
 
   beforeEach(async () => {
-    // Очищаем хранилище перед каждым тестом
-    if (await fs.pathExists(testStoragePath)) {
-      await fs.emptyDir(testStoragePath);
-    }
+    await clearTestStorage(config.testStoragePath);
   });
 
   describe('File Lifecycle Management', () => {
@@ -106,7 +34,7 @@ describe('Integration Tests (e2e)', () => {
       // 1. Upload file
       const uploadResponse = await request(app.getHttpServer())
         .post('/api/v1/files')
-        .set('Authorization', `Bearer ${validToken}`)
+        .set('Authorization', `Bearer ${config.validToken}`)
         .attach('file', Buffer.from(fileContent), fileName)
         .field('metadata', JSON.stringify(metadata))
         .field('ttl', '7200') // 2 hours
@@ -120,7 +48,7 @@ describe('Integration Tests (e2e)', () => {
       // 2. Get file info
       const infoResponse = await request(app.getHttpServer())
         .get(`/api/v1/files/${fileId}`)
-        .set('Authorization', `Bearer ${validToken}`)
+        .set('Authorization', `Bearer ${config.validToken}`)
         .expect(200);
 
       expect(infoResponse.body.file.id).toBe(fileId);
@@ -131,7 +59,7 @@ describe('Integration Tests (e2e)', () => {
       // 3. Download file
       const downloadResponse = await request(app.getHttpServer())
         .get(`/api/v1/files/${fileId}/download`)
-        .set('Authorization', `Bearer ${validToken}`)
+        .set('Authorization', `Bearer ${config.validToken}`)
         .expect(200);
 
       expect(downloadResponse.text).toBe(fileContent);
@@ -140,7 +68,7 @@ describe('Integration Tests (e2e)', () => {
       // 4. Check file exists
       const existsResponse = await request(app.getHttpServer())
         .get(`/api/v1/files/${fileId}/exists`)
-        .set('Authorization', `Bearer ${validToken}`)
+        .set('Authorization', `Bearer ${config.validToken}`)
         .expect(200);
 
       expect(existsResponse.body.exists).toBe(true);
@@ -149,7 +77,7 @@ describe('Integration Tests (e2e)', () => {
       // 5. Delete file
       const deleteResponse = await request(app.getHttpServer())
         .delete(`/api/v1/files/${fileId}`)
-        .set('Authorization', `Bearer ${validToken}`)
+        .set('Authorization', `Bearer ${config.validToken}`)
         .expect(200);
 
       expect(deleteResponse.body.fileId).toBe(fileId);
@@ -158,12 +86,12 @@ describe('Integration Tests (e2e)', () => {
       // 6. Verify file is deleted
       await request(app.getHttpServer())
         .get(`/api/v1/files/${fileId}`)
-        .set('Authorization', `Bearer ${validToken}`)
+        .set('Authorization', `Bearer ${config.validToken}`)
         .expect(404);
 
       await request(app.getHttpServer())
         .get(`/api/v1/files/${fileId}/exists`)
-        .set('Authorization', `Bearer ${validToken}`)
+        .set('Authorization', `Bearer ${config.validToken}`)
         .expect(200)
         .expect((res) => {
           expect(res.body.exists).toBe(false);
@@ -176,7 +104,7 @@ describe('Integration Tests (e2e)', () => {
       // Upload first file
       const response1 = await request(app.getHttpServer())
         .post('/api/v1/files')
-        .set('Authorization', `Bearer ${validToken}`)
+        .set('Authorization', `Bearer ${config.validToken}`)
         .attach('file', Buffer.from(content), 'file1.txt')
         .field('allowDuplicate', 'true')
         .expect(201);
@@ -187,7 +115,7 @@ describe('Integration Tests (e2e)', () => {
       // Upload second file with same content
       const response2 = await request(app.getHttpServer())
         .post('/api/v1/files')
-        .set('Authorization', `Bearer ${validToken}`)
+        .set('Authorization', `Bearer ${config.validToken}`)
         .attach('file', Buffer.from(content), 'file2.txt')
         .field('allowDuplicate', 'true')
         .expect(201);
@@ -202,12 +130,12 @@ describe('Integration Tests (e2e)', () => {
       // Both files should be downloadable
       const download1 = await request(app.getHttpServer())
         .get(`/api/v1/files/${fileId1}/download`)
-        .set('Authorization', `Bearer ${validToken}`)
+        .set('Authorization', `Bearer ${config.validToken}`)
         .expect(200);
 
       const download2 = await request(app.getHttpServer())
         .get(`/api/v1/files/${fileId2}/download`)
-        .set('Authorization', `Bearer ${validToken}`)
+        .set('Authorization', `Bearer ${config.validToken}`)
         .expect(200);
 
       expect(download1.text).toBe(content);
@@ -216,13 +144,13 @@ describe('Integration Tests (e2e)', () => {
       // Delete one file, the other should still exist
       await request(app.getHttpServer())
         .delete(`/api/v1/files/${fileId1}`)
-        .set('Authorization', `Bearer ${validToken}`)
+        .set('Authorization', `Bearer ${config.validToken}`)
         .expect(200);
 
       // Second file should still be accessible
       await request(app.getHttpServer())
         .get(`/api/v1/files/${fileId2}`)
-        .set('Authorization', `Bearer ${validToken}`)
+        .set('Authorization', `Bearer ${config.validToken}`)
         .expect(200);
     });
   });
@@ -243,7 +171,7 @@ describe('Integration Tests (e2e)', () => {
       for (const file of files) {
         const response = await request(app.getHttpServer())
           .post('/api/v1/files')
-          .set('Authorization', `Bearer ${validToken}`)
+          .set('Authorization', `Bearer ${config.validToken}`)
           .attach('file', Buffer.from(file.content), file.name)
           .field('metadata', JSON.stringify(file.metadata))
           .expect(201);
@@ -255,7 +183,7 @@ describe('Integration Tests (e2e)', () => {
       // List all files
       const listResponse = await request(app.getHttpServer())
         .get('/api/v1/files')
-        .set('Authorization', `Bearer ${validToken}`)
+        .set('Authorization', `Bearer ${config.validToken}`)
         .expect(200);
 
       expect(listResponse.body.files.length).toBeGreaterThanOrEqual(files.length);
@@ -264,7 +192,7 @@ describe('Integration Tests (e2e)', () => {
       // Test pagination
       const paginatedResponse = await request(app.getHttpServer())
         .get('/api/v1/files')
-        .set('Authorization', `Bearer ${validToken}`)
+        .set('Authorization', `Bearer ${config.validToken}`)
         .query({ limit: 3, offset: 0 })
         .expect(200);
 
@@ -274,7 +202,7 @@ describe('Integration Tests (e2e)', () => {
       // Get statistics
       const statsResponse = await request(app.getHttpServer())
         .get('/api/v1/files/stats')
-        .set('Authorization', `Bearer ${validToken}`)
+        .set('Authorization', `Bearer ${config.validToken}`)
         .expect(200);
 
       expect(statsResponse.body.stats.totalFiles).toBeGreaterThanOrEqual(files.length);
@@ -284,14 +212,14 @@ describe('Integration Tests (e2e)', () => {
       for (const fileId of uploadedFiles) {
         await request(app.getHttpServer())
           .delete(`/api/v1/files/${fileId}`)
-          .set('Authorization', `Bearer ${validToken}`)
+          .set('Authorization', `Bearer ${config.validToken}`)
           .expect(200);
       }
 
       // Verify all files are deleted
       const finalListResponse = await request(app.getHttpServer())
         .get('/api/v1/files')
-        .set('Authorization', `Bearer ${validToken}`)
+        .set('Authorization', `Bearer ${config.validToken}`)
         .expect(200);
 
       expect(finalListResponse.body.total).toBe(0);
@@ -307,7 +235,7 @@ describe('Integration Tests (e2e)', () => {
       const uploadPromises = concurrentOperations.map((file) =>
         request(app.getHttpServer())
           .post('/api/v1/files')
-          .set('Authorization', `Bearer ${validToken}`)
+          .set('Authorization', `Bearer ${config.validToken}`)
           .attach('file', Buffer.from(file.content), file.name),
       );
 
@@ -322,7 +250,7 @@ describe('Integration Tests (e2e)', () => {
       // Get list of uploaded files
       const listResponse = await request(app.getHttpServer())
         .get('/api/v1/files')
-        .set('Authorization', `Bearer ${validToken}`)
+        .set('Authorization', `Bearer ${config.validToken}`)
         .expect(200);
 
       expect(listResponse.body.files.length).toBeGreaterThanOrEqual(concurrentOperations.length);
@@ -331,7 +259,7 @@ describe('Integration Tests (e2e)', () => {
       const downloadPromises = uploadResults.map((result) =>
         request(app.getHttpServer())
           .get(`/api/v1/files/${result.body.file.id}/download`)
-          .set('Authorization', `Bearer ${validToken}`),
+          .set('Authorization', `Bearer ${config.validToken}`),
       );
 
       const downloadResults = await Promise.all(downloadPromises);
@@ -346,7 +274,7 @@ describe('Integration Tests (e2e)', () => {
       const deletePromises = uploadResults.map((result) =>
         request(app.getHttpServer())
           .delete(`/api/v1/files/${result.body.file.id}`)
-          .set('Authorization', `Bearer ${validToken}`),
+          .set('Authorization', `Bearer ${config.validToken}`),
       );
 
       const deleteResults = await Promise.all(deletePromises);
@@ -366,25 +294,25 @@ describe('Integration Tests (e2e)', () => {
       // Try to get info for invalid ID
       await request(app.getHttpServer())
         .get(`/api/v1/files/${invalidId}`)
-        .set('Authorization', `Bearer ${validToken}`)
+        .set('Authorization', `Bearer ${config.validToken}`)
         .expect(400);
 
       // Try to download invalid ID
       await request(app.getHttpServer())
         .get(`/api/v1/files/${invalidId}/download`)
-        .set('Authorization', `Bearer ${validToken}`)
+        .set('Authorization', `Bearer ${config.validToken}`)
         .expect(400);
 
       // Try to delete invalid ID
       await request(app.getHttpServer())
         .delete(`/api/v1/files/${invalidId}`)
-        .set('Authorization', `Bearer ${validToken}`)
+        .set('Authorization', `Bearer ${config.validToken}`)
         .expect(400);
 
       // Try to check existence of invalid ID
       await request(app.getHttpServer())
         .get(`/api/v1/files/${invalidId}/exists`)
-        .set('Authorization', `Bearer ${validToken}`)
+        .set('Authorization', `Bearer ${config.validToken}`)
         .expect(400);
     });
 
@@ -394,25 +322,25 @@ describe('Integration Tests (e2e)', () => {
       // Try to get info for non-existent file
       await request(app.getHttpServer())
         .get(`/api/v1/files/${nonExistentId}`)
-        .set('Authorization', `Bearer ${validToken}`)
+        .set('Authorization', `Bearer ${config.validToken}`)
         .expect(404);
 
       // Try to download non-existent file
       await request(app.getHttpServer())
         .get(`/api/v1/files/${nonExistentId}/download`)
-        .set('Authorization', `Bearer ${validToken}`)
+        .set('Authorization', `Bearer ${config.validToken}`)
         .expect(404);
 
       // Try to delete non-existent file
       await request(app.getHttpServer())
         .delete(`/api/v1/files/${nonExistentId}`)
-        .set('Authorization', `Bearer ${validToken}`)
+        .set('Authorization', `Bearer ${config.validToken}`)
         .expect(404);
 
       // Check existence should return false
       const existsResponse = await request(app.getHttpServer())
         .get(`/api/v1/files/${nonExistentId}/exists`)
-        .set('Authorization', `Bearer ${validToken}`)
+        .set('Authorization', `Bearer ${config.validToken}`)
         .expect(200);
 
       expect(existsResponse.body.exists).toBe(false);
@@ -458,7 +386,7 @@ describe('Integration Tests (e2e)', () => {
       for (const testFile of testFiles) {
         const response = await request(app.getHttpServer())
           .post('/api/v1/files')
-          .set('Authorization', `Bearer ${validToken}`)
+          .set('Authorization', `Bearer ${config.validToken}`)
           .attach('file', Buffer.from(testFile.content), testFile.name)
           .expect(201);
 
@@ -469,7 +397,7 @@ describe('Integration Tests (e2e)', () => {
         // Download and verify content
         const downloadResponse = await request(app.getHttpServer())
           .get(`/api/v1/files/${response.body.file.id}/download`)
-          .set('Authorization', `Bearer ${validToken}`)
+          .set('Authorization', `Bearer ${config.validToken}`)
           .expect(200);
 
         expect(downloadResponse.text).toBe(testFile.content);
@@ -517,7 +445,7 @@ describe('Integration Tests (e2e)', () => {
 
       const response = await request(app.getHttpServer())
         .post('/api/v1/files')
-        .set('Authorization', `Bearer ${validToken}`)
+        .set('Authorization', `Bearer ${config.validToken}`)
         .attach('file', pngHeader, 'test.png')
         .expect(201);
 
@@ -527,7 +455,7 @@ describe('Integration Tests (e2e)', () => {
       // Download and verify binary content
       const downloadResponse = await request(app.getHttpServer())
         .get(`/api/v1/files/${response.body.file.id}/download`)
-        .set('Authorization', `Bearer ${validToken}`)
+        .set('Authorization', `Bearer ${config.validToken}`)
         .expect(200);
 
       expect(Buffer.from(downloadResponse.body)).toEqual(pngHeader);
@@ -543,7 +471,7 @@ describe('Integration Tests (e2e)', () => {
       for (let i = 0; i < fileCount; i++) {
         const response = await request(app.getHttpServer())
           .post('/api/v1/files')
-          .set('Authorization', `Bearer ${validToken}`)
+          .set('Authorization', `Bearer ${config.validToken}`)
           .attach('file', Buffer.from(`Performance test file ${i}`), `perf-${i}.txt`)
           .expect(201);
 
@@ -554,7 +482,7 @@ describe('Integration Tests (e2e)', () => {
       const startTime = Date.now();
       const listResponse = await request(app.getHttpServer())
         .get('/api/v1/files')
-        .set('Authorization', `Bearer ${validToken}`)
+        .set('Authorization', `Bearer ${config.validToken}`)
         .expect(200);
 
       const listTime = Date.now() - startTime;
@@ -565,7 +493,7 @@ describe('Integration Tests (e2e)', () => {
       const statsStartTime = Date.now();
       const statsResponse = await request(app.getHttpServer())
         .get('/api/v1/files/stats')
-        .set('Authorization', `Bearer ${validToken}`)
+        .set('Authorization', `Bearer ${config.validToken}`)
         .expect(200);
 
       const statsTime = Date.now() - statsStartTime;
@@ -576,7 +504,7 @@ describe('Integration Tests (e2e)', () => {
       for (const fileId of files) {
         await request(app.getHttpServer())
           .delete(`/api/v1/files/${fileId}`)
-          .set('Authorization', `Bearer ${validToken}`)
+          .set('Authorization', `Bearer ${config.validToken}`)
           .expect(200);
       }
     });
@@ -588,7 +516,7 @@ describe('Integration Tests (e2e)', () => {
       const uploadStartTime = Date.now();
       const response = await request(app.getHttpServer())
         .post('/api/v1/files')
-        .set('Authorization', `Bearer ${validToken}`)
+        .set('Authorization', `Bearer ${config.validToken}`)
         .attach('file', largeContent, 'large-file.txt')
         .expect(201);
 
@@ -600,7 +528,7 @@ describe('Integration Tests (e2e)', () => {
       const downloadStartTime = Date.now();
       const downloadResponse = await request(app.getHttpServer())
         .get(`/api/v1/files/${response.body.file.id}/download`)
-        .set('Authorization', `Bearer ${validToken}`)
+        .set('Authorization', `Bearer ${config.validToken}`)
         .expect(200);
 
       const downloadTime = Date.now() - downloadStartTime;
@@ -610,7 +538,7 @@ describe('Integration Tests (e2e)', () => {
       // Clean up
       await request(app.getHttpServer())
         .delete(`/api/v1/files/${response.body.file.id}`)
-        .set('Authorization', `Bearer ${validToken}`)
+        .set('Authorization', `Bearer ${config.validToken}`)
         .expect(200);
     });
   });

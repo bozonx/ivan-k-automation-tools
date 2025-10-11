@@ -2,90 +2,22 @@
  * Простой E2E тест для проверки базовой функциональности
  */
 
-import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication, ValidationPipe } from '@nestjs/common';
-import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
+import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
-import { AppModule } from '../../src/app.module';
-import { getConfig } from '../../src/config/app.config';
-import * as fs from 'fs-extra';
-import * as path from 'path';
+import { createTestApp, cleanupTestApp, clearTestStorage } from './e2e-test-utils';
 
 describe('Simple E2E Test', () => {
   let app: INestApplication;
-  let testStoragePath: string;
+  let config: any;
 
   beforeAll(async () => {
-    // Тестовая конфигурация уже загружена автоматически через setup.ts
-
-    // Создаем временную директорию для тестов в корне репозитория
-    testStoragePath = path.join(
-      __dirname,
-      '..',
-      '..',
-      '..',
-      'test-data',
-      'micro-file-cache',
-      'temp-storage-simple',
-    );
-    await fs.ensureDir(testStoragePath);
-
-    // Получаем конфигурацию для тестов
-    const config = getConfig();
-
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    })
-      .overrideProvider('ConfigService')
-      .useValue({
-        get: (key: string) => {
-          const testConfig = {
-            ...config,
-            storage: {
-              ...config.storage,
-              basePath: testStoragePath,
-            },
-            auth: {
-              ...config.auth,
-              enabled: false, // Отключаем аутентификацию для простого теста
-            },
-          };
-          return testConfig[key] || config[key];
-        },
-      })
-      .compile();
-
-    app = moduleFixture.createNestApplication<NestFastifyApplication>(new FastifyAdapter());
-
-    // Регистрируем multipart для загрузки файлов
-    await (app as NestFastifyApplication).register(require('@fastify/multipart'), {
-      limits: {
-        fileSize: 50 * 1024 * 1024, // 50MB для тестов
-      },
-    });
-
-    // Настраиваем глобальные пайпы
-    app.useGlobalPipes(
-      new ValidationPipe({
-        transform: true,
-        whitelist: true,
-        forbidNonWhitelisted: true,
-      }),
-    );
-
-    // Установка глобального префикса для API
-    app.setGlobalPrefix('api/v1');
-
-    await app.init();
-    await app.getHttpAdapter().getInstance().ready();
+    const testApp = await createTestApp('simple', true); // Включаем аутентификацию для консистентности
+    app = testApp.app;
+    config = testApp.config;
   });
 
   afterAll(async () => {
-    // Очищаем временную директорию
-    if (await fs.pathExists(testStoragePath)) {
-      await fs.remove(testStoragePath);
-    }
-    await app.close();
+    await cleanupTestApp(app, config.testStoragePath);
   });
 
   it('should be defined', () => {
@@ -106,5 +38,16 @@ describe('Simple E2E Test', () => {
 
   it('should require authentication for files endpoint', async () => {
     await request(app.getHttpServer()).get('/api/v1/files').expect(401);
+  });
+
+  it('should allow access with valid token', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/api/v1/files')
+      .set('Authorization', `Bearer ${config.validToken}`)
+      .expect(200);
+
+    expect(response.body).toHaveProperty('files');
+    expect(response.body).toHaveProperty('total');
+    expect(response.body).toHaveProperty('pagination');
   });
 });
