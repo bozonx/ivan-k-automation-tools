@@ -171,76 +171,9 @@ export interface CorsConfig {
 
 /**
  * Конфигурация по умолчанию
+ * @deprecated Используйте createConfig() для динамического создания конфигурации
  */
-export const defaultConfig: AppConfig = {
-  server: {
-    port: parseInt(process.env.LISTEN_PORT || '3000', 10),
-    host: process.env.LISTEN_HOST || 'localhost',
-    apiPrefix: '/api',
-    apiVersion: 'v1',
-    enableSwagger: process.env.NODE_ENV !== 'production',
-    enableGlobalValidation: true,
-  },
-
-  storage: {
-    basePath: process.env.STORAGE_PATH || './storage',
-    maxFileSize: parseInt(process.env.MAX_FILE_SIZE || '104857600', 10), // 100MB
-    allowedMimeTypes: [
-      'image/jpeg',
-      'image/png',
-      'image/gif',
-      'image/webp',
-      'application/pdf',
-      'text/plain',
-      'application/json',
-      'text/csv',
-      'application/zip',
-      'application/x-zip-compressed',
-      'application/octet-stream',
-    ],
-    dateFormat: 'YYYY-MM',
-    enableDeduplication: true,
-    maxTtl: parseInt(process.env.MAX_TTL || '86400', 10), // 24 часа
-    minTtl: parseInt(process.env.MIN_TTL || '60', 10), // 1 минута
-    defaultTtl: parseInt(process.env.DEFAULT_TTL || '3600', 10), // 1 час
-  },
-
-  auth: {
-    enabled: process.env.AUTH_ENABLED === 'true',
-    secretKey: process.env.AUTH_SECRET_KEY || 'your-secret-key-change-in-production',
-    tokenExpiration: parseInt(process.env.AUTH_TOKEN_EXPIRATION || '3600', 10), // 1 час
-    algorithm: 'HS256',
-    excludePaths: ['/api/v1/health'],
-  },
-
-  cleanup: {
-    enabled: process.env.CLEANUP_ENABLED !== 'false',
-    cronExpression: process.env.CLEANUP_CRON || '0 * * * * *', // каждую минуту
-    checkInterval: parseInt(process.env.CLEANUP_INTERVAL || '60000', 10), // 1 минута
-    enableLogging: true,
-    maxFilesPerBatch: parseInt(process.env.CLEANUP_BATCH_SIZE || '100', 10),
-  },
-
-  logging: {
-    level: (process.env.LOG_LEVEL as any) || 'info',
-    enableFileLogging: process.env.NODE_ENV === 'production',
-    logFilePath: process.env.LOG_FILE_PATH || './logs/app.log',
-    maxLogFileSize: parseInt(process.env.MAX_LOG_FILE_SIZE || '10485760', 10), // 10MB
-    maxLogFiles: parseInt(process.env.MAX_LOG_FILES || '5', 10),
-    enableRequestLogging: true,
-    enableErrorLogging: true,
-  },
-
-  cors: {
-    enabled: true,
-    origin: process.env.CORS_ORIGIN || true,
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-    exposedHeaders: ['X-Total-Count', 'X-Page-Count'],
-    maxAge: 86400, // 24 часа
-  },
-};
+export const defaultConfig: AppConfig = createConfig();
 
 /**
  * Валидация конфигурации
@@ -258,6 +191,10 @@ export function validateConfig(config: AppConfig): string[] {
   }
 
   // Валидация хранилища
+  if (!config.storage.basePath || config.storage.basePath.trim() === '') {
+    errors.push('STORAGE_PATH environment variable is required');
+  }
+
   if (config.storage.maxFileSize < 1) {
     errors.push('Max file size must be greater than 0');
   }
@@ -291,10 +228,85 @@ export function validateConfig(config: AppConfig): string[] {
 }
 
 /**
+ * Создание конфигурации из переменных окружения
+ */
+export function createConfig(): AppConfig {
+  return {
+    server: {
+      port: parseInt(process.env.LISTEN_PORT || '3000', 10),
+      host: process.env.LISTEN_HOST || 'localhost',
+      apiPrefix: '/api',
+      apiVersion: 'v1',
+      enableSwagger: process.env.NODE_ENV !== 'production',
+      enableGlobalValidation: true,
+    },
+
+    storage: {
+      basePath: process.env.STORAGE_PATH!,
+      maxFileSize: parseInt(process.env.MAX_FILE_SIZE || '104857600', 10), // 100MB
+      allowedMimeTypes: [
+        'image/jpeg',
+        'image/png',
+        'image/gif',
+        'image/webp',
+        'application/pdf',
+        'text/plain',
+        'application/json',
+        'text/csv',
+        'application/zip',
+        'application/x-zip-compressed',
+        'application/octet-stream',
+      ],
+      dateFormat: 'YYYY-MM',
+      enableDeduplication: true,
+      maxTtl: parseInt(process.env.MAX_TTL || '86400', 10), // 24 часа
+      minTtl: parseInt(process.env.MIN_TTL || '60', 10), // 1 минута
+      defaultTtl: parseInt(process.env.DEFAULT_TTL || '3600', 10), // 1 час
+    },
+
+    auth: {
+      enabled: process.env.AUTH_ENABLED === 'true',
+      secretKey: process.env.AUTH_SECRET_KEY || 'your-secret-key-change-in-production',
+      tokenExpiration: parseInt(process.env.AUTH_TOKEN_EXPIRATION || '3600', 10), // 1 час
+      algorithm: 'HS256',
+      excludePaths: ['/api/v1/health'],
+    },
+
+    cleanup: {
+      enabled: process.env.CLEANUP_ENABLED !== 'false',
+      cronExpression: process.env.CLEANUP_CRON || '0 * * * * *', // каждую минуту
+      checkInterval: parseInt(process.env.CLEANUP_INTERVAL || '60000', 10), // 1 минута
+      enableLogging: true,
+      maxFilesPerBatch: parseInt(process.env.CLEANUP_BATCH_SIZE || '100', 10),
+    },
+
+    logging: {
+      level: (process.env.LOG_LEVEL as any) || 'info',
+      enableFileLogging: process.env.NODE_ENV === 'production',
+      logFilePath: process.env.LOG_FILE_PATH || './logs/app.log',
+      maxLogFileSize: parseInt(process.env.MAX_LOG_FILE_SIZE || '10485760', 10), // 10MB
+      maxLogFiles: parseInt(process.env.MAX_LOG_FILES || '5', 10),
+      enableRequestLogging: true,
+      enableErrorLogging: true,
+    },
+
+    cors: {
+      enabled: true,
+      origin: process.env.CORS_ORIGIN || true,
+      credentials: true,
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+      exposedHeaders: ['X-Total-Count', 'X-Page-Count'],
+      maxAge: 86400, // 24 часа
+    },
+  };
+}
+
+/**
  * Получение конфигурации с валидацией
  */
 export function getConfig(): AppConfig {
-  const config = defaultConfig;
+  const config = createConfig();
   const errors = validateConfig(config);
 
   if (errors.length > 0) {

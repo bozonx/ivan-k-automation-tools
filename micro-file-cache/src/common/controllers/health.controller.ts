@@ -1,7 +1,7 @@
 import { Controller, Get } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ConfigService } from '@nestjs/config';
 import { HealthResponse, HealthCheck } from '../interfaces/api.interface';
-import { getConfig } from '../../config/app.config';
 import * as os from 'os';
 import * as fs from 'fs-extra';
 import * as path from 'path';
@@ -13,6 +13,8 @@ import * as path from 'path';
 @Controller('health')
 export class HealthController {
   private readonly startTime = Date.now();
+
+  constructor(private readonly configService: ConfigService) {}
 
   /**
    * Проверка состояния приложения
@@ -38,7 +40,6 @@ export class HealthController {
     },
   })
   async getHealth(): Promise<HealthResponse> {
-    const config = getConfig();
     const now = new Date();
 
     try {
@@ -100,14 +101,10 @@ export class HealthController {
    * Проверка состояния хранилища
    */
   private async checkStorageHealth() {
-    const config = getConfig();
-    const storagePath = config.storage.basePath;
+    const storagePath = this.configService.get<string>('STORAGE_PATH', './storage');
 
     try {
-      // Создаем директорию хранилища если её нет
-      await fs.ensureDir(storagePath);
-
-      // Проверяем доступность директории хранилища
+      // Проверяем доступность директории хранилища (не создаем её)
       await fs.access(storagePath);
 
       // Получаем статистику диска
