@@ -6,8 +6,18 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
-import { AppModule } from '../../src/app.module';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ScheduleModule } from '@nestjs/schedule';
+// import { AppModule } from '../../src/app.module';
 import { getConfig } from '../../src/config/app.config';
+import { HealthController } from '../../src/common/controllers/health.controller';
+import { StorageTestController } from '../../src/common/controllers/storage-test.controller';
+import { StorageModule } from '../../src/modules/storage/storage.module';
+import { FilesModule } from '../../src/modules/files/files.module';
+import { CleanupModule } from '../../src/modules/cleanup/cleanup.module';
+import { GlobalValidationPipe } from '../../src/common/pipes/validation.pipe';
+import { AuthGuard } from '../../src/common/guards/auth.guard';
+import { APP_PIPE, APP_GUARD } from '@nestjs/core';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 
@@ -42,18 +52,69 @@ export async function createTestApp(
   );
   await fs.ensureDir(testStoragePath);
 
-  // Получаем конфигурацию (env.test уже загружен через setup.ts)
-  const config = getConfig();
-  const validToken = config.auth.secretKey || 'test-secret-key';
-
-  // Переопределяем переменные окружения для тестов
+  // Переопределяем переменные окружения для тестов ПЕРЕД загрузкой конфигурации
   process.env.STORAGE_PATH = testStoragePath;
   process.env.AUTH_ENABLED = authEnabled.toString();
-  process.env.AUTH_SECRET_KEY = validToken;
+  process.env.AUTH_SECRET_KEY = 'test-secret-key';
 
+  // Создаем тестовый модуль с правильной конфигурацией
   const moduleFixture: TestingModule = await Test.createTestingModule({
-    imports: [AppModule],
-  }).compile();
+    imports: [
+      // Глобальная конфигурация
+      ConfigModule.forRoot({
+        isGlobal: true,
+        envFilePath: 'env.test',
+        load: [getConfig],
+      }),
+      // Модуль для cron jobs (автоматическая очистка)
+      ScheduleModule.forRoot(),
+      // Модуль для работы с файловым хранилищем
+      StorageModule,
+      // Модуль для работы с файлами (бизнес-логика)
+      FilesModule,
+      // Модуль для автоматической очистки устаревших файлов
+      CleanupModule,
+    ],
+    controllers: [HealthController, StorageTestController],
+    providers: [
+      // Глобальный пайп валидации
+      {
+        provide: APP_PIPE,
+        useClass: GlobalValidationPipe,
+      },
+      // Глобальный guard аутентификации
+      {
+        provide: APP_GUARD,
+        useClass: AuthGuard,
+      },
+    ],
+  })
+    .overrideProvider(ConfigService)
+    .useValue({
+      get: (key: string, defaultValue?: any) => {
+        if (key === 'STORAGE_PATH') {
+          console.log(`🔧 ConfigService.get('STORAGE_PATH') returning: ${testStoragePath}`);
+          return testStoragePath;
+        }
+        if (key === 'AUTH_ENABLED') {
+          return authEnabled.toString();
+        }
+        if (key === 'AUTH_SECRET_KEY') {
+          return 'test-secret-key';
+        }
+        // Для остальных ключей используем значения из env.test
+        const value = process.env[key] || defaultValue;
+        if (key === 'STORAGE_PATH') {
+          console.log(`🔧 ConfigService.get('${key}') returning: ${value}`);
+        }
+        return value;
+      },
+    })
+    .compile();
+
+  // Получаем конфигурацию после создания модуля
+  const config = getConfig();
+  const validToken = config.auth.secretKey || 'test-secret-key';
 
   const app = moduleFixture.createNestApplication<NestFastifyApplication>(new FastifyAdapter());
 
