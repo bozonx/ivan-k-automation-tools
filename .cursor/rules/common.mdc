@@ -106,8 +106,8 @@ This repository contains multiple independent projects:
 ### Documentation
 
 - Store docs in `<projectName>/docs/`
-- Update `CHANGELOG.md` for significant changes
-- Keep `README.md` current with setup instructions
+- Update `<projectName>/docs/CHANGELOG.md` for significant changes
+- Keep `<projectName>/README.md` current with setup instructions
 - Write clear commit messages following conventional commits
 
 ## Testing Strategy
