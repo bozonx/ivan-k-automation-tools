@@ -1,17 +1,18 @@
 services:
   # Основной сервис micro-file-cache
   micro-file-cache:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: production
+    image: bozonx/micro-file-cache:latest
     container_name: micro-file-cache
     ports:
-      - '3000:80'
-    env_file:
-      - env.docker
+      - '80:80'
     environment:
+      - AUTH_TOKEN=your-secret-key
+      - CLEANUP_CRON=0 */10 * * * *
       - TZ=UTC
+      - MAX_FILES_COUNT=10000
+      - MAX_STORAGE_SIZE_MB=1000
+      - LOG_LEVEL=error
+      - CORS_ORIGIN=true
     volumes:
       # Монтируем директорию для хранения файлов
       - file_cache_storage:/app/storage
