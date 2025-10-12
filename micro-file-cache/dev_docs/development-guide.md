@@ -658,7 +658,7 @@ describe('FilesController (e2e)', () => {
 ### Docker
 
 ```dockerfile
-FROM node:18-alpine
+FROM node:22-alpine
 
 WORKDIR /app
 

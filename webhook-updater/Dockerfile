@@ -1,5 +1,5 @@
 # Используем официальный образ Node.js LTS на базе Alpine Linux для минимального размера
-FROM node:20-alpine
+FROM node:22-alpine
 
 # Устанавливаем метаданные образа
 LABEL maintainer="ivan-k-automation-tools"
