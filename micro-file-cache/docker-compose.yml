@@ -1,5 +1,4 @@
 services:
-  # Основной сервис micro-file-cache
   micro-file-cache:
     image: bozonx/micro-file-cache:latest
     container_name: micro-file-cache
@@ -8,39 +7,19 @@ services:
     environment:
       - AUTH_TOKEN=your-secret-key
       - MAX_TTL_MIN=10080
-      - TZ=UTC
-      - CLEANUP_CRON=0 */10 * * * *
       - MAX_FILE_SIZE_MB=100
       - MAX_STORAGE_SIZE_MB=1000
       - LOG_LEVEL=error
       - CORS_ORIGIN=true
+      # More environment variables see in .env.example
     volumes:
-      # Монтируем директорию для хранения файлов
       - file_cache_storage:/app/storage
-      # Монтируем логи (опционально)
-      - file_cache_logs:/app/logs
     restart: unless-stopped
-    healthcheck:
-      test:
-        [
-          'CMD',
-          'node',
-          '-e',
-          "require('http').get('http://localhost:80/api/v1/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) }).on('error', () => process.exit(1))",
-        ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
     networks:
       - micro-file-cache-network
 
 volumes:
-  # Постоянное хранилище для продакшн данных
   file_cache_storage:
-    driver: local
-  # Постоянное хранилище для логов
-  file_cache_logs:
     driver: local
 
 networks:
