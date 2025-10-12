@@ -3,6 +3,31 @@
  */
 
 /**
+ * Парсинг разрешенных MIME типов из переменной окружения
+ * @param allowedMimeTypesStr - строка с MIME типами в формате JSON массива или пустая строка
+ * @returns массив разрешенных MIME типов или пустой массив (разрешены все типы)
+ */
+function parseAllowedMimeTypes(allowedMimeTypesStr?: string): string[] {
+  if (!allowedMimeTypesStr || allowedMimeTypesStr.trim() === '') {
+    return []; // Пустой массив = разрешены все типы
+  }
+
+  try {
+    // Пытаемся распарсить как JSON массив
+    const parsed = JSON.parse(allowedMimeTypesStr);
+    if (Array.isArray(parsed)) {
+      return parsed
+        .filter((item) => typeof item === 'string' && item.trim() !== '')
+        .map((item) => item.trim());
+    }
+  } catch (error) {
+    // Если не удалось распарсить как JSON, игнорируем ошибку
+  }
+
+  return []; // По умолчанию разрешены все типы
+}
+
+/**
  * Основная конфигурация приложения
  */
 export interface AppConfig {
@@ -244,21 +269,9 @@ export function createConfig(): AppConfig {
     storage: {
       basePath: process.env.STORAGE_PATH!,
       maxFileSize: parseInt(process.env.MAX_FILE_SIZE || '104857600', 10), // 100MB
-      allowedMimeTypes: [
-        'image/jpeg',
-        'image/png',
-        'image/gif',
-        'image/webp',
-        'application/pdf',
-        'text/plain',
-        'application/json',
-        'text/csv',
-        'application/zip',
-        'application/x-zip-compressed',
-        'application/octet-stream',
-      ],
-      dateFormat: 'YYYY-MM',
-      enableDeduplication: true,
+      allowedMimeTypes: parseAllowedMimeTypes(process.env.ALLOWED_MIME_TYPES),
+      dateFormat: process.env.DATE_FORMAT || 'YYYY-MM',
+      enableDeduplication: process.env.ENABLE_DEDUPLICATION !== 'false',
       maxTtl: parseInt(process.env.MAX_TTL || '86400', 10), // 24 часа
       minTtl: parseInt(process.env.MIN_TTL || '60', 10), // 1 минута
       defaultTtl: parseInt(process.env.DEFAULT_TTL || '3600', 10), // 1 час

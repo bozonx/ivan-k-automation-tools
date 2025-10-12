@@ -20,67 +20,15 @@ export class ValidationUtil {
   private static readonly MAX_TTL = 30 * 24 * 60 * 60;
 
   /**
-   * Разрешенные MIME типы
-   */
-  private static readonly ALLOWED_MIME_TYPES = [
-    // Изображения
-    'image/jpeg',
-    'image/png',
-    'image/gif',
-    'image/webp',
-    'image/svg+xml',
-    'image/bmp',
-    'image/tiff',
-
-    // Документы
-    'application/pdf',
-    'application/msword',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    'application/vnd.ms-excel',
-    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    'application/vnd.ms-powerpoint',
-    'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-    'text/plain',
-    'text/csv',
-    'application/rtf',
-
-    // Архивы
-    'application/zip',
-    'application/x-rar-compressed',
-    'application/x-7z-compressed',
-    'application/gzip',
-    'application/x-tar',
-
-    // Аудио
-    'audio/mpeg',
-    'audio/wav',
-    'audio/ogg',
-    'audio/mp4',
-    'audio/aac',
-
-    // Видео
-    'video/mp4',
-    'video/avi',
-    'video/quicktime',
-    'video/x-msvideo',
-    'video/webm',
-    'video/ogg',
-
-    // JSON и XML
-    'application/json',
-    'application/xml',
-    'text/xml',
-
-    // Бинарные файлы (для тестов и общих случаев)
-    'application/octet-stream',
-  ];
-
-  /**
    * Валидирует загруженный файл
    * @param file - загруженный файл
+   * @param allowedMimeTypes - массив разрешенных MIME типов (пустой массив = разрешены все типы)
    * @returns объект с результатом валидации
    */
-  static validateUploadedFile(file: UploadedFile): {
+  static validateUploadedFile(
+    file: UploadedFile,
+    allowedMimeTypes: string[] = [],
+  ): {
     isValid: boolean;
     errors: string[];
   } {
@@ -111,7 +59,7 @@ export class ValidationUtil {
     // Проверяем MIME тип (обязательное поле)
     if (!file.mimetype || typeof file.mimetype !== 'string' || file.mimetype.trim() === '') {
       errors.push('MIME type is required');
-    } else if (!this.ALLOWED_MIME_TYPES.includes(file.mimetype)) {
+    } else if (allowedMimeTypes.length > 0 && !allowedMimeTypes.includes(file.mimetype)) {
       errors.push(`MIME type '${file.mimetype}' is not allowed`);
     }
 

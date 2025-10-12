@@ -10,15 +10,15 @@ describe('ValidationUtil', () => {
       path: '/tmp/test.txt',
     };
 
-    it('should validate correct file', () => {
-      const result = ValidationUtil.validateUploadedFile(validFile);
+    it('should validate correct file with empty allowed MIME types (allow all)', () => {
+      const result = ValidationUtil.validateUploadedFile(validFile, []);
 
       expect(result.isValid).toBe(true);
       expect(result.errors).toHaveLength(0);
     });
 
     it('should reject null file', () => {
-      const result = ValidationUtil.validateUploadedFile(null as any);
+      const result = ValidationUtil.validateUploadedFile(null as any, []);
 
       expect(result.isValid).toBe(false);
       expect(result.errors).toContain('File is required');
@@ -26,7 +26,7 @@ describe('ValidationUtil', () => {
 
     it('should reject file without originalname', () => {
       const file = { ...validFile, originalname: '' };
-      const result = ValidationUtil.validateUploadedFile(file);
+      const result = ValidationUtil.validateUploadedFile(file, []);
 
       expect(result.isValid).toBe(false);
       expect(result.errors).toContain('Original filename is required');
@@ -34,7 +34,7 @@ describe('ValidationUtil', () => {
 
     it('should reject file with invalid size', () => {
       const file = { ...validFile, size: -1 };
-      const result = ValidationUtil.validateUploadedFile(file);
+      const result = ValidationUtil.validateUploadedFile(file, []);
 
       expect(result.isValid).toBe(false);
       expect(result.errors).toContain('File size must be a positive number');
@@ -42,7 +42,7 @@ describe('ValidationUtil', () => {
 
     it('should reject file exceeding max size', () => {
       const file = { ...validFile, size: 200 * 1024 * 1024 }; // 200MB
-      const result = ValidationUtil.validateUploadedFile(file);
+      const result = ValidationUtil.validateUploadedFile(file, []);
 
       expect(result.isValid).toBe(false);
       expect(result.errors.some((e) => e.includes('File size exceeds maximum allowed size'))).toBe(
@@ -52,23 +52,32 @@ describe('ValidationUtil', () => {
 
     it('should reject file without mimetype', () => {
       const file = { ...validFile, mimetype: '' };
-      const result = ValidationUtil.validateUploadedFile(file);
+      const result = ValidationUtil.validateUploadedFile(file, []);
 
       expect(result.isValid).toBe(false);
       expect(result.errors).toContain('MIME type is required');
     });
 
-    it('should reject file with not allowed mimetype', () => {
+    it('should reject file with not allowed mimetype when restrictions are set', () => {
       const file = { ...validFile, mimetype: 'application/x-executable' };
-      const result = ValidationUtil.validateUploadedFile(file);
+      const allowedMimeTypes = ['text/plain', 'image/jpeg'];
+      const result = ValidationUtil.validateUploadedFile(file, allowedMimeTypes);
 
       expect(result.isValid).toBe(false);
       expect(result.errors).toContain("MIME type 'application/x-executable' is not allowed");
     });
 
+    it('should allow any mimetype when no restrictions are set', () => {
+      const file = { ...validFile, mimetype: 'application/x-executable' };
+      const result = ValidationUtil.validateUploadedFile(file, []);
+
+      expect(result.isValid).toBe(true);
+      expect(result.errors).toHaveLength(0);
+    });
+
     it('should reject file without path or buffer', () => {
       const file = { ...validFile, path: '', buffer: undefined };
-      const result = ValidationUtil.validateUploadedFile(file);
+      const result = ValidationUtil.validateUploadedFile(file, []);
 
       expect(result.isValid).toBe(false);
       expect(result.errors).toContain('File must have either path or buffer');
@@ -76,7 +85,7 @@ describe('ValidationUtil', () => {
 
     it('should accept file with buffer instead of path', () => {
       const file = { ...validFile, path: '', buffer: Buffer.from('test') };
-      const result = ValidationUtil.validateUploadedFile(file);
+      const result = ValidationUtil.validateUploadedFile(file, []);
 
       expect(result.isValid).toBe(true);
       expect(result.errors).toHaveLength(0);

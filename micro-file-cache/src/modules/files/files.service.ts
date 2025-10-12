@@ -64,6 +64,7 @@ export class FilesService {
   private readonly logger = new Logger(FilesService.name);
   private readonly defaultTTL: number;
   private readonly maxFileSize: number;
+  private readonly allowedMimeTypes: string[];
 
   constructor(
     private readonly storageService: StorageService,
@@ -71,6 +72,7 @@ export class FilesService {
   ) {
     this.defaultTTL = this.configService.get<number>('DEFAULT_TTL', 3600); // 1 час по умолчанию
     this.maxFileSize = this.configService.get<number>('MAX_FILE_SIZE', 100 * 1024 * 1024); // 100MB
+    this.allowedMimeTypes = this.configService.get<string[]>('ALLOWED_MIME_TYPES', []); // Пустой массив = разрешены все типы
   }
 
   /**
@@ -86,7 +88,10 @@ export class FilesService {
       const validatedParams = this.validateUploadParams(params);
 
       // Валидация файла
-      const fileValidation = ValidationUtil.validateUploadedFile(validatedParams.file);
+      const fileValidation = ValidationUtil.validateUploadedFile(
+        validatedParams.file,
+        this.allowedMimeTypes,
+      );
       if (!fileValidation.isValid) {
         throw new BadRequestException(
           `File validation failed: ${fileValidation.errors.join(', ')}`,
