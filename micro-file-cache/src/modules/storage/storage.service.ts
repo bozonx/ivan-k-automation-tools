@@ -49,7 +49,7 @@ export class StorageService {
 
       this.config = {
         basePath: absoluteBasePath,
-        maxFileSize: this.configService.get<number>('MAX_FILE_SIZE', 100 * 1024 * 1024), // 100MB
+        maxFileSize: this.configService.get<number>('MAX_FILE_SIZE_MB', 100) * 1024 * 1024, // Конвертируем MB в байты
         allowedMimeTypes: this.configService.get<string[]>('ALLOWED_MIME_TYPES', []), // Пустой массив = разрешены все типы
         dateFormat: this.configService.get<string>('DATE_FORMAT', 'YYYY-MM'),
         enableDeduplication: this.configService.get<boolean>('ENABLE_DEDUPLICATION', true),

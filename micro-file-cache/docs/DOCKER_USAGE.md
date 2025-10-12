@@ -62,7 +62,7 @@ docker-compose logs -f micro-file-cache
 - `AUTH_ENABLED=true` - включена аутентификация
 - `AUTH_SECRET_KEY` - секретный ключ для токенов
 - `STORAGE_PATH=/app/storage` - путь к хранилищу
-- `MAX_FILE_SIZE=104857600` - максимальный размер файла (100MB)
+- `MAX_FILE_SIZE_MB=100` - максимальный размер файла в мегабайтах (100MB)
 - `TTL_MAX_MINUTES=10080` - максимальный TTL (7 дней)
 
 ## Volumes

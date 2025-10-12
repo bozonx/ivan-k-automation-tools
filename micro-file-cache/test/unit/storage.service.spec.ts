@@ -67,7 +67,7 @@ describe('StorageService', () => {
             get: jest.fn((key: string, defaultValue?: any) => {
               const config = {
                 STORAGE_PATH: testStoragePath,
-                MAX_FILE_SIZE: 1024 * 1024, // 1MB
+                MAX_FILE_SIZE_MB: 1, // 1MB
                 ALLOWED_MIME_TYPES: [], // Разрешены все типы файлов
                 DATE_FORMAT: 'YYYY-MM',
                 ENABLE_DEDUPLICATION: true,
@@ -224,7 +224,7 @@ describe('StorageService', () => {
       configService.get = jest.fn((key: string, defaultValue?: any) => {
         const config = {
           STORAGE_PATH: testStoragePath,
-          MAX_FILE_SIZE: 1024 * 1024,
+          MAX_FILE_SIZE_MB: 1,
           ALLOWED_MIME_TYPES: ['image/jpeg'], // Только JPEG разрешен
           DATE_FORMAT: 'YYYY-MM',
           ENABLE_DEDUPLICATION: true,
@@ -617,7 +617,7 @@ describe('StorageService', () => {
         get: jest.fn((key: string, defaultValue?: any) => {
           const config = {
             STORAGE_PATH: '/invalid/path/that/does/not/exist',
-            MAX_FILE_SIZE: 1024 * 1024,
+            MAX_FILE_SIZE_MB: 1,
             ALLOWED_MIME_TYPES: [],
             DATE_FORMAT: 'YYYY-MM',
             ENABLE_DEDUPLICATION: true,

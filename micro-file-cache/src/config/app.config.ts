@@ -270,7 +270,7 @@ export function createConfig(): AppConfig {
 
     storage: {
       basePath: process.env.STORAGE_PATH!,
-      maxFileSize: parseInt(process.env.MAX_FILE_SIZE || '104857600', 10), // 100MB
+      maxFileSize: parseInt(process.env.MAX_FILE_SIZE_MB || '100', 10) * 1024 * 1024, // Конвертируем MB в байты
       allowedMimeTypes: parseAllowedMimeTypes(process.env.ALLOWED_MIME_TYPES),
       dateFormat: process.env.DATE_FORMAT || 'YYYY-MM',
       enableDeduplication: process.env.ENABLE_DEDUPLICATION !== 'false',

@@ -5,9 +5,9 @@ import { FileInfo, UploadedFile } from '../interfaces/file.interface';
  */
 export class ValidationUtil {
   /**
-   * Максимальный размер файла в байтах (100MB)
+   * Максимальный размер файла в байтах по умолчанию (100MB)
    */
-  private static readonly MAX_FILE_SIZE = 100 * 1024 * 1024;
+  private static readonly DEFAULT_MAX_FILE_SIZE = 100 * 1024 * 1024;
 
   /**
    * Минимальное время жизни файла в секундах (1 минута)
@@ -23,11 +23,13 @@ export class ValidationUtil {
    * Валидирует загруженный файл
    * @param file - загруженный файл
    * @param allowedMimeTypes - массив разрешенных MIME типов (пустой массив = разрешены все типы)
+   * @param maxFileSize - максимальный размер файла в байтах (по умолчанию 100MB)
    * @returns объект с результатом валидации
    */
   static validateUploadedFile(
     file: UploadedFile,
     allowedMimeTypes: string[] = [],
+    maxFileSize: number = this.DEFAULT_MAX_FILE_SIZE,
   ): {
     isValid: boolean;
     errors: string[];
@@ -52,8 +54,8 @@ export class ValidationUtil {
     // Проверяем размер файла (должен быть положительным числом)
     if (typeof file.size !== 'number' || file.size <= 0) {
       errors.push('File size must be a positive number');
-    } else if (file.size > this.MAX_FILE_SIZE) {
-      errors.push(`File size exceeds maximum allowed size of ${this.MAX_FILE_SIZE} bytes`);
+    } else if (file.size > maxFileSize) {
+      errors.push(`File size exceeds maximum allowed size of ${maxFileSize} bytes`);
     }
 
     // Проверяем MIME тип (обязательное поле)

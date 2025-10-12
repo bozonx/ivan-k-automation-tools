@@ -94,7 +94,7 @@ describe('FilesService', () => {
     configService.get.mockImplementation((key: string, defaultValue?: any) => {
       const config = {
         DEFAULT_TTL: 3600,
-        MAX_FILE_SIZE: 100 * 1024 * 1024,
+        MAX_FILE_SIZE_MB: 100,
       };
       return config[key] || defaultValue;
     });
