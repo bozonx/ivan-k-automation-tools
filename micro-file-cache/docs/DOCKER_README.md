@@ -109,12 +109,12 @@ docker volume prune
 
 Основные переменные настраиваются в файле `env.docker`:
 
-- `NODE_ENV` - режим работы (production/development)
-- `LISTEN_HOST` - хост для прослушивания (0.0.0.0 для Docker)
-- `LISTEN_PORT` - порт (80 для продакшн, 3000 для dev)
-- `AUTH_ENABLED` - включение аутентификации
-- `AUTH_SECRET_KEY` - секретный ключ для токенов
-- `STORAGE_PATH` - путь к хранилищу файлов
+- `NODE_ENV` - режим работы (по умолчанию: development)
+- `LISTEN_HOST` - хост для прослушивания (по умолчанию: localhost, для Docker: 0.0.0.0)
+- `LISTEN_PORT` - порт (по умолчанию: 3000, для продакшн: 80)
+- `AUTH_ENABLED` - включение аутентификации (по умолчанию: true)
+- `AUTH_SECRET_KEY` - секретный ключ для токенов (обязателен если AUTH_ENABLED=true)
+- `STORAGE_PATH` - путь к хранилищу файлов (обязателен)
 - `MAX_FILE_SIZE` - максимальный размер файла
 - `TTL_MAX_MINUTES` - максимальный TTL в минутах
 - `CLEANUP_INTERVAL` - интервал очистки в миллисекундах

@@ -237,7 +237,9 @@ export function validateConfig(config: AppConfig): string[] {
 
   // Валидация аутентификации
   if (config.auth.enabled && (!config.auth.secretKey || config.auth.secretKey.length < 32)) {
-    errors.push('Auth secret key must be at least 32 characters long when auth is enabled');
+    errors.push(
+      'AUTH_SECRET_KEY environment variable is required and must be at least 32 characters long when AUTH_ENABLED is true',
+    );
   }
 
   if (config.auth.tokenExpiration < 60) {
@@ -262,7 +264,7 @@ export function createConfig(): AppConfig {
       host: process.env.LISTEN_HOST || 'localhost',
       apiPrefix: '/api',
       apiVersion: 'v1',
-      enableSwagger: process.env.NODE_ENV !== 'production',
+      enableSwagger: (process.env.NODE_ENV || 'development') !== 'production',
       enableGlobalValidation: true,
     },
 
@@ -278,8 +280,8 @@ export function createConfig(): AppConfig {
     },
 
     auth: {
-      enabled: process.env.AUTH_ENABLED === 'true',
-      secretKey: process.env.AUTH_SECRET_KEY || 'your-secret-key-change-in-production',
+      enabled: process.env.AUTH_ENABLED !== 'false',
+      secretKey: process.env.AUTH_SECRET_KEY!,
       tokenExpiration: parseInt(process.env.AUTH_TOKEN_EXPIRATION || '3600', 10), // 1 час
       algorithm: 'HS256',
       excludePaths: ['/api/v1/health'],
@@ -295,7 +297,7 @@ export function createConfig(): AppConfig {
 
     logging: {
       level: (process.env.LOG_LEVEL as any) || 'info',
-      enableFileLogging: process.env.NODE_ENV === 'production',
+      enableFileLogging: (process.env.NODE_ENV || 'development') === 'production',
       logFilePath: process.env.LOG_FILE_PATH || './logs/app.log',
       maxLogFileSize: parseInt(process.env.MAX_LOG_FILE_SIZE || '10485760', 10), // 10MB
       maxLogFiles: parseInt(process.env.MAX_LOG_FILES || '5', 10),

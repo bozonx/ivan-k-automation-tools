@@ -113,7 +113,7 @@ docker-compose up -d
 | ------------------ | --------------------------------------- | --------------------------------------------- |
 | `NODE_ENV`         | `development`                           | Режим работы приложения                       |
 | `LISTEN_HOST`      | `localhost`                             | Хост для HTTP сервера                         |
-| `LISTEN_PORT`      | `80`                                    | Порт для HTTP сервера                         |
+| `LISTEN_PORT`      | `3000`                                  | Порт для HTTP сервера                         |
 | `AUTH_TOKEN`       | -                                       | Bearer токен для аутентификации (опционально) |
 | `STORAGE_DIR`      | `../test-data/micro-file-cache/storage` | Директория для хранения файлов                |
 | `DATA_DIR`         | `../test-data/micro-file-cache/data`    | Директория для метаданных                     |
@@ -126,7 +126,7 @@ docker-compose up -d
 ```bash
 NODE_ENV=production
 LISTEN_HOST=0.0.0.0
-LISTEN_PORT=80
+LISTEN_PORT=3000
 AUTH_TOKEN=your-secret-token
 STORAGE_DIR=/app/storage
 DATA_DIR=/app/data

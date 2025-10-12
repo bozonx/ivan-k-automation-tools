@@ -464,7 +464,7 @@ export class ConfigService {
   }
 
   get listenPort(): number {
-    return parseInt(process.env.LISTEN_PORT || '80', 10);
+    return parseInt(process.env.LISTEN_PORT || '3000', 10);
   }
 
   get authToken(): string | undefined {

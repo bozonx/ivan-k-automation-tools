@@ -332,10 +332,12 @@ export class FileService {
 ```bash
 # Основные настройки
 NODE_ENV=development
-PORT=3000
+LISTEN_HOST=localhost
+LISTEN_PORT=3000
 
 # Аутентификация
-AUTH_TOKEN=your-secret-token                # Bearer токен для аутентификации
+AUTH_ENABLED=true
+AUTH_SECRET_KEY=your-secret-key-change-in-production-12345678901234567890
 
 # Пути к хранилищу
 STORAGE_DIR=/app/storage                    # Продакшн

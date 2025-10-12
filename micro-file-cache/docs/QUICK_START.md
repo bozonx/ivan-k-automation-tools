@@ -94,9 +94,9 @@ src/
 
 Основные переменные для разработки:
 
-- `AUTH_ENABLED=true` - включить аутентификацию
-- `AUTH_SECRET_KEY=dev-secret-key-...` - секретный ключ
-- `LISTEN_PORT=3000` - порт приложения
+- `AUTH_ENABLED=true` - включить аутентификацию (по умолчанию: true)
+- `AUTH_SECRET_KEY=dev-secret-key-...` - секретный ключ (обязателен если AUTH_ENABLED=true)
+- `LISTEN_PORT=3000` - порт приложения (по умолчанию: 3000)
 - `LOG_LEVEL=debug` - уровень логирования
 
 Полный список переменных см. в файле `env.example` или `ENV_SETUP.md`.

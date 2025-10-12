@@ -152,7 +152,7 @@
 
 ### Changed
 
-- Обновлен main.ts для использования LISTEN_HOST (по умолчанию localhost) и LISTEN_PORT (по умолчанию 80)
+- Обновлен main.ts для использования LISTEN_HOST (по умолчанию localhost) и LISTEN_PORT (по умолчанию 3000)
 - Обновлен env.example с новыми переменными окружения
 - Обновлена документация (README.md, architecture.md) с информацией о новых переменных
 
