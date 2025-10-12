@@ -7,7 +7,7 @@ import { ConfigService } from '@nestjs/config';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import * as dayjs from 'dayjs';
+import { DateUtil } from '../../common/utils/date.util';
 
 import { StorageService } from '../storage/storage.service';
 import { FileInfo } from '../../common/interfaces/file.interface';
@@ -121,7 +121,7 @@ export class CleanupService {
       errors: 0,
       errorMessages: [],
       executionTime: 0,
-      executedAt: new Date(),
+      executedAt: DateUtil.now().toDate(),
     };
 
     try {
@@ -190,7 +190,7 @@ export class CleanupService {
       errors: 0,
       errorMessages: [],
       executionTime: 0,
-      executedAt: new Date(),
+      executedAt: DateUtil.now().toDate(),
     };
 
     try {

@@ -5,7 +5,7 @@ import {
   NotFoundException,
   InternalServerErrorException,
 } from '@nestjs/common';
-import dayjs from 'dayjs';
+import { DateUtil } from '../../src/common/utils/date.util';
 
 import { FilesService } from '../../src/modules/files/files.service';
 import { StorageService } from '../../src/modules/storage/storage.service';
@@ -44,7 +44,7 @@ describe('FilesService', () => {
     hash: 'test-hash',
     uploadedAt: new Date(),
     ttl: 3600,
-    expiresAt: dayjs().add(3600, 'seconds').toDate(),
+    expiresAt: DateUtil.createExpirationDate(3600),
     filePath: '/storage/2024-01/test-file-id_test-file.txt',
     metadata: { description: 'Test file' },
   };

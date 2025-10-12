@@ -11,7 +11,7 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import dayjs from 'dayjs';
+import { DateUtil } from '../../common/utils/date.util';
 
 import { StorageService } from '../storage/storage.service';
 import { ValidationUtil } from '../../common/utils/validation.util';
@@ -517,8 +517,8 @@ export class FilesService {
       expiresAt: expiresAt.toISOString(),
       metadata: fileInfo.metadata,
       hash: fileInfo.hash,
-      isExpired: dayjs().isAfter(dayjs(expiresAt)),
-      timeRemaining: Math.max(0, Math.floor((expiresAt.getTime() - Date.now()) / 1000)),
+      isExpired: DateUtil.isExpired(expiresAt),
+      timeRemaining: Math.max(0, DateUtil.diffInSeconds(expiresAt, DateUtil.now().toDate())),
     };
   }
 

@@ -3,6 +3,14 @@
  */
 
 /**
+ * Конфигурация timezone
+ */
+export interface TimezoneConfig {
+  /** Часовой пояс по умолчанию */
+  default: string;
+}
+
+/**
  * Парсинг разрешенных MIME типов из переменной окружения
  * @param allowedMimeTypesStr - строка с MIME типами в формате JSON массива или пустая строка
  * @returns массив разрешенных MIME типов или пустой массив (разрешены все типы)
@@ -48,6 +56,9 @@ export interface AppConfig {
 
   /** Настройки CORS */
   cors: CorsConfig;
+
+  /** Настройки timezone */
+  timezone: TimezoneConfig;
 }
 
 /**
@@ -303,6 +314,10 @@ export function createConfig(): AppConfig {
       allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
       exposedHeaders: ['X-Total-Count', 'X-Page-Count'],
       maxAge: 86400, // 24 часа
+    },
+
+    timezone: {
+      default: process.env.TZ || 'UTC',
     },
   };
 }

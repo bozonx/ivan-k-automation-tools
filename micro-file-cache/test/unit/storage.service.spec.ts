@@ -22,17 +22,20 @@ jest.mock('fs-extra', () => ({
   readFileSync: jest.fn(),
 }));
 
-// Мокаем dayjs для тестов
-jest.mock('dayjs', () => {
-  const mockDayjs = jest.fn(() => ({
+// Мокаем DateUtil для тестов
+jest.mock('../../src/common/utils/date.util', () => ({
+  DateUtil: {
+    now: jest.fn(() => ({
+      toDate: jest.fn(() => new Date('2024-01-01T00:00:00.000Z')),
+    })),
     format: jest.fn(() => '2024-01'),
-    add: jest.fn(() => mockDayjs()),
+    createExpirationDate: jest.fn(() => new Date('2024-01-01T01:00:00.000Z')),
+    isExpired: jest.fn(() => false),
     isAfter: jest.fn(() => false),
-    valueOf: jest.fn(() => 1640995200000),
-    toDate: jest.fn(() => new Date('2024-01-01T00:00:00.000Z')),
-  }));
-  return mockDayjs;
-});
+    isBefore: jest.fn(() => false),
+    toTimestamp: jest.fn(() => 1640995200000),
+  },
+}));
 
 describe('StorageService', () => {
   let service: StorageService;

@@ -7,7 +7,6 @@ import { ConfigService } from '@nestjs/config';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import { fileTypeFromBuffer } from 'file-type';
-import dayjs from 'dayjs';
 import { v4 as uuidv4 } from 'uuid';
 
 import {
@@ -26,6 +25,7 @@ import {
 } from '../../common/interfaces/storage.interface';
 import { HashUtil } from '../../common/utils/hash.util';
 import { FilenameUtil } from '../../common/utils/filename.util';
+import { DateUtil } from '../../common/utils/date.util';
 
 @Injectable()
 export class StorageService {
@@ -183,7 +183,7 @@ export class StorageService {
       const storedFilename = `${fileId}_${safeFilename}`;
 
       // Создаем директорию по дате
-      const dateDir = dayjs().format(config.dateFormat);
+      const dateDir = DateUtil.format(DateUtil.now().toDate(), config.dateFormat);
       const fileDir = path.join(config.basePath, dateDir);
       await fs.ensureDir(fileDir);
 
@@ -201,9 +201,9 @@ export class StorageService {
         mimeType,
         size: actualFileSize,
         hash,
-        uploadedAt: new Date(),
+        uploadedAt: DateUtil.now().toDate(),
         ttl,
-        expiresAt: dayjs().add(ttl, 'seconds').toDate(),
+        expiresAt: DateUtil.createExpirationDate(ttl),
         filePath,
         metadata,
       };
@@ -246,7 +246,7 @@ export class StorageService {
       }
 
       // Проверяем, не истек ли срок жизни файла
-      if (dayjs().isAfter(dayjs(fileInfo.expiresAt))) {
+      if (DateUtil.isExpired(fileInfo.expiresAt)) {
         return {
           success: false,
           error: `File with ID ${fileId} has expired`,
@@ -362,21 +362,19 @@ export class StorageService {
       }
 
       if (params.uploadedAfter) {
-        files = files.filter((file) => dayjs(file.uploadedAt).isAfter(dayjs(params.uploadedAfter)));
+        files = files.filter((file) => DateUtil.isAfter(file.uploadedAt, params.uploadedAfter!));
       }
 
       if (params.uploadedBefore) {
-        files = files.filter((file) =>
-          dayjs(file.uploadedAt).isBefore(dayjs(params.uploadedBefore)),
-        );
+        files = files.filter((file) => DateUtil.isBefore(file.uploadedAt, params.uploadedBefore!));
       }
 
       if (params.expiredOnly) {
-        files = files.filter((file) => dayjs().isAfter(dayjs(file.expiresAt)));
+        files = files.filter((file) => DateUtil.isExpired(file.expiresAt));
       }
 
       // Сортируем по дате загрузки (новые сначала)
-      files.sort((a, b) => dayjs(b.uploadedAt).valueOf() - dayjs(a.uploadedAt).valueOf());
+      files.sort((a, b) => DateUtil.toTimestamp(b.uploadedAt) - DateUtil.toTimestamp(a.uploadedAt));
 
       const total = files.length;
 
@@ -420,7 +418,7 @@ export class StorageService {
         filesByMimeType[file.mimeType] = (filesByMimeType[file.mimeType] || 0) + 1;
 
         // Группировка по дате загрузки
-        const dateKey = dayjs(file.uploadedAt).format('YYYY-MM-DD');
+        const dateKey = DateUtil.format(file.uploadedAt, 'YYYY-MM-DD');
         filesByDate[dateKey] = (filesByDate[dateKey] || 0) + 1;
       });
 
@@ -616,8 +614,8 @@ export class StorageService {
 
       if (fileInfo) {
         // Обновляем время истечения срока жизни
-        fileInfo.expiresAt = dayjs().add(fileInfo.ttl, 'seconds').toDate();
-        fileInfo.uploadedAt = new Date();
+        fileInfo.expiresAt = DateUtil.createExpirationDate(fileInfo.ttl);
+        fileInfo.uploadedAt = DateUtil.now().toDate();
 
         await this.updateMetadata(fileInfo, 'add');
         this.logger.log(`File reference incremented: ${fileId}`);

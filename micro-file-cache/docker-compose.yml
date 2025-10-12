@@ -10,6 +10,8 @@ services:
       - '3000:80'
     env_file:
       - env.docker
+    environment:
+      - TZ=UTC
     volumes:
       # Монтируем директорию для хранения файлов
       - file_cache_storage:/app/storage
@@ -54,6 +56,7 @@ services:
       - LOG_LEVEL=debug
       - MAX_FILES_COUNT=1000
       - MAX_STORAGE_SIZE_MB=1000
+      - TZ=UTC
     volumes:
       # Монтируем исходный код для hot reload
       - .:/app

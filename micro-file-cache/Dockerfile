@@ -1,8 +1,9 @@
 # Используем официальный образ Node.js 22 Alpine для минимального размера
 FROM node:22-alpine AS builder
 
-# Устанавливаем pnpm глобально
-RUN npm install -g pnpm@10.13.1
+# Устанавливаем pnpm глобально и timezone данные
+RUN npm install -g pnpm@10.13.1 && \
+    apk add --no-cache tzdata
 
 # Устанавливаем рабочую директорию
 WORKDIR /app
@@ -22,8 +23,9 @@ RUN pnpm run build
 # Продакшн образ
 FROM node:22-alpine AS production
 
-# Устанавливаем pnpm глобально
-RUN npm install -g pnpm@10.13.1
+# Устанавливаем pnpm глобально и timezone данные
+RUN npm install -g pnpm@10.13.1 && \
+    apk add --no-cache tzdata
 
 # Создаем пользователя для безопасности
 RUN addgroup -g 1001 -S nodejs && \
@@ -45,6 +47,9 @@ COPY --from=builder /app/dist ./dist
 # Создаем директории для хранения файлов
 RUN mkdir -p /app/storage && \
     chown -R nestjs:nodejs /app
+
+# Устанавливаем timezone по умолчанию
+ENV TZ=UTC
 
 # Переключаемся на непривилегированного пользователя
 USER nestjs
