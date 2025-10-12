@@ -48,7 +48,10 @@ async function bootstrap() {
     }
 
     // Установка глобального префикса для API
-    app.setGlobalPrefix(config.server.apiPrefix + '/' + config.server.apiVersion);
+    const globalPrefix = config.server.basePath
+      ? `${config.server.basePath}/${config.server.apiVersion}`
+      : config.server.apiVersion;
+    app.setGlobalPrefix(globalPrefix);
 
     // Настройка Swagger (только для разработки)
     if (config.server.enableSwagger) {
@@ -62,9 +65,10 @@ async function bootstrap() {
         .build();
 
       const document = SwaggerModule.createDocument(app, swaggerConfig);
-      SwaggerModule.setup('api/docs', app, document);
+      const swaggerPath = config.server.basePath ? `${config.server.basePath}/docs` : 'docs';
+      SwaggerModule.setup(swaggerPath, app, document);
 
-      logger.log('Swagger documentation available at /api/docs');
+      logger.log(`Swagger documentation available at /${swaggerPath}`);
     }
 
     // Запуск приложения
@@ -74,8 +78,8 @@ async function bootstrap() {
     await app.listen(port, host);
 
     logger.log(`🚀 Application is running on: http://${host}:${port}`);
-    logger.log(`📚 API documentation: http://${host}:${port}/api/docs`);
-    logger.log(`🏥 Health check: http://${host}:${port}/api/v1/health`);
+    logger.log(`📚 API documentation: http://${host}:${port}/${config.server.basePath || ''}/docs`);
+    logger.log(`🏥 Health check: http://${host}:${port}/${globalPrefix}/health`);
   } catch (error) {
     logger.error('❌ Failed to start application:', error);
     process.exit(1);

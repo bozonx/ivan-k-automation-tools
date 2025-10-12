@@ -60,8 +60,8 @@ export interface ServerConfig {
   /** Хост для прослушивания */
   host: string;
 
-  /** Префикс для API */
-  apiPrefix: string;
+  /** Базовый путь для API (может быть пустым для работы от корня) */
+  basePath: string;
 
   /** Версия API */
   apiVersion: string;
@@ -254,8 +254,8 @@ export function createConfig(): AppConfig {
     server: {
       port: parseInt(process.env.LISTEN_PORT || '3000', 10),
       host: process.env.LISTEN_HOST || 'localhost',
-      apiPrefix: '/api',
-      apiVersion: 'v1',
+      basePath: process.env.BASE_PATH || 'api',
+      apiVersion: process.env.API_VERSION || 'v1',
       enableSwagger: (process.env.NODE_ENV || 'development') !== 'production',
       enableGlobalValidation: true,
     },
@@ -275,7 +275,7 @@ export function createConfig(): AppConfig {
       secretKey: process.env.AUTH_SECRET_KEY!,
       tokenExpiration: parseInt(process.env.AUTH_TOKEN_EXPIRATION || '3600', 10), // 1 час
       algorithm: 'HS256',
-      excludePaths: ['/api/v1/health'],
+      excludePaths: [], // Будет заполнено динамически в getConfig()
     },
 
     cleanup: {
@@ -312,6 +312,14 @@ export function createConfig(): AppConfig {
  */
 export function getConfig(): AppConfig {
   const config = createConfig();
+
+  // Динамически формируем excludePaths для аутентификации
+  const basePath = config.server.basePath;
+  const apiVersion = config.server.apiVersion;
+  const healthPath = basePath ? `/${basePath}/${apiVersion}/health` : `/${apiVersion}/health`;
+
+  config.auth.excludePaths = [healthPath];
+
   const errors = validateConfig(config);
 
   if (errors.length > 0) {

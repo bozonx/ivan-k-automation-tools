@@ -76,6 +76,31 @@ export class FilesService {
   }
 
   /**
+   * Генерирует URL для API эндпоинта
+   * @param endpoint Эндпоинт (например, 'files', 'files/:id/download')
+   * @param params Параметры для замены в эндпоинте
+   * @returns Полный URL
+   */
+  private generateApiUrl(endpoint: string, params: Record<string, string> = {}): string {
+    const config = this.configService.get('server');
+
+    // Если конфигурация сервера недоступна (например, в тестах), используем значения по умолчанию
+    const basePath = config?.basePath || 'api';
+    const apiVersion = config?.apiVersion || 'v1';
+
+    // Формируем префикс
+    const prefix = basePath ? `${basePath}/${apiVersion}` : apiVersion;
+
+    // Заменяем параметры в эндпоинте
+    let url = `/${prefix}/${endpoint}`;
+    Object.entries(params).forEach(([key, value]) => {
+      url = url.replace(`:${key}`, value);
+    });
+
+    return url;
+  }
+
+  /**
    * Загрузка файла с дедупликацией и валидацией
    */
   async uploadFile(params: UploadFileParams): Promise<UploadFileResponseDto> {
@@ -150,9 +175,9 @@ export class FilesService {
       // Создаем ответ
       const response: UploadFileResponseDto = {
         file: fileResponse,
-        downloadUrl: `/api/v1/files/${fileInfo.id}/download`,
-        infoUrl: `/api/v1/files/${fileInfo.id}`,
-        deleteUrl: `/api/v1/files/${fileInfo.id}`,
+        downloadUrl: this.generateApiUrl('files/:id/download', { id: fileInfo.id }),
+        infoUrl: this.generateApiUrl('files/:id', { id: fileInfo.id }),
+        deleteUrl: this.generateApiUrl('files/:id', { id: fileInfo.id }),
         message: 'File uploaded successfully',
       };
 
@@ -216,8 +241,8 @@ export class FilesService {
       // Создаем ответ
       const response: GetFileInfoResponseDto = {
         file: fileResponse,
-        downloadUrl: `/api/v1/files/${fileInfo.id}/download`,
-        deleteUrl: `/api/v1/files/${fileInfo.id}`,
+        downloadUrl: this.generateApiUrl('files/:id/download', { id: fileInfo.id }),
+        deleteUrl: this.generateApiUrl('files/:id', { id: fileInfo.id }),
       };
 
       return response;

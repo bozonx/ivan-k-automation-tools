@@ -28,6 +28,7 @@ export interface TestAppConfig {
   testStoragePath: string;
   validToken: string;
   authEnabled?: boolean;
+  apiPaths: ReturnType<typeof createApiPathBuilder>;
 }
 
 /**
@@ -135,7 +136,10 @@ export async function createTestApp(
   );
 
   // Установка глобального префикса для API
-  app.setGlobalPrefix(config.server.apiPrefix + '/' + config.server.apiVersion);
+  const globalPrefix = config.server.basePath
+    ? `${config.server.basePath}/${config.server.apiVersion}`
+    : config.server.apiVersion;
+  app.setGlobalPrefix(globalPrefix);
 
   await app.init();
   await app.getHttpAdapter().getInstance().ready();
@@ -146,6 +150,7 @@ export async function createTestApp(
       testStoragePath,
       validToken,
       authEnabled,
+      apiPaths: createApiPathBuilder(config.server.basePath, config.server.apiVersion),
     },
   };
 }
@@ -426,4 +431,65 @@ export function expectStatsStructure(statsData: any): void {
   expect(typeof statsData.totalSize).toBe('number');
   expect(typeof statsData.filesByMimeType).toBe('object');
   expect(typeof statsData.filesByDate).toBe('object');
+}
+
+/**
+ * Генерирует API пути на основе конфигурации
+ * @param basePath Базовый путь API (может быть пустым)
+ * @param apiVersion Версия API
+ * @returns Объект с функциями для генерации путей
+ */
+export function createApiPathBuilder(basePath: string = 'api', apiVersion: string = 'v1') {
+  const prefix = basePath ? `${basePath}/${apiVersion}` : apiVersion;
+
+  return {
+    /**
+     * Генерирует путь для health check
+     */
+    health: () => `/${prefix}/health`,
+
+    /**
+     * Генерирует путь для списка файлов
+     */
+    files: () => `/${prefix}/files`,
+
+    /**
+     * Генерирует путь для статистики файлов
+     */
+    filesStats: () => `/${prefix}/files/stats`,
+
+    /**
+     * Генерирует путь для загрузки файла
+     */
+    uploadFile: () => `/${prefix}/files`,
+
+    /**
+     * Генерирует путь для получения информации о файле
+     * @param fileId ID файла
+     */
+    getFile: (fileId: string) => `/${prefix}/files/${fileId}`,
+
+    /**
+     * Генерирует путь для скачивания файла
+     * @param fileId ID файла
+     */
+    downloadFile: (fileId: string) => `/${prefix}/files/${fileId}/download`,
+
+    /**
+     * Генерирует путь для удаления файла
+     * @param fileId ID файла
+     */
+    deleteFile: (fileId: string) => `/${prefix}/files/${fileId}`,
+
+    /**
+     * Генерирует путь для проверки существования файла
+     * @param fileId ID файла
+     */
+    fileExists: (fileId: string) => `/${prefix}/files/${fileId}/exists`,
+
+    /**
+     * Генерирует путь для документации Swagger
+     */
+    swagger: () => `/${basePath || ''}/docs`,
+  };
 }

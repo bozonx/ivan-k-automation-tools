@@ -29,7 +29,7 @@ describe('Simple E2E Test', () => {
   });
 
   it('should respond to health check', async () => {
-    const response = await request(app.getHttpServer()).get('/api/v1/health').expect(200);
+    const response = await request(app.getHttpServer()).get(config.apiPaths.health()).expect(200);
 
     expect(response.body).toHaveProperty('status');
     expect(response.body).toHaveProperty('uptime');
@@ -37,12 +37,12 @@ describe('Simple E2E Test', () => {
   });
 
   it('should require authentication for files endpoint', async () => {
-    await request(app.getHttpServer()).get('/api/v1/files').expect(401);
+    await request(app.getHttpServer()).get(config.apiPaths.files()).expect(401);
   });
 
   it('should allow access with valid token', async () => {
     const response = await request(app.getHttpServer())
-      .get('/api/v1/files')
+      .get(config.apiPaths.files())
       .set('Authorization', `Bearer ${config.validToken}`)
       .expect(200);
 
