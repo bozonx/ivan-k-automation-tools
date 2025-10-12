@@ -34,6 +34,17 @@ AUTH_SECRET_KEY=dev-secret-key-for-micro-file-cache-12345678901234567890
 pnpm run start:dev
 ```
 
+## Настройка базового пути API
+
+Для размещения нескольких микросервисов на одном хосте можно настроить базовый путь:
+
+```env
+API_BASE_PATH=file-cache
+API_VERSION=v1
+```
+
+В этом случае API будет доступен по пути `/file-cache/v1/` вместо `/api/v1/`.
+
 ## Тестирование аутентификации
 
 ### Health endpoint (без аутентификации)
@@ -60,6 +71,8 @@ curl -X GET http://localhost:3000/api/v1/files \
 - `NODE_ENV` - режим работы (по умолчанию: development)
 - `LISTEN_HOST` - хост для прослушивания (по умолчанию: localhost)
 - `LISTEN_PORT` - порт для прослушивания (по умолчанию: 3000)
+- `API_BASE_PATH` - базовый путь для API (по умолчанию: api)
+- `API_VERSION` - версия API (по умолчанию: v1)
 
 ### Аутентификация
 

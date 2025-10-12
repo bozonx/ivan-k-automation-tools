@@ -137,6 +137,20 @@ CLEANUP_CRON=0 */10 * * * *
 
 ## API Документация
 
+### Настройка базового пути API
+
+По умолчанию API доступен по пути `/api/v1/`. Для размещения нескольких микросервисов на одном хосте можно настроить базовый путь:
+
+```env
+API_BASE_PATH=file-cache
+API_VERSION=v1
+```
+
+В этом случае API будет доступен по пути `/file-cache/v1/`:
+
+- Health check: `http://localhost:3000/file-cache/v1/health`
+- Upload: `http://localhost:3000/file-cache/v1/files`
+
 ### Аутентификация
 
 API защищен Bearer токен аутентификацией. Для доступа к защищенным endpoints необходимо передавать токен в заголовке `Authorization`:

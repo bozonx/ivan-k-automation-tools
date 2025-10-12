@@ -254,7 +254,7 @@ export function createConfig(): AppConfig {
     server: {
       port: parseInt(process.env.LISTEN_PORT || '3000', 10),
       host: process.env.LISTEN_HOST || 'localhost',
-      basePath: process.env.BASE_PATH || 'api',
+      basePath: process.env.API_BASE_PATH || 'api',
       apiVersion: process.env.API_VERSION || 'v1',
       enableSwagger: (process.env.NODE_ENV || 'development') !== 'production',
       enableGlobalValidation: true,
