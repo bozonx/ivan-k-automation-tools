@@ -1,0 +1,11 @@
+dist/
+
+*.log
+
+# Dependency directories
+node_modules/
+
+# dotenv environment variable files
+.env
+# .env.*
+# !.env.example
