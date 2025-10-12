@@ -70,7 +70,7 @@ curl -X GET http://localhost:3000/api/v1/files \
 
 - `STORAGE_PATH` - путь к директории хранилища
 - `MAX_FILE_SIZE` - максимальный размер файла в байтах
-- `ALLOWED_MIME_TYPES` - разрешенные MIME типы файлов
+- `ALLOWED_MIME_TYPES` - разрешенные MIME типы файлов (пустой массив = разрешены все типы)
 
 ### TTL настройки
 

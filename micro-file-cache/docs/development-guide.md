@@ -137,10 +137,10 @@ interface FileInfo {
 Система использует SHA-256 хеширование для предотвращения дублирования файлов:
 
 ```typescript
-import { createHash } from "crypto";
+import { createHash } from 'crypto';
 
 function calculateFileHash(buffer: Buffer): string {
-  return createHash("sha256").update(buffer).digest("hex");
+  return createHash('sha256').update(buffer).digest('hex');
 }
 ```
 
@@ -160,13 +160,52 @@ async function getFileMimeType(buffer: Buffer): Promise<string> {
 async uploadFile(file: Express.Multer.File, ttlMinutes: number) {
   const buffer = file.buffer;
   const mimeType = await getFileMimeType(buffer);
-  
-  // Дополнительная валидация по содержимому
-  if (!this.isAllowedMimeType(mimeType)) {
-    throw new BadRequestException("File type not allowed");
+
+  // Валидация MIME типа (если заданы ограничения)
+  const allowedMimeTypes = this.configService.get<string[]>('ALLOWED_MIME_TYPES', []);
+  if (allowedMimeTypes.length > 0 && !allowedMimeTypes.includes(mimeType)) {
+    throw new BadRequestException(`MIME type ${mimeType} is not allowed`);
   }
-  
+
   // ... остальная логика
+}
+```
+
+### Валидация MIME типов
+
+Система поддерживает гибкую настройку разрешенных MIME типов через переменную окружения `ALLOWED_MIME_TYPES`:
+
+#### Логика работы:
+
+- **Пустая переменная или не задана** - разрешены все MIME типы
+- **Задан массив типов** - разрешены только указанные типы
+
+#### Примеры конфигурации:
+
+```env
+# Разрешить все типы (по умолчанию)
+ALLOWED_MIME_TYPES=
+
+# Только изображения
+ALLOWED_MIME_TYPES=["image/jpeg","image/png","image/gif","image/webp"]
+
+# Только документы
+ALLOWED_MIME_TYPES=["application/pdf","text/plain","application/json","text/csv"]
+```
+
+#### Валидация в коде:
+
+```typescript
+// В ValidationUtil
+static validateUploadedFile(file: UploadedFile, allowedMimeTypes: string[] = []): ValidationResult {
+  // ... другие проверки ...
+
+  // Проверяем MIME тип (только если заданы ограничения)
+  if (allowedMimeTypes.length > 0 && !allowedMimeTypes.includes(file.mimetype)) {
+    errors.push(`MIME type '${file.mimetype}' is not allowed`);
+  }
+
+  return { isValid: errors.length === 0, errors };
 }
 ```
 
@@ -175,58 +214,58 @@ async uploadFile(file: Express.Multer.File, ttlMinutes: number) {
 Для упрощения работы с файлами используется пакет `fs-extra`:
 
 ```typescript
-import * as fs from "fs-extra";
-import * as path from "path";
+import * as fs from 'fs-extra';
+import * as path from 'path';
 
 export class StorageService {
   async saveFile(buffer: Buffer, originalName: string, uuid: string): Promise<string> {
     const date = new Date();
     const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+
     // Создание директории в формате YYYY-MM
     const dir = path.join(this.storageDir, `${year}-${month}`);
-    
+
     // Автоматически создает директории если их нет
     await fs.ensureDir(dir);
-    
+
     // Создание безопасного имени файла
     const shortName = this.createShortFilename(originalName);
     const extension = path.extname(originalName);
     const filename = `${shortName}-${uuid}${extension}`;
-    
+
     const filePath = path.join(dir, filename);
     await fs.writeFile(filePath, buffer);
-    
+
     return path.relative(this.storageDir, filePath);
   }
 
   // Создание короткого имени файла (до 30 символов)
   private createShortFilename(originalName: string): string {
     const nameWithoutExt = path.parse(originalName).name;
-    
+
     // Замена неправильных символов на _
     const sanitized = nameWithoutExt.replace(/[^a-zA-Z0-9\-_]/g, '_');
-    
+
     // Обрезка до 30 символов
     return sanitized.substring(0, 30);
   }
 
   async deleteFile(filePath: string): Promise<void> {
     const fullPath = path.join(this.storageDir, filePath);
-    
+
     // Безопасное удаление - не выбросит ошибку если файл не существует
     await fs.remove(fullPath);
   }
 
   async getFile(filePath: string): Promise<Buffer> {
     const fullPath = path.join(this.storageDir, filePath);
-    
+
     // Проверяет существование файла перед чтением
     if (!(await fs.pathExists(fullPath))) {
-      throw new NotFoundException("File not found");
+      throw new NotFoundException('File not found');
     }
-    
+
     return await fs.readFile(fullPath);
   }
 }
@@ -237,16 +276,16 @@ export class StorageService {
 Для удобной работы с датами используется пакет `dayjs`:
 
 ```typescript
-import dayjs from "dayjs";
-import utc from "dayjs/plugin/utc";
-import duration from "dayjs/plugin/duration";
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+import duration from 'dayjs/plugin/duration';
 
 dayjs.extend(utc);
 dayjs.extend(duration);
 
 export class FileService {
   calculateExpirationDate(ttlMinutes: number): string {
-    return dayjs().add(ttlMinutes, "minute").utc().toISOString();
+    return dayjs().add(ttlMinutes, 'minute').utc().toISOString();
   }
 
   isFileExpired(expiresAt: string): boolean {
@@ -256,17 +295,17 @@ export class FileService {
   getRemainingMinutes(expiresAt: string): number {
     const now = dayjs().utc();
     const expiration = dayjs(expiresAt).utc();
-    
+
     if (now.isAfter(expiration)) {
       return 0;
     }
-    
-    return expiration.diff(now, "minute");
+
+    return expiration.diff(now, 'minute');
   }
 
   formatDuration(minutes: number): string {
-    const duration = dayjs.duration(minutes, "minute");
-    
+    const duration = dayjs.duration(minutes, 'minute');
+
     if (duration.asDays() >= 1) {
       return `${Math.floor(duration.asDays())}d ${duration.hours()}h`;
     } else if (duration.asHours() >= 1) {
@@ -318,13 +357,11 @@ CLEANUP_INTERVAL=60000                      # 1 минута в мс
 ### Рекомендуемый подход
 
 1. **Начните с создания базовой структуры проекта**
-
    - Создайте package.json с необходимыми зависимостями
    - Настройте TypeScript конфигурацию
    - Создайте базовую структуру папок
 
 2. **Реализуйте модули поэтапно**
-
    - Сначала StorageModule (базовая работа с файлами)
    - Затем FilesModule (API endpoints)
    - В конце CleanupModule (автоматическая очистка)
@@ -366,7 +403,7 @@ test/
 
 ```typescript
 // files.service.spec.ts
-describe("FilesService", () => {
+describe('FilesService', () => {
   let service: FilesService;
   let storageService: StorageService;
 
@@ -389,11 +426,11 @@ describe("FilesService", () => {
     storageService = module.get<StorageService>(StorageService);
   });
 
-  it("should upload file successfully", async () => {
+  it('should upload file successfully', async () => {
     // Тест загрузки файла
   });
 
-  it("should handle duplicate files", async () => {
+  it('should handle duplicate files', async () => {
     // Тест дедупликации
   });
 });
@@ -403,14 +440,14 @@ describe("FilesService", () => {
 
 ```typescript
 // files.controller.e2e-spec.ts
-import { Test, TestingModule } from "@nestjs/testing";
-import { INestApplication } from "@nestjs/common";
-import * as request from "supertest";
-import { AppModule } from "../src/app.module";
+import { Test, TestingModule } from '@nestjs/testing';
+import { INestApplication } from '@nestjs/common';
+import * as request from 'supertest';
+import { AppModule } from '../src/app.module';
 
-describe("FilesController (e2e)", () => {
+describe('FilesController (e2e)', () => {
   let app: INestApplication;
-  const authToken = "test-token";
+  const authToken = 'test-token';
 
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -425,130 +462,130 @@ describe("FilesController (e2e)", () => {
     await app.close();
   });
 
-  describe("POST /api/v1/files", () => {
-    it("should upload file successfully", () => {
+  describe('POST /api/v1/files', () => {
+    it('should upload file successfully', () => {
       return request(app.getHttpServer())
-        .post("/api/v1/files")
-        .set("Authorization", `Bearer ${authToken}`)
-        .attach("file", Buffer.from("test content"), "test.txt")
-        .field("ttlMinutes", "60")
+        .post('/api/v1/files')
+        .set('Authorization', `Bearer ${authToken}`)
+        .attach('file', Buffer.from('test content'), 'test.txt')
+        .field('ttlMinutes', '60')
         .expect(201)
         .expect((res) => {
           expect(res.body.success).toBe(true);
-          expect(res.body.data).toHaveProperty("id");
-          expect(res.body.data.originalName).toBe("test.txt");
+          expect(res.body.data).toHaveProperty('id');
+          expect(res.body.data.originalName).toBe('test.txt');
           expect(res.body.data.ttlMinutes).toBe(60);
         });
     });
 
-    it("should reject file without auth token", () => {
+    it('should reject file without auth token', () => {
       return request(app.getHttpServer())
-        .post("/api/v1/files")
-        .attach("file", Buffer.from("test content"), "test.txt")
-        .field("ttlMinutes", "60")
+        .post('/api/v1/files')
+        .attach('file', Buffer.from('test content'), 'test.txt')
+        .field('ttlMinutes', '60')
         .expect(401);
     });
 
-    it("should reject file that is too large", () => {
+    it('should reject file that is too large', () => {
       const largeBuffer = Buffer.alloc(11 * 1024 * 1024); // 11MB
-      
+
       return request(app.getHttpServer())
-        .post("/api/v1/files")
-        .set("Authorization", `Bearer ${authToken}`)
-        .attach("file", largeBuffer, "large.txt")
-        .field("ttlMinutes", "60")
+        .post('/api/v1/files')
+        .set('Authorization', `Bearer ${authToken}`)
+        .attach('file', largeBuffer, 'large.txt')
+        .field('ttlMinutes', '60')
         .expect(413);
     });
 
-    it("should reject invalid TTL", () => {
+    it('should reject invalid TTL', () => {
       return request(app.getHttpServer())
-        .post("/api/v1/files")
-        .set("Authorization", `Bearer ${authToken}`)
-        .attach("file", Buffer.from("test content"), "test.txt")
-        .field("ttlMinutes", "0")
+        .post('/api/v1/files')
+        .set('Authorization', `Bearer ${authToken}`)
+        .attach('file', Buffer.from('test content'), 'test.txt')
+        .field('ttlMinutes', '0')
         .expect(400);
     });
   });
 
-  describe("GET /api/v1/files/:id", () => {
+  describe('GET /api/v1/files/:id', () => {
     let fileId: string;
 
     beforeEach(async () => {
       // Загружаем файл для тестов
       const response = await request(app.getHttpServer())
-        .post("/api/v1/files")
-        .set("Authorization", `Bearer ${authToken}`)
-        .attach("file", Buffer.from("test content"), "test.txt")
-        .field("ttlMinutes", "60");
-      
+        .post('/api/v1/files')
+        .set('Authorization', `Bearer ${authToken}`)
+        .attach('file', Buffer.from('test content'), 'test.txt')
+        .field('ttlMinutes', '60');
+
       fileId = response.body.data.id;
     });
 
-    it("should return file info", () => {
+    it('should return file info', () => {
       return request(app.getHttpServer())
         .get(`/api/v1/files/${fileId}`)
-        .set("Authorization", `Bearer ${authToken}`)
+        .set('Authorization', `Bearer ${authToken}`)
         .expect(200)
         .expect((res) => {
           expect(res.body.success).toBe(true);
           expect(res.body.data.id).toBe(fileId);
-          expect(res.body.data.originalName).toBe("test.txt");
+          expect(res.body.data.originalName).toBe('test.txt');
         });
     });
 
-    it("should return 404 for non-existent file", () => {
-      const fakeId = "550e8400-e29b-41d4-a716-446655440000";
-      
+    it('should return 404 for non-existent file', () => {
+      const fakeId = '550e8400-e29b-41d4-a716-446655440000';
+
       return request(app.getHttpServer())
         .get(`/api/v1/files/${fakeId}`)
-        .set("Authorization", `Bearer ${authToken}`)
+        .set('Authorization', `Bearer ${authToken}`)
         .expect(404);
     });
   });
 
-  describe("GET /api/v1/files/:id/download", () => {
+  describe('GET /api/v1/files/:id/download', () => {
     let fileId: string;
 
     beforeEach(async () => {
       const response = await request(app.getHttpServer())
-        .post("/api/v1/files")
-        .set("Authorization", `Bearer ${authToken}`)
-        .attach("file", Buffer.from("test download content"), "download.txt")
-        .field("ttlMinutes", "60");
-      
+        .post('/api/v1/files')
+        .set('Authorization', `Bearer ${authToken}`)
+        .attach('file', Buffer.from('test download content'), 'download.txt')
+        .field('ttlMinutes', '60');
+
       fileId = response.body.data.id;
     });
 
-    it("should download file", () => {
+    it('should download file', () => {
       return request(app.getHttpServer())
         .get(`/api/v1/files/${fileId}/download`)
-        .set("Authorization", `Bearer ${authToken}`)
+        .set('Authorization', `Bearer ${authToken}`)
         .expect(200)
-        .expect("Content-Type", /text\/plain/)
-        .expect("Content-Disposition", /attachment/)
+        .expect('Content-Type', /text\/plain/)
+        .expect('Content-Disposition', /attachment/)
         .expect((res) => {
-          expect(res.text).toBe("test download content");
+          expect(res.text).toBe('test download content');
         });
     });
   });
 
-  describe("DELETE /api/v1/files/:id", () => {
+  describe('DELETE /api/v1/files/:id', () => {
     let fileId: string;
 
     beforeEach(async () => {
       const response = await request(app.getHttpServer())
-        .post("/api/v1/files")
-        .set("Authorization", `Bearer ${authToken}`)
-        .attach("file", Buffer.from("test content"), "delete.txt")
-        .field("ttlMinutes", "60");
-      
+        .post('/api/v1/files')
+        .set('Authorization', `Bearer ${authToken}`)
+        .attach('file', Buffer.from('test content'), 'delete.txt')
+        .field('ttlMinutes', '60');
+
       fileId = response.body.data.id;
     });
 
-    it("should delete file", () => {
+    it('should delete file', () => {
       return request(app.getHttpServer())
         .delete(`/api/v1/files/${fileId}`)
-        .set("Authorization", `Bearer ${authToken}`)
+        .set('Authorization', `Bearer ${authToken}`)
         .expect(200)
         .expect((res) => {
           expect(res.body.success).toBe(true);
@@ -556,27 +593,27 @@ describe("FilesController (e2e)", () => {
         });
     });
 
-    it("should return 404 when deleting non-existent file", () => {
-      const fakeId = "550e8400-e29b-41d4-a716-446655440000";
-      
+    it('should return 404 when deleting non-existent file', () => {
+      const fakeId = '550e8400-e29b-41d4-a716-446655440000';
+
       return request(app.getHttpServer())
         .delete(`/api/v1/files/${fakeId}`)
-        .set("Authorization", `Bearer ${authToken}`)
+        .set('Authorization', `Bearer ${authToken}`)
         .expect(404);
     });
   });
 
-  describe("GET /api/v1/health", () => {
-    it("should return health status", () => {
+  describe('GET /api/v1/health', () => {
+    it('should return health status', () => {
       return request(app.getHttpServer())
-        .get("/api/v1/health")
+        .get('/api/v1/health')
         .expect(200)
         .expect((res) => {
           expect(res.body.success).toBe(true);
-          expect(res.body.data.status).toBe("healthy");
-          expect(res.body.data).toHaveProperty("uptime");
-          expect(res.body.data).toHaveProperty("storage");
-          expect(res.body.data).toHaveProperty("cleanup");
+          expect(res.body.data.status).toBe('healthy');
+          expect(res.body.data).toHaveProperty('uptime');
+          expect(res.body.data).toHaveProperty('storage');
+          expect(res.body.data).toHaveProperty('cleanup');
         });
     });
   });
@@ -636,13 +673,13 @@ CMD ["node", "dist/main.js"]
 ### Docker Compose
 
 ```yaml
-version: "3.8"
+version: '3.8'
 
 services:
   micro-file-cache:
     build: .
     ports:
-      - "3000:3000"
+      - '3000:3000'
     environment:
       - NODE_ENV=production
       - STORAGE_DIR=/app/storage
