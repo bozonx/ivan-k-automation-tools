@@ -70,7 +70,7 @@ export class FilesService {
     private readonly storageService: StorageService,
     private readonly configService: ConfigService,
   ) {
-    this.defaultTTL = this.configService.get<number>('DEFAULT_TTL', 3600); // 1 час по умолчанию
+    this.defaultTTL = (this.configService.get<number>('MAX_TTL_MIN') || 60) * 60; // Конвертируем минуты в секунды
     this.maxFileSize = this.configService.get<number>('MAX_FILE_SIZE_MB', 100) * 1024 * 1024; // Конвертируем MB в байты
     this.allowedMimeTypes = this.configService.get<string[]>('ALLOWED_MIME_TYPES', []); // Пустой массив = разрешены все типы
   }
@@ -100,7 +100,12 @@ export class FilesService {
       }
 
       // Валидация TTL
-      const ttlValidation = ValidationUtil.validateTTL(validatedParams.ttl);
+      const config = this.configService.get('storage');
+      const ttlValidation = ValidationUtil.validateTTL(
+        validatedParams.ttl,
+        config.minTtl,
+        config.maxTtl,
+      );
       if (!ttlValidation.isValid) {
         throw new BadRequestException(`TTL validation failed: ${ttlValidation.errors.join(', ')}`);
       }

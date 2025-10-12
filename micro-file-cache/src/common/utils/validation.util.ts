@@ -12,12 +12,13 @@ export class ValidationUtil {
   /**
    * Минимальное время жизни файла в секундах (1 минута)
    */
-  private static readonly MIN_TTL = 60;
+  private static readonly MIN_TTL_MIN = 1 * 60; // 1 минута в секундах
 
   /**
-   * Максимальное время жизни файла в секундах (30 дней)
+   * Максимальное время жизни файла в секундах (по умолчанию 30 дней)
+   * Используется только как fallback, реальное значение берется из конфигурации
    */
-  private static readonly MAX_TTL = 30 * 24 * 60 * 60;
+  private static readonly DEFAULT_MAX_TTL = 30 * 24 * 60 * 60;
 
   /**
    * Валидирует загруженный файл
@@ -79,9 +80,15 @@ export class ValidationUtil {
   /**
    * Валидирует TTL (время жизни файла)
    * @param ttl - время жизни в секундах
+   * @param minTtl - минимальное время жизни в секундах (по умолчанию 1 минута)
+   * @param maxTtl - максимальное время жизни в секундах (по умолчанию 30 дней)
    * @returns объект с результатом валидации
    */
-  static validateTTL(ttl: number): {
+  static validateTTL(
+    ttl: number,
+    minTtl: number = this.MIN_TTL_MIN,
+    maxTtl: number = this.DEFAULT_MAX_TTL,
+  ): {
     isValid: boolean;
     errors: string[];
   } {
@@ -91,10 +98,10 @@ export class ValidationUtil {
       errors.push('TTL must be a number');
     } else if (!Number.isInteger(ttl)) {
       errors.push('TTL must be an integer');
-    } else if (ttl < this.MIN_TTL) {
-      errors.push(`TTL must be at least ${this.MIN_TTL} seconds`);
-    } else if (ttl > this.MAX_TTL) {
-      errors.push(`TTL must not exceed ${this.MAX_TTL} seconds`);
+    } else if (ttl < minTtl) {
+      errors.push(`TTL must be at least ${minTtl} seconds`);
+    } else if (ttl > maxTtl) {
+      errors.push(`TTL must not exceed ${maxTtl} seconds`);
     }
 
     return {

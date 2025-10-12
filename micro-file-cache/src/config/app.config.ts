@@ -97,9 +97,6 @@ export interface StorageConfig {
 
   /** Минимальное время жизни файла в секундах */
   minTtl: number;
-
-  /** Время жизни по умолчанию в секундах */
-  defaultTtl: number;
 }
 
 /**
@@ -228,13 +225,6 @@ export function validateConfig(config: AppConfig): string[] {
     errors.push('Max TTL must be greater than or equal to min TTL');
   }
 
-  if (
-    config.storage.defaultTtl < config.storage.minTtl ||
-    config.storage.defaultTtl > config.storage.maxTtl
-  ) {
-    errors.push('Default TTL must be between min and max TTL');
-  }
-
   // Валидация аутентификации
   if (config.auth.enabled && (!config.auth.secretKey || config.auth.secretKey.length < 32)) {
     errors.push(
@@ -274,9 +264,8 @@ export function createConfig(): AppConfig {
       allowedMimeTypes: parseAllowedMimeTypes(process.env.ALLOWED_MIME_TYPES),
       dateFormat: process.env.DATE_FORMAT || 'YYYY-MM',
       enableDeduplication: process.env.ENABLE_DEDUPLICATION !== 'false',
-      maxTtl: parseInt(process.env.MAX_TTL || '86400', 10), // 24 часа
-      minTtl: parseInt(process.env.MIN_TTL || '60', 10), // 1 минута
-      defaultTtl: parseInt(process.env.DEFAULT_TTL || '3600', 10), // 1 час
+      maxTtl: parseInt(process.env.MAX_TTL_MIN || '60', 10) * 60, // Конвертируем минуты в секунды
+      minTtl: 1 * 60, // 1 минута в секундах (внутренняя константа)
     },
 
     auth: {

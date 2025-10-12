@@ -93,10 +93,14 @@ describe('FilesService', () => {
     // Настраиваем моки для ConfigService
     configService.get.mockImplementation((key: string, defaultValue?: any) => {
       const config = {
-        DEFAULT_TTL: 3600,
+        MAX_TTL_MIN: 60, // 60 минут
         MAX_FILE_SIZE_MB: 100,
+        storage: {
+          minTtl: 60, // 1 минута в секундах
+          maxTtl: 3600, // 60 минут в секундах
+        },
       };
-      return config[key] || defaultValue;
+      return config[key] !== undefined ? config[key] : defaultValue;
     });
   });
 
@@ -827,7 +831,7 @@ describe('FilesService', () => {
       // Assert
       expect(storageService.saveFile).toHaveBeenCalledWith({
         file: mockUploadedFile,
-        ttl: undefined, // TTL не был передан, поэтому остается undefined
+        ttl: 3600, // TTL не был передан, поэтому используется значение по умолчанию (60 минут * 60 секунд)
         metadata: {},
       });
     });

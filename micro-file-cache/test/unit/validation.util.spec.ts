@@ -93,50 +93,60 @@ describe('ValidationUtil', () => {
   });
 
   describe('validateTTL', () => {
+    const minTtl = 60; // 1 минута в секундах
+    const maxTtl = 3600; // 60 минут в секундах
+
     it('should validate correct TTL', () => {
-      const result = ValidationUtil.validateTTL(3600); // 1 hour
+      const result = ValidationUtil.validateTTL(1800, minTtl, maxTtl); // 30 минут
 
       expect(result.isValid).toBe(true);
       expect(result.errors).toHaveLength(0);
     });
 
     it('should reject non-number TTL', () => {
-      const result = ValidationUtil.validateTTL('3600' as any);
+      const result = ValidationUtil.validateTTL('3600' as any, minTtl, maxTtl);
 
       expect(result.isValid).toBe(false);
       expect(result.errors).toContain('TTL must be a number');
     });
 
     it('should reject non-integer TTL', () => {
-      const result = ValidationUtil.validateTTL(3600.5);
+      const result = ValidationUtil.validateTTL(3600.5, minTtl, maxTtl);
 
       expect(result.isValid).toBe(false);
       expect(result.errors).toContain('TTL must be an integer');
     });
 
     it('should reject TTL below minimum', () => {
-      const result = ValidationUtil.validateTTL(30); // 30 seconds
+      const result = ValidationUtil.validateTTL(30, minTtl, maxTtl); // 30 seconds
 
       expect(result.isValid).toBe(false);
       expect(result.errors).toContain('TTL must be at least 60 seconds');
     });
 
     it('should reject TTL above maximum', () => {
-      const result = ValidationUtil.validateTTL(60 * 24 * 60 * 60); // 60 days
+      const result = ValidationUtil.validateTTL(7200, minTtl, maxTtl); // 2 hours
 
       expect(result.isValid).toBe(false);
-      expect(result.errors).toContain('TTL must not exceed 2592000 seconds');
+      expect(result.errors).toContain('TTL must not exceed 3600 seconds');
     });
 
     it('should accept minimum TTL', () => {
-      const result = ValidationUtil.validateTTL(60); // 1 minute
+      const result = ValidationUtil.validateTTL(60, minTtl, maxTtl); // 1 minute
 
       expect(result.isValid).toBe(true);
       expect(result.errors).toHaveLength(0);
     });
 
     it('should accept maximum TTL', () => {
-      const result = ValidationUtil.validateTTL(30 * 24 * 60 * 60); // 30 days
+      const result = ValidationUtil.validateTTL(3600, minTtl, maxTtl); // 60 minutes
+
+      expect(result.isValid).toBe(true);
+      expect(result.errors).toHaveLength(0);
+    });
+
+    it('should use default values when no parameters provided', () => {
+      const result = ValidationUtil.validateTTL(3600); // 1 hour
 
       expect(result.isValid).toBe(true);
       expect(result.errors).toHaveLength(0);
