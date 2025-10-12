@@ -13,6 +13,7 @@ export class FilenameUtil {
 
   /**
    * Запрещенные символы в именах файлов (для замены)
+   * Используем более строгую проверку только для действительно опасных символов
    */
   private static readonly FORBIDDEN_CHARS_REPLACE = /[<>:"/\\|?*\x00-\x1f]/g;
 
@@ -92,8 +93,8 @@ export class FilenameUtil {
       return '';
     }
 
-    // Заменяем запрещенные символы и пробелы на подчеркивания
-    let sanitized = filename.replace(/[^a-zA-Z0-9._-]/g, '_');
+    // Заменяем запрещенные символы и пробелы на подчеркивания (поддерживает Unicode буквы и цифры)
+    let sanitized = filename.replace(/[^\p{L}\p{N}._-]/gu, '_');
 
     // Удаляем множественные подчеркивания
     sanitized = sanitized.replace(/_+/g, '_');

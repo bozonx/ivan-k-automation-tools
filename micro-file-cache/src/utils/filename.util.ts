@@ -12,7 +12,7 @@ const MAX_SHORT_FILENAME_LENGTH = 20;
  */
 export function sanitizeFilename(filename: string): string {
   return filename
-    .replace(/[^a-zA-Z0-9._-]/g, '_') // Заменяем все неправильные символы и пробелы на _
+    .replace(/[^\p{L}\p{N}._-]/gu, '_') // Заменяем все неправильные символы и пробелы на _ (поддерживает Unicode буквы и цифры)
     .replace(/_{2,}/g, '_') // Заменяем множественные подчеркивания на одно
     .replace(/^_+|_+$/g, ''); // Убираем подчеркивания в начале и конце
 }

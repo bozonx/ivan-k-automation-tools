@@ -59,6 +59,27 @@ describe('FilenameUtil', () => {
         'Hash must be a valid SHA-256 hash',
       );
     });
+
+    it('should handle Cyrillic filenames', () => {
+      const originalName = 'документ с пробелами.pdf';
+      const safeName = FilenameUtil.generateSafeFilename(originalName, validHash);
+
+      expect(safeName).toMatch(/^документ_с_пробелами_[a-f0-9]{8}\.pdf$/);
+    });
+
+    it('should handle Chinese filenames', () => {
+      const originalName = '文档文件.jpg';
+      const safeName = FilenameUtil.generateSafeFilename(originalName, validHash);
+
+      expect(safeName).toMatch(/^文档文件_[a-f0-9]{8}\.jpg$/);
+    });
+
+    it('should handle mixed language filenames', () => {
+      const originalName = 'document документ 文档.txt';
+      const safeName = FilenameUtil.generateSafeFilename(originalName, validHash);
+
+      expect(safeName).toMatch(/^document_документ_文档_[a-f0-9]{8}\.txt$/);
+    });
   });
 
   describe('getFileExtension', () => {
@@ -131,6 +152,27 @@ describe('FilenameUtil', () => {
       const sanitized = FilenameUtil.sanitizeFilename(filename);
 
       expect(sanitized).toBe('file');
+    });
+
+    it('should support Cyrillic characters', () => {
+      const filename = 'документ с пробелами.txt';
+      const sanitized = FilenameUtil.sanitizeFilename(filename);
+
+      expect(sanitized).toBe('документ_с_пробелами.txt');
+    });
+
+    it('should support Chinese characters', () => {
+      const filename = '文档 文件.pdf';
+      const sanitized = FilenameUtil.sanitizeFilename(filename);
+
+      expect(sanitized).toBe('文档_文件.pdf');
+    });
+
+    it('should support mixed languages', () => {
+      const filename = 'document документ 文档.txt';
+      const sanitized = FilenameUtil.sanitizeFilename(filename);
+
+      expect(sanitized).toBe('document_документ_文档.txt');
     });
 
     it('should handle empty or invalid input', () => {

@@ -32,6 +32,34 @@ describe('Utils Filename Functions', () => {
     it('should handle empty input', () => {
       expect(sanitizeFilename('')).toBe('');
     });
+
+    it('should support Cyrillic characters', () => {
+      const filename = 'документ с пробелами.txt';
+      const sanitized = sanitizeFilename(filename);
+
+      expect(sanitized).toBe('документ_с_пробелами.txt');
+    });
+
+    it('should support Chinese characters', () => {
+      const filename = '文档 文件.pdf';
+      const sanitized = sanitizeFilename(filename);
+
+      expect(sanitized).toBe('文档_文件.pdf');
+    });
+
+    it('should support Arabic characters', () => {
+      const filename = 'ملف وثيقة.docx';
+      const sanitized = sanitizeFilename(filename);
+
+      expect(sanitized).toBe('ملف_وثيقة.docx');
+    });
+
+    it('should support mixed languages', () => {
+      const filename = 'document документ 文档.txt';
+      const sanitized = sanitizeFilename(filename);
+
+      expect(sanitized).toBe('document_документ_文档.txt');
+    });
   });
 
   describe('createShortFilename', () => {
@@ -105,6 +133,27 @@ describe('Utils Filename Functions', () => {
       expect(name1).not.toBe(name2);
       expect(name1).toMatch(/^test_[a-f0-9]{8}\.txt$/);
       expect(name2).toMatch(/^test_[a-f0-9]{8}\.txt$/);
+    });
+
+    it('should handle Cyrillic filenames', () => {
+      const filename = 'документ с пробелами.pdf';
+      const storageName = createStorageFilename(filename);
+
+      expect(storageName).toMatch(/^документ_с_пробелами_[a-f0-9]{8}\.pdf$/);
+    });
+
+    it('should handle Chinese filenames', () => {
+      const filename = '文档文件.jpg';
+      const storageName = createStorageFilename(filename);
+
+      expect(storageName).toMatch(/^文档文件_[a-f0-9]{8}\.jpg$/);
+    });
+
+    it('should handle mixed language filenames', () => {
+      const filename = 'document документ 文档.txt';
+      const storageName = createStorageFilename(filename);
+
+      expect(storageName).toMatch(/^document_документ_文档_[a-f0-9]{8}\.txt$/);
     });
   });
 
