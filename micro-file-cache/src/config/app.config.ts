@@ -223,10 +223,15 @@ export function validateConfig(config: AppConfig): string[] {
   }
 
   // Валидация аутентификации
-  if (config.auth.enabled && (!config.auth.secretKey || config.auth.secretKey.length < 32)) {
-    errors.push(
-      'AUTH_SECRET_KEY environment variable is required and must be at least 32 characters long when AUTH_ENABLED is true',
-    );
+  const nodeEnv = process.env.NODE_ENV || 'development';
+  const isProduction = nodeEnv === 'production';
+
+  if (config.auth.enabled) {
+    if (!config.auth.secretKey) {
+      errors.push('AUTH_SECRET_KEY environment variable is required when AUTH_ENABLED is true');
+    } else if (isProduction && config.auth.secretKey.length < 32) {
+      errors.push('AUTH_SECRET_KEY must be at least 32 characters long in production environment');
+    }
   }
 
   if (config.auth.tokenExpiration < 60) {

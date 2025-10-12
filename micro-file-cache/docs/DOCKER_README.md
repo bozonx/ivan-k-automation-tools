@@ -113,7 +113,7 @@ docker volume prune
 - `LISTEN_HOST` - хост для прослушивания (по умолчанию: localhost, для Docker: 0.0.0.0)
 - `LISTEN_PORT` - порт (по умолчанию: 3000, для продакшн: 80)
 - `AUTH_ENABLED` - включение аутентификации (по умолчанию: true)
-- `AUTH_SECRET_KEY` - секретный ключ для токенов (обязателен если AUTH_ENABLED=true)
+- `AUTH_SECRET_KEY` - секретный ключ для токенов (обязателен если AUTH_ENABLED=true, в production режиме минимум 32 символа)
 - `STORAGE_PATH` - путь к хранилищу файлов (обязателен)
 - `MAX_FILE_SIZE_MB` - максимальный размер файла в мегабайтах
 - `MAX_TTL_MIN` - максимальный TTL в минутах (по умолчанию 60)

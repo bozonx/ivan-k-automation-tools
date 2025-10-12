@@ -95,7 +95,7 @@ src/
 Основные переменные для разработки:
 
 - `AUTH_ENABLED=true` - включить аутентификацию (по умолчанию: true)
-- `AUTH_SECRET_KEY=dev-secret-key-...` - секретный ключ (обязателен если AUTH_ENABLED=true)
+- `AUTH_SECRET_KEY=dev-secret-key-...` - секретный ключ (обязателен если AUTH_ENABLED=true, в production режиме минимум 32 символа)
 - `LISTEN_PORT=3000` - порт приложения (по умолчанию: 3000)
 - `LOG_LEVEL=debug` - уровень логирования
 

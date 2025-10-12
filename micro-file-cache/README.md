@@ -152,7 +152,7 @@ curl -H "Authorization: Bearer your-token" http://localhost:3000/api/v1/files
 **Настройка аутентификации:**
 
 - `AUTH_ENABLED=true` - включить аутентификацию
-- `AUTH_SECRET_KEY=your-secret-key` - секретный ключ (минимум 32 символа)
+- `AUTH_SECRET_KEY=your-secret-key` - секретный ключ (в production режиме минимум 32 символа)
 
 ### Основные endpoints
 

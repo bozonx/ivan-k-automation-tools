@@ -733,7 +733,7 @@ services:
     environment:
       - NODE_ENV=production
       - AUTH_ENABLED=true
-      - AUTH_SECRET_KEY=your-production-secret-key
+      - AUTH_SECRET_KEY=your-production-secret-key-minimum-32-chars
       - STORAGE_PATH=/app/storage
     volumes:
       - file-storage:/app/storage

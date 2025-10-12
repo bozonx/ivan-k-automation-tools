@@ -95,11 +95,11 @@ print(f"File ID: {result['data']['id']}")
 ```bash
 # Включить аутентификацию
 export AUTH_ENABLED=true
-export AUTH_SECRET_KEY=your-secret-key-change-in-production-12345678901234567890
+export AUTH_SECRET_KEY=your-secret-key-change-in-production
 
 # Или в .env файле
 echo "AUTH_ENABLED=true" >> .env
-echo "AUTH_SECRET_KEY=your-secret-key-change-in-production-12345678901234567890" >> .env
+echo "AUTH_SECRET_KEY=your-secret-key-change-in-production" >> .env
 ```
 
 ## Docker пример

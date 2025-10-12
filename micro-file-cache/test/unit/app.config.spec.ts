@@ -109,29 +109,60 @@ describe('AppConfig', () => {
       expect(errors).toContain('STORAGE_PATH environment variable is required');
     });
 
-    it('should validate AUTH_SECRET_KEY when AUTH_ENABLED is true', () => {
+    it('should validate AUTH_SECRET_KEY when AUTH_ENABLED is true and NODE_ENV is production', () => {
       process.env.STORAGE_PATH = '/test/storage';
       process.env.AUTH_ENABLED = 'true';
-      process.env.AUTH_SECRET_KEY = 'short'; // Слишком короткий ключ
+      process.env.NODE_ENV = 'production';
+      process.env.AUTH_SECRET_KEY = 'short'; // Слишком короткий ключ для production
 
       const config = createConfig();
       const errors = validateConfig(config);
 
       expect(errors).toContain(
-        'AUTH_SECRET_KEY environment variable is required and must be at least 32 characters long when AUTH_ENABLED is true',
+        'AUTH_SECRET_KEY must be at least 32 characters long in production environment',
+      );
+    });
+
+    it('should not validate AUTH_SECRET_KEY length when NODE_ENV is not production', () => {
+      process.env.STORAGE_PATH = '/test/storage';
+      process.env.AUTH_ENABLED = 'true';
+      process.env.NODE_ENV = 'development';
+      process.env.AUTH_SECRET_KEY = 'short'; // Короткий ключ, но не production
+
+      const config = createConfig();
+      const errors = validateConfig(config);
+
+      expect(errors).not.toContain(
+        'AUTH_SECRET_KEY must be at least 32 characters long in production environment',
+      );
+    });
+
+    it('should validate AUTH_SECRET_KEY is required when AUTH_ENABLED is true', () => {
+      process.env.STORAGE_PATH = '/test/storage';
+      process.env.AUTH_ENABLED = 'true';
+      process.env.AUTH_SECRET_KEY = ''; // Пустой ключ
+
+      const config = createConfig();
+      const errors = validateConfig(config);
+
+      expect(errors).toContain(
+        'AUTH_SECRET_KEY environment variable is required when AUTH_ENABLED is true',
       );
     });
 
     it('should not validate AUTH_SECRET_KEY when AUTH_ENABLED is false', () => {
       process.env.STORAGE_PATH = '/test/storage';
       process.env.AUTH_ENABLED = 'false';
-      process.env.AUTH_SECRET_KEY = 'short'; // Слишком короткий ключ, но auth выключена
+      process.env.AUTH_SECRET_KEY = 'short'; // Короткий ключ, но auth выключена
 
       const config = createConfig();
       const errors = validateConfig(config);
 
       expect(errors).not.toContain(
-        'AUTH_SECRET_KEY environment variable is required and must be at least 32 characters long when AUTH_ENABLED is true',
+        'AUTH_SECRET_KEY environment variable is required when AUTH_ENABLED is true',
+      );
+      expect(errors).not.toContain(
+        'AUTH_SECRET_KEY must be at least 32 characters long in production environment',
       );
     });
 
