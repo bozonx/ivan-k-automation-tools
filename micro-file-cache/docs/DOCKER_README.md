@@ -116,7 +116,7 @@ docker volume prune
 - `AUTH_SECRET_KEY` - секретный ключ для токенов (обязателен если AUTH_ENABLED=true)
 - `STORAGE_PATH` - путь к хранилищу файлов (обязателен)
 - `MAX_FILE_SIZE_MB` - максимальный размер файла в мегабайтах
-- `TTL_MAX_MINUTES` - максимальный TTL в минутах
+- `MAX_TTL_MIN` - максимальный TTL в минутах (по умолчанию 60)
 - `CLEANUP_INTERVAL` - интервал очистки в миллисекундах
 
 ## Volumes

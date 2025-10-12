@@ -90,17 +90,17 @@ curl -X POST http://localhost:3000/api/files \
 
 #### Параметры запроса
 
-| Параметр     | Тип    | Обязательный | Описание                                                            |
-| ------------ | ------ | ------------ | ------------------------------------------------------------------- |
-| `file`       | File   | Да           | Загружаемый файл                                                    |
-| `ttlMinutes` | number | Да           | Время жизни файла в минутах (1-настраивается через TTL_MAX_MINUTES) |
+| Параметр     | Тип    | Обязательный | Описание                                                        |
+| ------------ | ------ | ------------ | --------------------------------------------------------------- |
+| `file`       | File   | Да           | Загружаемый файл                                                |
+| `ttlMinutes` | number | Да           | Время жизни файла в минутах (1-настраивается через MAX_TTL_MIN) |
 
 #### Ограничения
 
-- Максимальный размер файла: 10MB (настраивается через `FILE_MAX_SIZE_MB`)
+- Максимальный размер файла: 100MB (настраивается через `MAX_FILE_SIZE_MB`)
 - Разрешенные MIME типы: любые
-- Минимальный TTL: 1 минута
-- Максимальный TTL: 7 дней (10080 минут, настраивается через `TTL_MAX_MINUTES`)
+- Минимальный TTL: 1 минута (внутренняя константа)
+- Максимальный TTL: 60 минут (настраивается через `MAX_TTL_MIN`)
 
 #### Пример запроса
 
@@ -339,7 +339,7 @@ interface UploadResponse {
 
 ```typescript
 interface HealthResponse {
-  status: "healthy" | "unhealthy";
+  status: 'healthy' | 'unhealthy';
   uptime: number; // Время работы в секундах
   version: string;
   environment: string;
@@ -375,11 +375,11 @@ interface HealthResponse {
 // Загрузка файла
 async function uploadFile(file: File, ttlMinutes: number, token: string) {
   const formData = new FormData();
-  formData.append("file", file);
-  formData.append("ttlMinutes", ttlMinutes.toString());
+  formData.append('file', file);
+  formData.append('ttlMinutes', ttlMinutes.toString());
 
-  const response = await fetch("/api/v1/files", {
-    method: "POST",
+  const response = await fetch('/api/v1/files', {
+    method: 'POST',
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -401,7 +401,7 @@ async function getFileInfo(id: string, token: string) {
 
 // Скачивание файла
 function downloadFile(id: string, filename: string) {
-  const link = document.createElement("a");
+  const link = document.createElement('a');
   link.href = `/api/v1/files/${id}/download`;
   link.download = filename;
   link.click();
@@ -466,9 +466,9 @@ curl http://localhost:3000/api/v1/health
 
 ### Ограничения
 
-- Максимальный размер файла: 10MB (настраивается через `FILE_MAX_SIZE_MB`)
+- Максимальный размер файла: 100MB (настраивается через `MAX_FILE_SIZE_MB`)
 - Максимальное количество файлов: 10000
-- Максимальный TTL: 7 дней (10080 минут, настраивается через `TTL_MAX_MINUTES`)
+- Максимальный TTL: 60 минут (настраивается через `MAX_TTL_MIN`)
 - Минимальный TTL: 1 минута
 
 ### Рекомендации

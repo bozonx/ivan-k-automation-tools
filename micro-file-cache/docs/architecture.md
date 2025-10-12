@@ -480,11 +480,11 @@ export class ConfigService {
   }
 
   get maxFileSizeMB(): number {
-    return parseInt(process.env.FILE_MAX_SIZE_MB || '10', 10); // 10MB
+    return parseInt(process.env.MAX_FILE_SIZE_MB || '100', 10); // 100MB
   }
 
   get ttlMaxMinutes(): number {
-    return parseInt(process.env.TTL_MAX_MINUTES || '10080', 10); // 7 дней
+    return parseInt(process.env.MAX_TTL_MIN || '60', 10); // 60 минут
   }
 
   get cleanupInterval(): number {
