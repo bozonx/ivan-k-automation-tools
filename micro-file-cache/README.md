@@ -120,8 +120,6 @@ docker-compose up -d
 | `MAX_FILE_SIZE_MB`     | `100`                                   | Максимальный размер файла в мегабайтах                                      |
 | `ALLOWED_MIME_TYPES`   | `[]` (все типы)                         | Разрешенные MIME типы файлов                                                |
 | `ENABLE_DEDUPLICATION` | `true`                                  | Включить дедупликацию файлов                                                |
-| `DATE_FORMAT`          | `YYYY-MM`                               | Формат организации файлов по датам                                          |
-| `MAX_TTL_MIN`          | `10080`                                 | Максимальный TTL в минутах (7 дней, обязательно указывать ttl при загрузке) |
 | `CLEANUP_CRON`         | `0 */10 * * * *`                        | Cron выражение для очистки (каждые 10 минут)                                |
 | `MAX_FILES_COUNT`      | `10000`                                 | Максимальное количество файлов в кэше                                       |
 | `MAX_STORAGE_SIZE_MB`  | `1000`                                  | Максимальный общий размер хранилища в МБ                                    |
@@ -143,7 +141,6 @@ STORAGE_DIR=/app/storage
 MAX_FILE_SIZE_MB=100
 ALLOWED_MIME_TYPES=["image/jpeg","image/png","application/pdf","text/plain"]
 ENABLE_DEDUPLICATION=true
-DATE_FORMAT=YYYY-MM
 MAX_TTL_MIN=1440
 CLEANUP_CRON=0 */5 * * * *
 MAX_FILES_COUNT=10000

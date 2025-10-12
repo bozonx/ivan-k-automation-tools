@@ -3,6 +3,14 @@
  */
 
 /**
+ * Константы для хранилища
+ */
+export const STORAGE_CONSTANTS = {
+  /** Формат организации файлов по датам */
+  DATE_FORMAT: 'YYYY-MM',
+} as const;
+
+/**
  * Конфигурация timezone
  */
 export interface TimezoneConfig {
@@ -96,9 +104,6 @@ export interface StorageConfig {
 
   /** Разрешенные MIME типы */
   allowedMimeTypes: string[];
-
-  /** Формат организации файлов по датам */
-  dateFormat: string;
 
   /** Включить дедупликацию файлов */
   enableDeduplication: boolean;
@@ -272,7 +277,6 @@ export function createConfig(): AppConfig {
       basePath: process.env.STORAGE_DIR!,
       maxFileSize: parseInt(process.env.MAX_FILE_SIZE_MB || '100', 10) * 1024 * 1024, // Конвертируем MB в байты
       allowedMimeTypes: parseAllowedMimeTypes(process.env.ALLOWED_MIME_TYPES),
-      dateFormat: process.env.DATE_FORMAT || 'YYYY-MM',
       enableDeduplication: process.env.ENABLE_DEDUPLICATION !== 'false',
       maxTtl: parseInt(process.env.MAX_TTL_MIN || '10080', 10) * 60, // Конвертируем минуты в секунды
     },

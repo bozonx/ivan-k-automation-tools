@@ -72,7 +72,6 @@ describe('StorageService', () => {
                 STORAGE_DIR: testStoragePath,
                 MAX_FILE_SIZE_MB: 1, // 1MB
                 ALLOWED_MIME_TYPES: [], // Разрешены все типы файлов
-                DATE_FORMAT: 'YYYY-MM',
                 ENABLE_DEDUPLICATION: true,
               };
               return config[key] || defaultValue;
@@ -229,7 +228,6 @@ describe('StorageService', () => {
           STORAGE_DIR: testStoragePath,
           MAX_FILE_SIZE_MB: 1,
           ALLOWED_MIME_TYPES: ['image/jpeg'], // Только JPEG разрешен
-          DATE_FORMAT: 'YYYY-MM',
           ENABLE_DEDUPLICATION: true,
         };
         return config[key] || defaultValue;
@@ -622,7 +620,6 @@ describe('StorageService', () => {
             STORAGE_DIR: '/invalid/path/that/does/not/exist',
             MAX_FILE_SIZE_MB: 1,
             ALLOWED_MIME_TYPES: [],
-            DATE_FORMAT: 'YYYY-MM',
             ENABLE_DEDUPLICATION: true,
           };
           return config[key] || defaultValue;

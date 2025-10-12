@@ -17,9 +17,6 @@ export interface StorageConfig {
   /** Разрешенные MIME типы */
   allowedMimeTypes: string[];
 
-  /** Формат организации файлов по датам */
-  dateFormat: string; // например 'YYYY-MM'
-
   /** Включить дедупликацию файлов */
   enableDeduplication: boolean;
 }

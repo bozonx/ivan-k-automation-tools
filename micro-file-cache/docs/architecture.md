@@ -502,9 +502,6 @@ export class ConfigService {
     return process.env.ENABLE_DEDUPLICATION !== 'false';
   }
 
-  get dateFormat(): string {
-    return process.env.DATE_FORMAT || 'YYYY-MM';
-  }
 
   get minTtlMinutes(): number {
     return parseInt(process.env.TTL_MIN || '10080', 10); // 7 дней

@@ -26,6 +26,7 @@ import {
 import { HashUtil } from '../../common/utils/hash.util';
 import { FilenameUtil } from '../../common/utils/filename.util';
 import { DateUtil } from '../../common/utils/date.util';
+import { STORAGE_CONSTANTS } from '../../config/app.config';
 
 @Injectable()
 export class StorageService {
@@ -51,7 +52,6 @@ export class StorageService {
         basePath: absoluteBasePath,
         maxFileSize: this.configService.get<number>('MAX_FILE_SIZE_MB', 100) * 1024 * 1024, // Конвертируем MB в байты
         allowedMimeTypes: this.configService.get<string[]>('ALLOWED_MIME_TYPES', []), // Пустой массив = разрешены все типы
-        dateFormat: this.configService.get<string>('DATE_FORMAT', 'YYYY-MM'),
         enableDeduplication: this.configService.get<boolean>('ENABLE_DEDUPLICATION', true),
       };
 
@@ -183,7 +183,7 @@ export class StorageService {
       const storedFilename = `${fileId}_${safeFilename}`;
 
       // Создаем директорию по дате
-      const dateDir = DateUtil.format(DateUtil.now().toDate(), config.dateFormat);
+      const dateDir = DateUtil.format(DateUtil.now().toDate(), STORAGE_CONSTANTS.DATE_FORMAT);
       const fileDir = path.join(config.basePath, dateDir);
       await fs.ensureDir(fileDir);
 

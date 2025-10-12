@@ -109,8 +109,6 @@ API_VERSION=v1
 | `MAX_FILE_SIZE_MB`     | Максимальный размер файла в мегабайтах   | `100`           | ❌           |
 | `ALLOWED_MIME_TYPES`   | Разрешенные MIME типы файлов             | `[]` (все типы) | ❌           |
 | `ENABLE_DEDUPLICATION` | Включить дедупликацию файлов             | `true`          | ❌           |
-| `DATE_FORMAT`          | Формат организации файлов по датам       | `YYYY-MM`       | ❌           |
-| `MAX_FILES_COUNT`      | Максимальное количество файлов в кэше    | `10000`         | ❌           |
 | `MAX_STORAGE_SIZE_MB`  | Максимальный общий размер хранилища в МБ | `1000`          | ❌           |
 
 ### ⏰ TTL настройки
@@ -197,7 +195,6 @@ STORAGE_DIR=./storage
 MAX_FILE_SIZE_MB=100
 ALLOWED_MIME_TYPES=[]
 ENABLE_DEDUPLICATION=true
-DATE_FORMAT=YYYY-MM
 MAX_FILES_COUNT=10000
 MAX_STORAGE_SIZE_MB=1000
 
@@ -234,7 +231,6 @@ STORAGE_DIR=/app/storage
 MAX_FILE_SIZE_MB=100
 ALLOWED_MIME_TYPES=["image/jpeg","image/png","application/pdf","text/plain"]
 ENABLE_DEDUPLICATION=true
-DATE_FORMAT=YYYY-MM
 MAX_FILES_COUNT=10000
 MAX_STORAGE_SIZE_MB=1000
 
