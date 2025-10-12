@@ -277,9 +277,9 @@ export function createConfig(): AppConfig {
     },
 
     cleanup: {
-      enabled: process.env.CLEANUP_ENABLED !== 'false',
+      enabled: true, // Очистка всегда включена - это основная функция микросервиса
       cronExpression: process.env.CLEANUP_CRON || '0 * * * * *', // каждую минуту
-      checkInterval: parseInt(process.env.CLEANUP_INTERVAL || '60000', 10), // 1 минута
+      checkInterval: parseInt(process.env.CLEANUP_INTERVAL_MIN || '1', 10) * 60 * 1000, // Конвертируем минуты в миллисекунды
       enableLogging: true,
       maxFilesPerBatch: parseInt(process.env.CLEANUP_BATCH_SIZE || '100', 10),
     },

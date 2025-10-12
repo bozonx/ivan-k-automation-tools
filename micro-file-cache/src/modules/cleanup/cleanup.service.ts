@@ -80,7 +80,7 @@ export class CleanupService {
     private readonly storageService: StorageService,
   ) {
     this.config = {
-      enabled: this.configService.get<boolean>('CLEANUP_ENABLED', true),
+      enabled: true, // Очистка всегда включена - это основная функция микросервиса
       cronExpression: this.configService.get<string>('CLEANUP_CRON', CronExpression.EVERY_MINUTE),
       batchSize: this.configService.get<number>('CLEANUP_BATCH_SIZE', 100),
       dryRun: this.configService.get<boolean>('CLEANUP_DRY_RUN', false),
@@ -94,11 +94,7 @@ export class CleanupService {
    */
   @Cron(CronExpression.EVERY_MINUTE)
   async handleScheduledCleanup(): Promise<void> {
-    const enabled = this.configService.get<boolean>('CLEANUP_ENABLED', true);
-    if (!enabled) {
-      this.logger.debug('Cleanup is disabled, skipping scheduled cleanup');
-      return;
-    }
+    // Очистка всегда включена - это основная функция микросервиса
 
     this.logger.log('Starting scheduled cleanup');
     const result = await this.cleanupExpiredFiles();

@@ -58,7 +58,6 @@ describe('CleanupService', () => {
     // Настройка моков по умолчанию
     mockConfigService.get.mockImplementation((key: string, defaultValue?: any) => {
       const config = {
-        CLEANUP_ENABLED: true,
         CLEANUP_CRON: '*/1 * * * *', // CronExpression.EVERY_MINUTE
         CLEANUP_BATCH_SIZE: 100,
         CLEANUP_DRY_RUN: false,
@@ -214,7 +213,6 @@ describe('CleanupService', () => {
       const batchSize = 2;
       configService.get.mockImplementation((key: string, defaultValue?: any) => {
         const config = {
-          CLEANUP_ENABLED: true,
           CLEANUP_CRON: '*/1 * * * *',
           CLEANUP_BATCH_SIZE: batchSize,
           CLEANUP_DRY_RUN: false,
@@ -458,38 +456,35 @@ describe('CleanupService', () => {
   describe('configuration', () => {
     it('should use default configuration values', () => {
       // Act & Assert
-      expect(configService.get).toHaveBeenCalledWith('CLEANUP_ENABLED', true);
       expect(configService.get).toHaveBeenCalledWith('CLEANUP_CRON', '*/1 * * * *');
       expect(configService.get).toHaveBeenCalledWith('CLEANUP_BATCH_SIZE', 100);
       expect(configService.get).toHaveBeenCalledWith('CLEANUP_DRY_RUN', false);
     });
 
-    it('should handle disabled cleanup', async () => {
+    it('should always run cleanup (cleanup is always enabled)', async () => {
       // Arrange
-      configService.get.mockImplementation((key: string, defaultValue?: any) => {
-        if (key === 'CLEANUP_ENABLED') {
-          return false;
-        }
-        const config = {
-          CLEANUP_CRON: '*/1 * * * *',
-          CLEANUP_BATCH_SIZE: 100,
-          CLEANUP_DRY_RUN: false,
-        };
-        return config[key] || defaultValue;
-      });
+      const mockSearchResult: FileSearchResult = {
+        files: [],
+        total: 0,
+        params: { expiredOnly: true },
+      };
+
+      storageService.searchFiles.mockResolvedValue(mockSearchResult);
 
       // Act
       await service.handleScheduledCleanup();
 
       // Assert
-      expect(configService.get).toHaveBeenCalledWith('CLEANUP_ENABLED', true);
-      // Проверяем, что searchFiles не вызывался, так как очистка отключена
-      expect(storageService.searchFiles).not.toHaveBeenCalled();
+      // Проверяем, что searchFiles вызывался, так как очистка всегда включена
+      expect(storageService.searchFiles).toHaveBeenCalledWith({
+        expiredOnly: true,
+        limit: 10000,
+      });
     });
   });
 
   describe('handleScheduledCleanup', () => {
-    it('should call cleanupExpiredFiles when enabled', async () => {
+    it('should call cleanupExpiredFiles (cleanup is always enabled)', async () => {
       // Arrange
       const mockSearchResult: FileSearchResult = {
         files: [mockExpiredFileInfo],
@@ -516,25 +511,25 @@ describe('CleanupService', () => {
       expect(storageService.deleteFile).toHaveBeenCalledWith(mockExpiredFileInfo.id);
     });
 
-    it('should skip cleanup when disabled', async () => {
+    it('should always run cleanup (cleanup cannot be disabled)', async () => {
       // Arrange
-      configService.get.mockImplementation((key: string, defaultValue?: any) => {
-        if (key === 'CLEANUP_ENABLED') {
-          return false;
-        }
-        const config = {
-          CLEANUP_CRON: '*/1 * * * *',
-          CLEANUP_BATCH_SIZE: 100,
-          CLEANUP_DRY_RUN: false,
-        };
-        return config[key] || defaultValue;
-      });
+      const mockSearchResult: FileSearchResult = {
+        files: [],
+        total: 0,
+        params: { expiredOnly: true },
+      };
+
+      storageService.searchFiles.mockResolvedValue(mockSearchResult);
 
       // Act
       await service.handleScheduledCleanup();
 
       // Assert
-      expect(storageService.searchFiles).not.toHaveBeenCalled();
+      // Проверяем, что searchFiles всегда вызывается, так как очистка всегда включена
+      expect(storageService.searchFiles).toHaveBeenCalledWith({
+        expiredOnly: true,
+        limit: 10000,
+      });
     });
   });
 

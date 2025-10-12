@@ -80,9 +80,8 @@ curl -X GET http://localhost:3000/api/v1/files \
 
 ### Очистка
 
-- `CLEANUP_ENABLED` - включить автоматическую очистку
 - `CLEANUP_CRON` - cron выражение для расписания очистки
-- `CLEANUP_INTERVAL` - интервал проверки в миллисекундах
+- `CLEANUP_INTERVAL_MIN` - интервал проверки в минутах (очистка всегда включена)
 
 ### Логирование
 

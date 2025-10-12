@@ -117,7 +117,7 @@ docker volume prune
 - `STORAGE_PATH` - путь к хранилищу файлов (обязателен)
 - `MAX_FILE_SIZE_MB` - максимальный размер файла в мегабайтах
 - `MAX_TTL_MIN` - максимальный TTL в минутах (по умолчанию 60)
-- `CLEANUP_INTERVAL` - интервал очистки в миллисекундах
+- `CLEANUP_INTERVAL_MIN` - интервал очистки в минутах
 
 ## Volumes
 
