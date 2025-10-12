@@ -99,7 +99,8 @@ This repository contains multiple independent projects:
 
 - Package manager: `pnpm`
 - Use relative imports within projects
-- Store tests in `<projectName>/test/`
+- Store unit tests in `<projectName>/test/unit/`
+- Store e2e tests in `<projectName>/test/e2e/`
 - Use Jest for testing with proper mocking
 - Define constants at file top, avoid magic numbers
 
