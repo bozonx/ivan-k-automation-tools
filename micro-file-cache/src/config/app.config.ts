@@ -274,7 +274,7 @@ export function createConfig(): AppConfig {
       allowedMimeTypes: parseAllowedMimeTypes(process.env.ALLOWED_MIME_TYPES),
       dateFormat: process.env.DATE_FORMAT || 'YYYY-MM',
       enableDeduplication: process.env.ENABLE_DEDUPLICATION !== 'false',
-      maxTtl: parseInt(process.env.MAX_TTL_MIN || '60', 10) * 60, // Конвертируем минуты в секунды
+      maxTtl: parseInt(process.env.MAX_TTL_MIN || '10080', 10) * 60, // Конвертируем минуты в секунды
     },
 
     auth: {

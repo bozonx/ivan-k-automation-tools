@@ -7,7 +7,7 @@ services:
       - '80:80'
     environment:
       - AUTH_TOKEN=your-secret-key
-      - CLEANUP_CRON=0 */10 * * * *
+      - MAX_TTL_MIN=10080
       - TZ=UTC
       - CLEANUP_CRON=0 */10 * * * *
       - MAX_FILE_SIZE_MB=100
@@ -35,51 +35,12 @@ services:
     networks:
       - micro-file-cache-network
 
-  # Сервис для разработки (с hot reload)
-  micro-file-cache-dev:
-    build:
-      context: .
-      dockerfile: Dockerfile.dev
-    container_name: micro-file-cache-dev
-    ports:
-      - '3001:3000'
-    environment:
-      - NODE_ENV=development
-      - LISTEN_HOST=0.0.0.0
-      - LISTEN_PORT=3000
-      - AUTH_ENABLED=false
-      - STORAGE_DIR=/app/storage
-      - MAX_FILE_SIZE_MB=100
-      - ALLOWED_MIME_TYPES=
-      - DATE_FORMAT=YYYY-MM
-      - ENABLE_DEDUPLICATION=true
-      - MAX_TTL_MIN=10080
-      - CLEANUP_CRON=0 */10 * * * *
-      - LOG_LEVEL=debug
-      - MAX_FILES_COUNT=1000
-      - MAX_STORAGE_SIZE_MB=1000
-      - TZ=UTC
-    volumes:
-      # Монтируем исходный код для hot reload
-      - .:/app
-      - /app/node_modules
-      - file_cache_storage_dev:/app/storage
-    command: pnpm run start:dev
-    restart: unless-stopped
-    networks:
-      - micro-file-cache-network
-    profiles:
-      - dev
-
 volumes:
   # Постоянное хранилище для продакшн данных
   file_cache_storage:
     driver: local
   # Постоянное хранилище для логов
   file_cache_logs:
-    driver: local
-  # Хранилище для разработки
-  file_cache_storage_dev:
     driver: local
 
 networks:

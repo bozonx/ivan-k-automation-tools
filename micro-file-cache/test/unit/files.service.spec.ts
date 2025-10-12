@@ -93,10 +93,10 @@ describe('FilesService', () => {
     // Настраиваем моки для ConfigService
     configService.get.mockImplementation((key: string, defaultValue?: any) => {
       const config = {
-        MAX_TTL_MIN: 60, // 60 минут
+        MAX_TTL_MIN: 10080, // 7 дней
         MAX_FILE_SIZE_MB: 100,
         storage: {
-          maxTtl: 3600, // 60 минут в секундах
+          maxTtl: 604800, // 7 дней в секундах
         },
       };
       return config[key] !== undefined ? config[key] : defaultValue;

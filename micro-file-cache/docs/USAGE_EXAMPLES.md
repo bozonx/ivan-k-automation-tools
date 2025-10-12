@@ -429,7 +429,7 @@ mkdir -p "$TEMP_DIR"
 # Функция для загрузки файла
 upload_file() {
     local file_path="$1"
-    local ttl_minutes="${2:-60}"
+    local ttl_minutes="${2:-10080}"
 
     echo "Uploading file: $file_path"
     response=$(curl -s -H "Authorization: Bearer ${TOKEN}" \

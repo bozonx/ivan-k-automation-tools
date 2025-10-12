@@ -507,11 +507,11 @@ export class ConfigService {
   }
 
   get minTtlMinutes(): number {
-    return parseInt(process.env.TTL_MIN || '60', 10); // 60 минут
+    return parseInt(process.env.TTL_MIN || '10080', 10); // 7 дней
   }
 
   get maxTtlMinutes(): number {
-    return parseInt(process.env.MAX_TTL_MIN || '60', 10); // 60 минут
+    return parseInt(process.env.MAX_TTL_MIN || '10080', 10); // 7 дней
   }
 
   get maxFilesCount(): number {

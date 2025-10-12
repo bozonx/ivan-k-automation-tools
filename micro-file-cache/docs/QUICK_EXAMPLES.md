@@ -140,7 +140,7 @@ function useFileCache() {
 ```python
 import requests
 
-def upload_file(file_path, ttl_minutes=60):
+def upload_file(file_path, ttl_minutes=10080):
     with open(file_path, 'rb') as f:
         files = {'file': f}
         data = {'ttl': ttl_minutes * 60}  # Конвертируем минуты в секунды
@@ -163,7 +163,7 @@ print(f"File ID: {result['data']['id']}")
 import aiohttp
 import aiofiles
 
-async def upload_file_async(file_path, ttl_minutes=60):
+async def upload_file_async(file_path, ttl_minutes=10080):
     data = aiohttp.FormData()
     data.add_field('ttl', str(ttl_minutes * 60))  # Конвертируем минуты в секунды
 

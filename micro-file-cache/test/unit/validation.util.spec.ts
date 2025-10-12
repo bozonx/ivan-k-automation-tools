@@ -94,7 +94,7 @@ describe('ValidationUtil', () => {
 
   describe('validateTTL', () => {
     const minTtl = 60; // 1 минута в секундах
-    const maxTtl = 3600; // 60 минут в секундах
+    const maxTtl = 604800; // 7 дней в секундах
 
     it('should validate correct TTL', () => {
       const result = ValidationUtil.validateTTL(1800, minTtl, maxTtl); // 30 минут
@@ -125,10 +125,12 @@ describe('ValidationUtil', () => {
     });
 
     it('should reject TTL above maximum', () => {
-      const result = ValidationUtil.validateTTL(7200, minTtl, maxTtl); // 2 hours
+      const result = ValidationUtil.validateTTL(700000, minTtl, maxTtl); // 8+ days
 
       expect(result.isValid).toBe(false);
-      expect(result.errors).toContain('TTL must not exceed 3600 seconds (MAX_TTL_MIN: 60 minutes)');
+      expect(result.errors).toContain(
+        'TTL must not exceed 604800 seconds (MAX_TTL_MIN: 10080 minutes)',
+      );
     });
 
     it('should accept minimum TTL', () => {
@@ -139,7 +141,7 @@ describe('ValidationUtil', () => {
     });
 
     it('should accept maximum TTL', () => {
-      const result = ValidationUtil.validateTTL(3600, minTtl, maxTtl); // 60 minutes
+      const result = ValidationUtil.validateTTL(604800, minTtl, maxTtl); // 7 days
 
       expect(result.isValid).toBe(true);
       expect(result.errors).toHaveLength(0);

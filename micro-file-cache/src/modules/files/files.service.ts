@@ -70,7 +70,7 @@ export class FilesService {
     private readonly storageService: StorageService,
     private readonly configService: ConfigService,
   ) {
-    this.defaultTTL = (this.configService.get<number>('MAX_TTL_MIN') || 60) * 60; // Конвертируем минуты в секунды
+    this.defaultTTL = (this.configService.get<number>('MAX_TTL_MIN') || 10080) * 60; // Конвертируем минуты в секунды
     this.maxFileSize = this.configService.get<number>('MAX_FILE_SIZE_MB', 100) * 1024 * 1024; // Конвертируем MB в байты
     this.allowedMimeTypes = this.configService.get<string[]>('ALLOWED_MIME_TYPES', []); // Пустой массив = разрешены все типы
   }
