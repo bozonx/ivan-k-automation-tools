@@ -106,7 +106,8 @@ This repository contains multiple independent projects:
 
 ### Documentation
 
-- Store docs in `<projectName>/docs/`
+- Store guide docs in `<projectName>/docs/`
+- Store development stage docks in `<projectName>/dev_docs/`
 - Update `<projectName>/docs/CHANGELOG.md` for significant changes
 - Keep `<projectName>/README.md` current with setup instructions
 - Write clear commit messages following conventional commits

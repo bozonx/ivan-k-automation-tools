@@ -766,3 +766,4 @@ volumes:
 - [API документацию](api-specification.md)
 - [Руководство по быстрому старту](QUICK_START.md)
 - [Настройка переменных окружения](ENV_SETUP.md)
+- [Быстрые примеры](QUICK_EXAMPLES.md)

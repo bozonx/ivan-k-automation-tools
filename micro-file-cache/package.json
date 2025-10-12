@@ -1,6 +1,6 @@
 {
   "name": "micro-file-cache",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Микросервис для временного кэширования файлов с автоматической очисткой по истечении времени жизни (TTL)",
   "main": "dist/main.js",
   "scripts": {
