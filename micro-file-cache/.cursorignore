@@ -4,6 +4,7 @@
 # Build outputs
 dist/
 coverage/
+#dev_docs/
 
 # Dependencies
 node_modules/
