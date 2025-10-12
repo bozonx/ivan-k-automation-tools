@@ -153,3 +153,9 @@ This repository contains multiple independent projects:
 - Keep functions small and focused
 - Avoid deep nesting (max 3 levels)
 - Use consistent formatting and linting
+
+## Sub project specific
+
+### micro-file-cache
+
+- Use file `.env.example` to undestand env variables of the project
