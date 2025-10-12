@@ -58,7 +58,7 @@ describe('CleanupService', () => {
     // Настройка моков по умолчанию
     mockConfigService.get.mockImplementation((key: string, defaultValue?: any) => {
       const config = {
-        CLEANUP_CRON: '*/1 * * * *', // CronExpression.EVERY_MINUTE
+        CLEANUP_CRON: '0 */10 * * * *', // каждые 10 минут
         CLEANUP_BATCH_SIZE: 100,
         CLEANUP_DRY_RUN: false,
       };
@@ -213,7 +213,7 @@ describe('CleanupService', () => {
       const batchSize = 2;
       configService.get.mockImplementation((key: string, defaultValue?: any) => {
         const config = {
-          CLEANUP_CRON: '*/1 * * * *',
+          CLEANUP_CRON: '0 */10 * * * *',
           CLEANUP_BATCH_SIZE: batchSize,
           CLEANUP_DRY_RUN: false,
         };
@@ -456,7 +456,7 @@ describe('CleanupService', () => {
   describe('configuration', () => {
     it('should use default configuration values', () => {
       // Act & Assert
-      expect(configService.get).toHaveBeenCalledWith('CLEANUP_CRON', '*/1 * * * *');
+      expect(configService.get).toHaveBeenCalledWith('CLEANUP_CRON', '0 */10 * * * *');
       expect(configService.get).toHaveBeenCalledWith('CLEANUP_BATCH_SIZE', 100);
       expect(configService.get).toHaveBeenCalledWith('CLEANUP_DRY_RUN', false);
     });

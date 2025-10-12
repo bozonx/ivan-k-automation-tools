@@ -129,9 +129,6 @@ export interface CleanupConfig {
   /** Cron выражение для расписания очистки */
   cronExpression: string;
 
-  /** Интервал проверки в миллисекундах */
-  checkInterval: number;
-
   /** Включить логирование операций очистки */
   enableLogging: boolean;
 
@@ -278,8 +275,7 @@ export function createConfig(): AppConfig {
 
     cleanup: {
       enabled: true, // Очистка всегда включена - это основная функция микросервиса
-      cronExpression: process.env.CLEANUP_CRON || '0 * * * * *', // каждую минуту
-      checkInterval: parseInt(process.env.CLEANUP_INTERVAL_MIN || '1', 10) * 60 * 1000, // Конвертируем минуты в миллисекунды
+      cronExpression: process.env.CLEANUP_CRON || '0 */10 * * * *', // каждые 10 минут
       enableLogging: true,
       maxFilesPerBatch: parseInt(process.env.CLEANUP_BATCH_SIZE || '100', 10),
     },

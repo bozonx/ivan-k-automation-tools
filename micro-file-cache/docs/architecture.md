@@ -488,7 +488,7 @@ export class ConfigService {
   }
 
   get cleanupInterval(): number {
-    return parseInt(process.env.CLEANUP_INTERVAL_MIN || '1', 10) * 60 * 1000; // Конвертируем минуты в миллисекунды
+    return process.env.CLEANUP_CRON || '0 */10 * * * *'; // Cron выражение для очистки
   }
 }
 ```

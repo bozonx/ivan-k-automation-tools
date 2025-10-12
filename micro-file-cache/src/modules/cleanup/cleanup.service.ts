@@ -81,7 +81,7 @@ export class CleanupService {
   ) {
     this.config = {
       enabled: true, // Очистка всегда включена - это основная функция микросервиса
-      cronExpression: this.configService.get<string>('CLEANUP_CRON', CronExpression.EVERY_MINUTE),
+      cronExpression: this.configService.get<string>('CLEANUP_CRON', '0 */10 * * * *'),
       batchSize: this.configService.get<number>('CLEANUP_BATCH_SIZE', 100),
       dryRun: this.configService.get<boolean>('CLEANUP_DRY_RUN', false),
     };
@@ -92,7 +92,7 @@ export class CleanupService {
   /**
    * Автоматическая очистка по расписанию
    */
-  @Cron(CronExpression.EVERY_MINUTE)
+  @Cron('0 */10 * * * *')
   async handleScheduledCleanup(): Promise<void> {
     // Очистка всегда включена - это основная функция микросервиса
 
