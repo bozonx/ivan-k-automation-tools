@@ -33,7 +33,7 @@ export class AuthGuard implements CanActivate {
 
     // Получаем конфигурацию аутентификации
     const authEnabled = this.configService.get<boolean>('AUTH_ENABLED');
-    const authSecretKey = this.configService.get<string>('AUTH_SECRET_KEY');
+    const authSecretKey = this.configService.get<string>('AUTH_TOKEN');
     const excludePaths = this.configService.get<string[]>('auth.excludePaths') || [
       '/api/v1/health',
     ];

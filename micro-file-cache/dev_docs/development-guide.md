@@ -337,7 +337,7 @@ LISTEN_PORT=3000
 
 # Аутентификация
 AUTH_ENABLED=true
-AUTH_SECRET_KEY=your-secret-key-change-in-production
+AUTH_TOKEN=your-secret-key-change-in-production
 
 # Пути к хранилищу
 STORAGE_DIR=/app/storage                    # Продакшн

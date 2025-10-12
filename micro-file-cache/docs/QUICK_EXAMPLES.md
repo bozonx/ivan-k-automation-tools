@@ -187,7 +187,7 @@ async def upload_file_async(file_path, ttl_minutes=60):
 ```bash
 # В .env файле
 AUTH_ENABLED=true
-AUTH_SECRET_KEY=your-secret-key-change-in-production
+AUTH_TOKEN=your-secret-key-change-in-production
 ```
 
 ### Отключение аутентификации

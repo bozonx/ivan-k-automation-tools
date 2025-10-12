@@ -44,7 +44,7 @@ services:
       - LISTEN_HOST=0.0.0.0
       - LISTEN_PORT=3000
       - AUTH_ENABLED=false
-      - STORAGE_PATH=/app/storage
+      - STORAGE_DIR=/app/storage
       - MAX_FILE_SIZE_MB=100
       - ALLOWED_MIME_TYPES=
       - DATE_FORMAT=YYYY-MM

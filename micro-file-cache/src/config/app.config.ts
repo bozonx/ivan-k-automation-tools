@@ -211,7 +211,7 @@ export function validateConfig(config: AppConfig): string[] {
 
   // Валидация хранилища
   if (!config.storage.basePath || config.storage.basePath.trim() === '') {
-    errors.push('STORAGE_PATH environment variable is required');
+    errors.push('STORAGE_DIR environment variable is required');
   }
 
   if (config.storage.maxFileSize < 1) {
@@ -228,9 +228,9 @@ export function validateConfig(config: AppConfig): string[] {
 
   if (config.auth.enabled) {
     if (!config.auth.secretKey) {
-      errors.push('AUTH_SECRET_KEY environment variable is required when AUTH_ENABLED is true');
+      errors.push('AUTH_TOKEN environment variable is required when AUTH_ENABLED is true');
     } else if (isProduction && config.auth.secretKey.length < 32) {
-      errors.push('AUTH_SECRET_KEY must be at least 32 characters long in production environment');
+      errors.push('AUTH_TOKEN must be at least 32 characters long in production environment');
     }
   }
 
@@ -261,7 +261,7 @@ export function createConfig(): AppConfig {
     },
 
     storage: {
-      basePath: process.env.STORAGE_PATH!,
+      basePath: process.env.STORAGE_DIR!,
       maxFileSize: parseInt(process.env.MAX_FILE_SIZE_MB || '100', 10) * 1024 * 1024, // Конвертируем MB в байты
       allowedMimeTypes: parseAllowedMimeTypes(process.env.ALLOWED_MIME_TYPES),
       dateFormat: process.env.DATE_FORMAT || 'YYYY-MM',
@@ -272,7 +272,7 @@ export function createConfig(): AppConfig {
 
     auth: {
       enabled: process.env.AUTH_ENABLED !== 'false',
-      secretKey: process.env.AUTH_SECRET_KEY!,
+      secretKey: process.env.AUTH_TOKEN!,
       tokenExpiration: parseInt(process.env.AUTH_TOKEN_EXPIRATION || '3600', 10), // 1 час
       algorithm: 'HS256',
       excludePaths: [], // Будет заполнено динамически в getConfig()

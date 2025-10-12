@@ -482,11 +482,11 @@ export class ConfigService {
   }
 
   get authSecretKey(): string | undefined {
-    return process.env.AUTH_SECRET_KEY;
+    return process.env.AUTH_TOKEN;
   }
 
   get storagePath(): string {
-    return process.env.STORAGE_PATH || '../test-data/micro-file-cache/storage';
+    return process.env.STORAGE_DIR || '../test-data/micro-file-cache/storage';
   }
 
   get maxFileSizeMB(): number {

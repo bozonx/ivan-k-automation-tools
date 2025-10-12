@@ -44,7 +44,7 @@ export class StorageService {
   private getConfig(): StorageConfig {
     if (!this.config) {
       // Получаем базовый путь и преобразуем его в абсолютный
-      const basePath = this.configService.get<string>('STORAGE_PATH', './storage');
+      const basePath = this.configService.get<string>('STORAGE_DIR', './storage');
       const absoluteBasePath = path.isAbsolute(basePath) ? basePath : path.resolve(basePath);
 
       this.config = {

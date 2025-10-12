@@ -39,7 +39,7 @@ pnpm run start:dev
 
 ```env
 AUTH_ENABLED=true
-AUTH_SECRET_KEY=dev-secret-key-for-micro-file-cache-12345678901234567890
+AUTH_TOKEN=dev-secret-key-for-micro-file-cache-12345678901234567890
 ```
 
 ### Отключение аутентификации
@@ -94,10 +94,10 @@ API_VERSION=v1
 
 ### 🔐 Аутентификация
 
-| Переменная        | Описание                          | По умолчанию | Обязательная |
-| ----------------- | --------------------------------- | ------------ | ------------ |
-| `AUTH_ENABLED`    | Включить/выключить аутентификацию | `true`       | ❌           |
-| `AUTH_SECRET_KEY` | Секретный ключ для аутентификации | -            | ✅\*         |
+| Переменная     | Описание                          | По умолчанию | Обязательная |
+| -------------- | --------------------------------- | ------------ | ------------ |
+| `AUTH_ENABLED` | Включить/выключить аутентификацию | `true`       | ❌           |
+| `AUTH_TOKEN`   | Секретный ключ для аутентификации | -            | ✅\*         |
 
 \*Обязательна если `AUTH_ENABLED=true`, в production режиме минимум 32 символа
 
@@ -105,7 +105,7 @@ API_VERSION=v1
 
 | Переменная             | Описание                                 | По умолчанию    | Обязательная |
 | ---------------------- | ---------------------------------------- | --------------- | ------------ |
-| `STORAGE_PATH`         | Путь к директории хранилища              | -               | ✅           |
+| `STORAGE_DIR`          | Путь к директории хранилища              | -               | ✅           |
 | `MAX_FILE_SIZE_MB`     | Максимальный размер файла в мегабайтах   | `100`           | ❌           |
 | `ALLOWED_MIME_TYPES`   | Разрешенные MIME типы файлов             | `[]` (все типы) | ❌           |
 | `ENABLE_DEDUPLICATION` | Включить дедупликацию файлов             | `true`          | ❌           |
@@ -142,7 +142,7 @@ API_VERSION=v1
 
 ## 🔒 Безопасность
 
-⚠️ **Важно**: В продакшене обязательно измените `AUTH_SECRET_KEY` на более сложный и безопасный ключ!
+⚠️ **Важно**: В продакшене обязательно измените `AUTH_TOKEN` на более сложный и безопасный ключ!
 
 ### Рекомендации по безопасности
 
@@ -167,10 +167,10 @@ LISTEN_PORT=3000
 
 # Аутентификация
 AUTH_ENABLED=true
-AUTH_SECRET_KEY=your-secret-key-here
+AUTH_TOKEN=your-secret-key-here
 
 # Хранилище
-STORAGE_PATH=./storage
+STORAGE_DIR=./storage
 ```
 
 ### Полная конфигурация для разработки
@@ -185,10 +185,10 @@ API_VERSION=v1
 
 # Аутентификация
 AUTH_ENABLED=true
-AUTH_SECRET_KEY=dev-secret-key-for-micro-file-cache-12345678901234567890
+AUTH_TOKEN=dev-secret-key-for-micro-file-cache-12345678901234567890
 
 # Хранилище
-STORAGE_PATH=./storage
+STORAGE_DIR=./storage
 MAX_FILE_SIZE_MB=100
 ALLOWED_MIME_TYPES=[]
 ENABLE_DEDUPLICATION=true
@@ -220,10 +220,10 @@ LISTEN_PORT=3000
 
 # Аутентификация
 AUTH_ENABLED=true
-AUTH_SECRET_KEY=your-very-secure-production-key-minimum-32-characters-long
+AUTH_TOKEN=your-very-secure-production-key-minimum-32-characters-long
 
 # Хранилище
-STORAGE_PATH=/app/storage
+STORAGE_DIR=/app/storage
 MAX_FILE_SIZE_MB=100
 ALLOWED_MIME_TYPES=["image/jpeg","image/png","application/pdf","text/plain"]
 ENABLE_DEDUPLICATION=true
@@ -252,11 +252,11 @@ CORS_ORIGIN=true
 1. **Проверьте обязательные переменные**:
 
    ```bash
-   # Убедитесь, что STORAGE_PATH установлен
-   echo $STORAGE_PATH
+   # Убедитесь, что STORAGE_DIR установлен
+   echo $STORAGE_DIR
 
-   # Если AUTH_ENABLED=true, проверьте AUTH_SECRET_KEY
-   echo $AUTH_SECRET_KEY
+   # Если AUTH_ENABLED=true, проверьте AUTH_TOKEN
+   echo $AUTH_TOKEN
    ```
 
 2. **Проверьте права доступа**:
@@ -274,14 +274,14 @@ CORS_ORIGIN=true
    # Убедитесь, что AUTH_ENABLED=true
    grep AUTH_ENABLED .env
 
-   # Проверьте, что AUTH_SECRET_KEY установлен
-   grep AUTH_SECRET_KEY .env
+   # Проверьте, что AUTH_TOKEN установлен
+   grep AUTH_TOKEN .env
    ```
 
 2. **Проверьте токен в запросах**:
    ```bash
    # Используйте правильный токен из .env файла
-   curl -H "Authorization: Bearer $(grep AUTH_SECRET_KEY .env | cut -d'=' -f2)" \
+   curl -H "Authorization: Bearer $(grep AUTH_TOKEN .env | cut -d'=' -f2)" \
      http://localhost:3000/api/v1/health
    ```
 
@@ -291,14 +291,14 @@ CORS_ORIGIN=true
 
    ```bash
    # Убедитесь, что путь существует
-   ls -la $(grep STORAGE_PATH .env | cut -d'=' -f2)
+   ls -la $(grep STORAGE_DIR .env | cut -d'=' -f2)
    ```
 
 2. **Проверьте права доступа**:
    ```bash
    # Убедитесь, что приложение может писать в папку
-   touch $(grep STORAGE_PATH .env | cut -d'=' -f2)/test.txt
-   rm $(grep STORAGE_PATH .env | cut -d'=' -f2)/test.txt
+   touch $(grep STORAGE_DIR .env | cut -d'=' -f2)/test.txt
+   rm $(grep STORAGE_DIR .env | cut -d'=' -f2)/test.txt
    ```
 
 ## 📚 Дополнительные ресурсы

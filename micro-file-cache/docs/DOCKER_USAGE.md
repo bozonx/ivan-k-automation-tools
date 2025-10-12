@@ -60,8 +60,8 @@ docker-compose logs -f micro-file-cache
 Основные настройки в файле `env.docker`:
 
 - `AUTH_ENABLED=true` - включена аутентификация
-- `AUTH_SECRET_KEY` - секретный ключ для токенов (в production режиме минимум 32 символа)
-- `STORAGE_PATH=/app/storage` - путь к хранилищу
+- `AUTH_TOKEN` - секретный ключ для токенов (в production режиме минимум 32 символа)
+- `STORAGE_DIR=/app/storage` - путь к хранилищу
 - `MAX_FILE_SIZE_MB=100` - максимальный размер файла в мегабайтах (100MB)
 - `MAX_TTL_MIN=60` - максимальный TTL в минутах (по умолчанию 60)
 

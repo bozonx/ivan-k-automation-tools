@@ -66,7 +66,7 @@ describe('StorageService', () => {
           useValue: {
             get: jest.fn((key: string, defaultValue?: any) => {
               const config = {
-                STORAGE_PATH: testStoragePath,
+                STORAGE_DIR: testStoragePath,
                 MAX_FILE_SIZE_MB: 1, // 1MB
                 ALLOWED_MIME_TYPES: [], // Разрешены все типы файлов
                 DATE_FORMAT: 'YYYY-MM',
@@ -223,7 +223,7 @@ describe('StorageService', () => {
       const configService = service['configService'];
       configService.get = jest.fn((key: string, defaultValue?: any) => {
         const config = {
-          STORAGE_PATH: testStoragePath,
+          STORAGE_DIR: testStoragePath,
           MAX_FILE_SIZE_MB: 1,
           ALLOWED_MIME_TYPES: ['image/jpeg'], // Только JPEG разрешен
           DATE_FORMAT: 'YYYY-MM',
@@ -616,7 +616,7 @@ describe('StorageService', () => {
       const invalidService = new StorageService({
         get: jest.fn((key: string, defaultValue?: any) => {
           const config = {
-            STORAGE_PATH: '/invalid/path/that/does/not/exist',
+            STORAGE_DIR: '/invalid/path/that/does/not/exist',
             MAX_FILE_SIZE_MB: 1,
             ALLOWED_MIME_TYPES: [],
             DATE_FORMAT: 'YYYY-MM',

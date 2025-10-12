@@ -136,8 +136,8 @@ docker-compose up -d
 | `LISTEN_HOST`          | `localhost`                             | Хост для HTTP сервера                           |
 | `LISTEN_PORT`          | `3000`                                  | Порт для HTTP сервера                           |
 | `AUTH_ENABLED`         | `true`                                  | Включить/выключить аутентификацию               |
-| `AUTH_SECRET_KEY`      | -                                       | Секретный ключ для аутентификации (обязательно) |
-| `STORAGE_PATH`         | `../test-data/micro-file-cache/storage` | Путь к хранилищу файлов и метаданных            |
+| `AUTH_TOKEN`           | -                                       | Секретный ключ для аутентификации (обязательно) |
+| `STORAGE_DIR`          | `../test-data/micro-file-cache/storage` | Путь к хранилищу файлов и метаданных            |
 | `MAX_FILE_SIZE_MB`     | `100`                                   | Максимальный размер файла в мегабайтах          |
 | `ALLOWED_MIME_TYPES`   | `[]` (все типы)                         | Разрешенные MIME типы файлов                    |
 | `ENABLE_DEDUPLICATION` | `true`                                  | Включить дедупликацию файлов                    |
@@ -159,8 +159,8 @@ NODE_ENV=production
 LISTEN_HOST=0.0.0.0
 LISTEN_PORT=3000
 AUTH_ENABLED=true
-AUTH_SECRET_KEY=your-very-secure-production-key-minimum-32-characters-long
-STORAGE_PATH=/app/storage
+AUTH_TOKEN=your-very-secure-production-key-minimum-32-characters-long
+STORAGE_DIR=/app/storage
 MAX_FILE_SIZE_MB=100
 ALLOWED_MIME_TYPES=["image/jpeg","image/png","application/pdf","text/plain"]
 ENABLE_DEDUPLICATION=true
@@ -207,7 +207,7 @@ curl -H "Authorization: Bearer your-token" http://localhost:3000/api/v1/files
 **Настройка аутентификации:**
 
 - `AUTH_ENABLED=true` - включить аутентификацию
-- `AUTH_SECRET_KEY=your-secret-key` - секретный ключ (в production режиме минимум 32 символа)
+- `AUTH_TOKEN=your-secret-key` - секретный ключ (в production режиме минимум 32 символа)
 
 ### Основные endpoints
 

@@ -101,7 +101,7 @@ export class HealthController {
    * Проверка состояния хранилища
    */
   private async checkStorageHealth() {
-    const storagePath = this.configService.get<string>('STORAGE_PATH', './storage');
+    const storagePath = this.configService.get<string>('STORAGE_DIR', './storage');
 
     try {
       // Проверяем доступность директории хранилища (не создаем её)

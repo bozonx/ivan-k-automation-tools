@@ -54,9 +54,9 @@ export async function createTestApp(
   await fs.ensureDir(testStoragePath);
 
   // Переопределяем переменные окружения для тестов ПЕРЕД загрузкой конфигурации
-  process.env.STORAGE_PATH = testStoragePath;
+  process.env.STORAGE_DIR = testStoragePath;
   process.env.AUTH_ENABLED = authEnabled.toString();
-  process.env.AUTH_SECRET_KEY = 'test-secret-key';
+  process.env.AUTH_TOKEN = 'test-secret-key';
 
   // Создаем тестовый модуль с правильной конфигурацией
   const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -93,19 +93,19 @@ export async function createTestApp(
     .overrideProvider(ConfigService)
     .useValue({
       get: (key: string, defaultValue?: any) => {
-        if (key === 'STORAGE_PATH') {
-          console.log(`🔧 ConfigService.get('STORAGE_PATH') returning: ${testStoragePath}`);
+        if (key === 'STORAGE_DIR') {
+          console.log(`🔧 ConfigService.get('STORAGE_DIR') returning: ${testStoragePath}`);
           return testStoragePath;
         }
         if (key === 'AUTH_ENABLED') {
           return authEnabled.toString();
         }
-        if (key === 'AUTH_SECRET_KEY') {
+        if (key === 'AUTH_TOKEN') {
           return 'test-secret-key';
         }
         // Для остальных ключей используем значения из env.test
         const value = process.env[key] || defaultValue;
-        if (key === 'STORAGE_PATH') {
+        if (key === 'STORAGE_DIR') {
           console.log(`🔧 ConfigService.get('${key}') returning: ${value}`);
         }
         return value;

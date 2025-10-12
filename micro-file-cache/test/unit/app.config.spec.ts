@@ -101,75 +101,75 @@ describe('AppConfig', () => {
   });
 
   describe('validateConfig', () => {
-    it('should validate STORAGE_PATH as required', () => {
-      process.env.STORAGE_PATH = '';
+    it('should validate STORAGE_DIR as required', () => {
+      process.env.STORAGE_DIR = '';
       const config = createConfig();
       const errors = validateConfig(config);
 
-      expect(errors).toContain('STORAGE_PATH environment variable is required');
+      expect(errors).toContain('STORAGE_DIR environment variable is required');
     });
 
-    it('should validate AUTH_SECRET_KEY when AUTH_ENABLED is true and NODE_ENV is production', () => {
-      process.env.STORAGE_PATH = '/test/storage';
+    it('should validate AUTH_TOKEN when AUTH_ENABLED is true and NODE_ENV is production', () => {
+      process.env.STORAGE_DIR = '/test/storage';
       process.env.AUTH_ENABLED = 'true';
       process.env.NODE_ENV = 'production';
-      process.env.AUTH_SECRET_KEY = 'short'; // Слишком короткий ключ для production
+      process.env.AUTH_TOKEN = 'short'; // Слишком короткий ключ для production
 
       const config = createConfig();
       const errors = validateConfig(config);
 
       expect(errors).toContain(
-        'AUTH_SECRET_KEY must be at least 32 characters long in production environment',
+        'AUTH_TOKEN must be at least 32 characters long in production environment',
       );
     });
 
-    it('should not validate AUTH_SECRET_KEY length when NODE_ENV is not production', () => {
-      process.env.STORAGE_PATH = '/test/storage';
+    it('should not validate AUTH_TOKEN length when NODE_ENV is not production', () => {
+      process.env.STORAGE_DIR = '/test/storage';
       process.env.AUTH_ENABLED = 'true';
       process.env.NODE_ENV = 'development';
-      process.env.AUTH_SECRET_KEY = 'short'; // Короткий ключ, но не production
+      process.env.AUTH_TOKEN = 'short'; // Короткий ключ, но не production
 
       const config = createConfig();
       const errors = validateConfig(config);
 
       expect(errors).not.toContain(
-        'AUTH_SECRET_KEY must be at least 32 characters long in production environment',
+        'AUTH_TOKEN must be at least 32 characters long in production environment',
       );
     });
 
-    it('should validate AUTH_SECRET_KEY is required when AUTH_ENABLED is true', () => {
-      process.env.STORAGE_PATH = '/test/storage';
+    it('should validate AUTH_TOKEN is required when AUTH_ENABLED is true', () => {
+      process.env.STORAGE_DIR = '/test/storage';
       process.env.AUTH_ENABLED = 'true';
-      process.env.AUTH_SECRET_KEY = ''; // Пустой ключ
+      process.env.AUTH_TOKEN = ''; // Пустой ключ
 
       const config = createConfig();
       const errors = validateConfig(config);
 
       expect(errors).toContain(
-        'AUTH_SECRET_KEY environment variable is required when AUTH_ENABLED is true',
+        'AUTH_TOKEN environment variable is required when AUTH_ENABLED is true',
       );
     });
 
-    it('should not validate AUTH_SECRET_KEY when AUTH_ENABLED is false', () => {
-      process.env.STORAGE_PATH = '/test/storage';
+    it('should not validate AUTH_TOKEN when AUTH_ENABLED is false', () => {
+      process.env.STORAGE_DIR = '/test/storage';
       process.env.AUTH_ENABLED = 'false';
-      process.env.AUTH_SECRET_KEY = 'short'; // Короткий ключ, но auth выключена
+      process.env.AUTH_TOKEN = 'short'; // Короткий ключ, но auth выключена
 
       const config = createConfig();
       const errors = validateConfig(config);
 
       expect(errors).not.toContain(
-        'AUTH_SECRET_KEY environment variable is required when AUTH_ENABLED is true',
+        'AUTH_TOKEN environment variable is required when AUTH_ENABLED is true',
       );
       expect(errors).not.toContain(
-        'AUTH_SECRET_KEY must be at least 32 characters long in production environment',
+        'AUTH_TOKEN must be at least 32 characters long in production environment',
       );
     });
 
     it('should pass validation with valid configuration', () => {
-      process.env.STORAGE_PATH = '/test/storage';
+      process.env.STORAGE_DIR = '/test/storage';
       process.env.AUTH_ENABLED = 'true';
-      process.env.AUTH_SECRET_KEY = 'valid-secret-key-that-is-long-enough-12345678901234567890';
+      process.env.AUTH_TOKEN = 'valid-secret-key-that-is-long-enough-12345678901234567890';
 
       const config = createConfig();
       const errors = validateConfig(config);
@@ -178,7 +178,7 @@ describe('AppConfig', () => {
     });
 
     it('should validate server port range', () => {
-      process.env.STORAGE_PATH = '/test/storage';
+      process.env.STORAGE_DIR = '/test/storage';
       process.env.LISTEN_PORT = '0'; // Невалидный порт
 
       const config = createConfig();
@@ -188,7 +188,7 @@ describe('AppConfig', () => {
     });
 
     it('should validate server host is not empty', () => {
-      process.env.STORAGE_PATH = '/test/storage';
+      process.env.STORAGE_DIR = '/test/storage';
       process.env.LISTEN_HOST = '   '; // Пробелы - невалидное значение
 
       const config = createConfig();
@@ -200,15 +200,15 @@ describe('AppConfig', () => {
 
   describe('getConfig', () => {
     it('should throw error when validation fails', () => {
-      process.env.STORAGE_PATH = ''; // Невалидная конфигурация
+      process.env.STORAGE_DIR = ''; // Невалидная конфигурация
 
       expect(() => getConfig()).toThrow('Configuration validation failed');
     });
 
     it('should return valid configuration when validation passes', () => {
-      process.env.STORAGE_PATH = '/test/storage';
+      process.env.STORAGE_DIR = '/test/storage';
       process.env.AUTH_ENABLED = 'true';
-      process.env.AUTH_SECRET_KEY = 'valid-secret-key-that-is-long-enough-12345678901234567890';
+      process.env.AUTH_TOKEN = 'valid-secret-key-that-is-long-enough-12345678901234567890';
 
       const config = getConfig();
 
