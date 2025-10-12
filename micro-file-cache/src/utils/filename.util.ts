@@ -3,70 +3,54 @@ import { v4 as uuidv4 } from 'uuid';
 /**
  * Максимальная длина короткого имени файла
  */
-const MAX_SHORT_FILENAME_LENGTH = 30;
+const MAX_SHORT_FILENAME_LENGTH = 20;
 
 /**
- * Санитизирует имя файла, заменяя неправильные символы на подчеркивания
+ * Санитизирует имя файла, заменяя неправильные символы и пробелы на подчеркивания
  * @param filename - оригинальное имя файла
  * @returns санитизированное имя файла
  */
 export function sanitizeFilename(filename: string): string {
   return filename
-    .replace(/[^a-zA-Z0-9._-]/g, '_') // Заменяем все неправильные символы на _
+    .replace(/[^a-zA-Z0-9._-]/g, '_') // Заменяем все неправильные символы и пробелы на _
     .replace(/_{2,}/g, '_') // Заменяем множественные подчеркивания на одно
     .replace(/^_+|_+$/g, ''); // Убираем подчеркивания в начале и конце
 }
 
 /**
- * Создает короткое имя файла (обрезает до 30 символов)
+ * Создает короткое имя файла без расширения (обрезает до 20 символов)
  * @param filename - оригинальное имя файла
- * @returns короткое имя файла
+ * @returns короткое имя файла без расширения
  */
 export function createShortFilename(filename: string): string {
   const sanitized = sanitizeFilename(filename);
 
-  if (sanitized.length <= MAX_SHORT_FILENAME_LENGTH) {
-    return sanitized;
-  }
-
-  // Обрезаем до максимальной длины, сохраняя расширение если возможно
+  // Удаляем расширение
   const lastDotIndex = sanitized.lastIndexOf('.');
+  const nameWithoutExt = lastDotIndex > 0 ? sanitized.substring(0, lastDotIndex) : sanitized;
 
-  if (lastDotIndex > 0 && lastDotIndex < sanitized.length - 1) {
-    const nameWithoutExt = sanitized.substring(0, lastDotIndex);
-    const extension = sanitized.substring(lastDotIndex);
-
-    if (extension.length < MAX_SHORT_FILENAME_LENGTH) {
-      const maxNameLength = MAX_SHORT_FILENAME_LENGTH - extension.length;
-      const truncatedName = nameWithoutExt.substring(0, maxNameLength);
-      return truncatedName + extension;
-    }
+  // Обрезаем до максимальной длины
+  if (nameWithoutExt.length <= MAX_SHORT_FILENAME_LENGTH) {
+    return nameWithoutExt;
   }
 
-  // Если расширение слишком длинное или его нет, просто обрезаем
-  return sanitized.substring(0, MAX_SHORT_FILENAME_LENGTH);
+  return nameWithoutExt.substring(0, MAX_SHORT_FILENAME_LENGTH);
 }
 
 /**
- * Создает полное имя файла в новом формате: <SHORT_FILENAME>-<UUID>.<EXT>
+ * Создает полное имя файла в новом формате: <SHORT_FILENAME>_<UUID>.<EXT>
  * @param originalFilename - оригинальное имя файла
  * @returns новое имя файла с UUID
  */
 export function createStorageFilename(originalFilename: string): string {
   const shortName = createShortFilename(originalFilename);
-  const uuid = uuidv4();
+  const uuid = uuidv4().substring(0, 8); // Используем короткий UUID (8 символов)
 
   // Извлекаем расширение из оригинального имени
   const lastDotIndex = originalFilename.lastIndexOf('.');
   const extension = lastDotIndex > 0 ? originalFilename.substring(lastDotIndex) : '';
 
-  // Если короткое имя уже содержит расширение, используем его
-  if (shortName.includes('.')) {
-    const shortNameWithoutExt = shortName.substring(0, shortName.lastIndexOf('.'));
-    return `${shortNameWithoutExt}-${uuid}${extension}`;
-  }
-
-  return `${shortName}-${uuid}${extension}`;
+  return `${shortName}_${uuid}${extension}`;
 }
 
 /**

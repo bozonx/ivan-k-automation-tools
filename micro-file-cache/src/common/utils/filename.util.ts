@@ -1,4 +1,5 @@
 import { extname, basename, dirname } from 'path';
+import { v4 as uuidv4 } from 'uuid';
 import { HashUtil } from './hash.util';
 
 /**
@@ -21,9 +22,9 @@ export class FilenameUtil {
   private static readonly FORBIDDEN_CHARS_TEST = /[<>:"/\\|?*\x00-\x1f]/;
 
   /**
-   * Генерирует безопасное имя файла для хранения
+   * Генерирует безопасное имя файла для хранения в формате: filename_uuid.ext
    * @param originalName - оригинальное имя файла
-   * @param hash - хеш файла для уникальности
+   * @param hash - хеш файла для уникальности (не используется в новом формате)
    * @returns безопасное имя файла
    */
   static generateSafeFilename(originalName: string, hash: string): string {
@@ -38,23 +39,19 @@ export class FilenameUtil {
     // Получаем расширение файла
     const extension = this.getFileExtension(originalName);
 
-    // Очищаем имя файла от запрещенных символов
+    // Очищаем имя файла от запрещенных символов и пробелов
     const cleanName = this.sanitizeFilename(originalName);
 
-    // Создаем уникальное имя: cleanName_hash.ext
-    const shortHash = hash.substring(0, 8);
+    // Удаляем расширение из очищенного имени
     const baseName = this.removeExtension(cleanName);
 
-    let safeFilename = `${baseName}_${shortHash}${extension}`;
+    // Обрезаем до 20 символов
+    const shortName = baseName.length > 20 ? baseName.substring(0, 20) : baseName;
 
-    // Проверяем длину и обрезаем если необходимо
-    if (safeFilename.length > this.MAX_FILENAME_LENGTH) {
-      const maxBaseLength = this.MAX_FILENAME_LENGTH - shortHash.length - extension.length - 1; // -1 для подчеркивания
-      const truncatedBase = baseName.substring(0, maxBaseLength);
-      safeFilename = `${truncatedBase}_${shortHash}${extension}`;
-    }
+    // Генерируем короткий UUID для уникальности (первые 8 символов)
+    const uuid = uuidv4().substring(0, 8);
 
-    return safeFilename;
+    return `${shortName}_${uuid}${extension}`;
   }
 
   /**
@@ -86,7 +83,7 @@ export class FilenameUtil {
   }
 
   /**
-   * Очищает имя файла от запрещенных символов
+   * Очищает имя файла от запрещенных символов и пробелов
    * @param filename - имя файла для очистки
    * @returns очищенное имя файла
    */
@@ -95,8 +92,8 @@ export class FilenameUtil {
       return '';
     }
 
-    // Заменяем запрещенные символы на подчеркивания
-    let sanitized = filename.replace(this.FORBIDDEN_CHARS_REPLACE, '_');
+    // Заменяем запрещенные символы и пробелы на подчеркивания
+    let sanitized = filename.replace(/[^a-zA-Z0-9._-]/g, '_');
 
     // Удаляем множественные подчеркивания
     sanitized = sanitized.replace(/_+/g, '_');
@@ -107,12 +104,6 @@ export class FilenameUtil {
     // Если имя стало пустым, используем "file"
     if (!sanitized) {
       sanitized = 'file';
-    }
-
-    // Ограничиваем длину имени файла (оставляем место для хеша и расширения)
-    const maxLength = 200; // Оставляем место для хеша (8 символов) + подчеркивание + расширение
-    if (sanitized.length > maxLength) {
-      sanitized = sanitized.substring(0, maxLength);
     }
 
     return sanitized;

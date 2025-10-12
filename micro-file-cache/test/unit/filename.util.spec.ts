@@ -5,25 +5,41 @@ describe('FilenameUtil', () => {
   const validHash = 'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3';
 
   describe('generateSafeFilename', () => {
-    it('should generate safe filename with hash', () => {
+    it('should generate safe filename with short UUID in format filename_uuid.ext', () => {
       const originalName = 'test-file.txt';
       const safeName = FilenameUtil.generateSafeFilename(originalName, validHash);
 
       expect(safeName).toBeDefined();
-      expect(safeName).toContain('test-file');
-      expect(safeName).toContain('a665a459');
+      expect(safeName).toMatch(/^test-file_[a-f0-9]{8}\.txt$/);
       expect(safeName).toContain('.txt');
     });
 
-    it('should sanitize forbidden characters', () => {
-      const originalName = 'test<file>:"name".txt';
+    it('should sanitize forbidden characters and spaces', () => {
+      const originalName = 'test<file>:"name with spaces".txt';
       const safeName = FilenameUtil.generateSafeFilename(originalName, validHash);
 
       expect(safeName).not.toContain('<');
       expect(safeName).not.toContain('>');
       expect(safeName).not.toContain(':');
       expect(safeName).not.toContain('"');
+      expect(safeName).not.toContain(' ');
       expect(safeName).toContain('_');
+      expect(safeName).toMatch(/^test_file_name_with__[a-f0-9]{8}\.txt$/);
+    });
+
+    it('should truncate filename to 20 characters before UUID', () => {
+      const longName = 'a'.repeat(30) + '.txt';
+      const safeName = FilenameUtil.generateSafeFilename(longName, validHash);
+
+      // Должно быть: 20 символов + _ + короткий UUID + .txt
+      expect(safeName).toMatch(/^a{20}_[a-f0-9]{8}\.txt$/);
+    });
+
+    it('should handle files without extension', () => {
+      const originalName = 'testfile';
+      const safeName = FilenameUtil.generateSafeFilename(originalName, validHash);
+
+      expect(safeName).toMatch(/^testfile_[a-f0-9]{8}$/);
     });
 
     it('should throw error for empty filename', () => {
@@ -32,15 +48,6 @@ describe('FilenameUtil', () => {
       expect(() => FilenameUtil.generateSafeFilename(originalName, validHash)).toThrow(
         'Original filename must be a non-empty string',
       );
-    });
-
-    it('should truncate long filenames', () => {
-      const longName = 'a'.repeat(300) + '.txt';
-      const safeName = FilenameUtil.generateSafeFilename(longName, validHash);
-
-      expect(safeName.length).toBeLessThanOrEqual(255);
-      expect(safeName).toContain('a665a459');
-      expect(safeName).toContain('.txt');
     });
 
     it('should throw error for invalid inputs', () => {
@@ -98,11 +105,11 @@ describe('FilenameUtil', () => {
   });
 
   describe('sanitizeFilename', () => {
-    it('should replace forbidden characters with underscores', () => {
-      const filename = 'test<file>:"name".txt';
+    it('should replace forbidden characters and spaces with underscores', () => {
+      const filename = 'test<file>:"name with spaces".txt';
       const sanitized = FilenameUtil.sanitizeFilename(filename);
 
-      expect(sanitized).toBe('test_file_name_.txt');
+      expect(sanitized).toBe('test_file_name_with_spaces_.txt');
     });
 
     it('should remove multiple consecutive underscores', () => {
