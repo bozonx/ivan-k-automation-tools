@@ -445,12 +445,22 @@ async uploadFile(file: Express.Multer.File, ttlMinutes: number) {
 interface AppConfig {
   listenHost: string;
   listenPort: number;
-  authToken?: string;
-  storageDir: string;
-  dataDir: string;
+  authEnabled: boolean;
+  authSecretKey?: string;
+  storagePath: string;
   maxFileSizeMB: number;
-  ttlMaxMinutes: number;
-  cleanupInterval: number;
+  allowedMimeTypes: string[];
+  enableDeduplication: boolean;
+  dateFormat: string;
+  minTtlMinutes: number;
+  maxTtlMinutes: number;
+  maxFilesCount: number;
+  maxStorageSizeMB: number;
+  cleanupCron: string;
+  apiBasePath: string;
+  apiVersion: string;
+  logLevel: string;
+  corsOrigin: boolean;
 }
 ```
 
@@ -467,28 +477,69 @@ export class ConfigService {
     return parseInt(process.env.LISTEN_PORT || '3000', 10);
   }
 
-  get authToken(): string | undefined {
-    return process.env.AUTH_TOKEN;
+  get authEnabled(): boolean {
+    return process.env.AUTH_ENABLED === 'true';
   }
 
-  get storageDir(): string {
-    return process.env.STORAGE_DIR || '../test-data/micro-file-cache/storage';
+  get authSecretKey(): string | undefined {
+    return process.env.AUTH_SECRET_KEY;
   }
 
-  get dataDir(): string {
-    return process.env.DATA_DIR || '../test-data/micro-file-cache/data';
+  get storagePath(): string {
+    return process.env.STORAGE_PATH || '../test-data/micro-file-cache/storage';
   }
 
   get maxFileSizeMB(): number {
     return parseInt(process.env.MAX_FILE_SIZE_MB || '100', 10); // 100MB
   }
 
-  get ttlMaxMinutes(): number {
+  get allowedMimeTypes(): string[] {
+    const types = process.env.ALLOWED_MIME_TYPES;
+    return types ? JSON.parse(types) : [];
+  }
+
+  get enableDeduplication(): boolean {
+    return process.env.ENABLE_DEDUPLICATION !== 'false';
+  }
+
+  get dateFormat(): string {
+    return process.env.DATE_FORMAT || 'YYYY-MM';
+  }
+
+  get minTtlMinutes(): number {
+    return parseInt(process.env.MIN_TTL_MIN || '60', 10); // 60 минут
+  }
+
+  get maxTtlMinutes(): number {
     return parseInt(process.env.MAX_TTL_MIN || '60', 10); // 60 минут
   }
 
-  get cleanupInterval(): number {
+  get maxFilesCount(): number {
+    return parseInt(process.env.MAX_FILES_COUNT || '10000', 10);
+  }
+
+  get maxStorageSizeMB(): number {
+    return parseInt(process.env.MAX_STORAGE_SIZE_MB || '1000', 10);
+  }
+
+  get cleanupCron(): string {
     return process.env.CLEANUP_CRON || '0 */10 * * * *'; // Cron выражение для очистки
+  }
+
+  get apiBasePath(): string {
+    return process.env.API_BASE_PATH || 'api';
+  }
+
+  get apiVersion(): string {
+    return process.env.API_VERSION || 'v1';
+  }
+
+  get logLevel(): string {
+    return process.env.LOG_LEVEL || 'info';
+  }
+
+  get corsOrigin(): boolean {
+    return process.env.CORS_ORIGIN !== 'false';
   }
 }
 ```

@@ -102,7 +102,7 @@ pnpm run lint
 | `AUTH_ENABLED`    | Включить аутентификацию    | `true`               |
 | `AUTH_SECRET_KEY` | Секретный ключ для токенов | `dev-secret-key-...` |
 | `LISTEN_PORT`     | Порт приложения            | `3000`               |
-| `LOG_LEVEL`       | Уровень логирования        | `debug`              |
+| `LOG_LEVEL`       | Уровень логирования        | `info`               |
 
 ### Отключение аутентификации
 

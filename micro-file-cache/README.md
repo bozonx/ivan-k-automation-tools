@@ -130,17 +130,27 @@ docker-compose up -d
 
 ### Переменные окружения
 
-| Переменная         | По умолчанию                            | Описание                                      |
-| ------------------ | --------------------------------------- | --------------------------------------------- |
-| `NODE_ENV`         | `development`                           | Режим работы приложения                       |
-| `LISTEN_HOST`      | `localhost`                             | Хост для HTTP сервера                         |
-| `LISTEN_PORT`      | `3000`                                  | Порт для HTTP сервера                         |
-| `AUTH_TOKEN`       | -                                       | Bearer токен для аутентификации (опционально) |
-| `STORAGE_DIR`      | `../test-data/micro-file-cache/storage` | Директория для хранения файлов                |
-| `DATA_DIR`         | `../test-data/micro-file-cache/data`    | Директория для метаданных                     |
-| `MAX_FILE_SIZE_MB` | `100`                                   | Максимальный размер файла в мегабайтах        |
-| `MAX_TTL_MIN`      | `60`                                    | Максимальный TTL в минутах (по умолчанию 60)  |
-| `CLEANUP_CRON`     | `0 */10 * * * *`                        | Cron выражение для очистки (каждые 10 минут)  |
+| Переменная             | По умолчанию                            | Описание                                        |
+| ---------------------- | --------------------------------------- | ----------------------------------------------- |
+| `NODE_ENV`             | `production`                            | Режим работы приложения                         |
+| `LISTEN_HOST`          | `localhost`                             | Хост для HTTP сервера                           |
+| `LISTEN_PORT`          | `3000`                                  | Порт для HTTP сервера                           |
+| `AUTH_ENABLED`         | `true`                                  | Включить/выключить аутентификацию               |
+| `AUTH_SECRET_KEY`      | -                                       | Секретный ключ для аутентификации (обязательно) |
+| `STORAGE_PATH`         | `../test-data/micro-file-cache/storage` | Путь к хранилищу файлов и метаданных            |
+| `MAX_FILE_SIZE_MB`     | `100`                                   | Максимальный размер файла в мегабайтах          |
+| `ALLOWED_MIME_TYPES`   | `[]` (все типы)                         | Разрешенные MIME типы файлов                    |
+| `ENABLE_DEDUPLICATION` | `true`                                  | Включить дедупликацию файлов                    |
+| `DATE_FORMAT`          | `YYYY-MM`                               | Формат организации файлов по датам              |
+| `MIN_TTL_MIN`          | `60`                                    | Минимальный TTL в минутах                       |
+| `MAX_TTL_MIN`          | `60`                                    | Максимальный TTL в минутах                      |
+| `CLEANUP_CRON`         | `0 */10 * * * *`                        | Cron выражение для очистки (каждые 10 минут)    |
+| `MAX_FILES_COUNT`      | `10000`                                 | Максимальное количество файлов в кэше           |
+| `MAX_STORAGE_SIZE_MB`  | `1000`                                  | Максимальный общий размер хранилища в МБ        |
+| `API_BASE_PATH`        | `api`                                   | Базовый путь для API                            |
+| `API_VERSION`          | `v1`                                    | Версия API                                      |
+| `LOG_LEVEL`            | `info`                                  | Уровень логирования                             |
+| `CORS_ORIGIN`          | `true`                                  | CORS настройки                                  |
 
 ### Пример .env файла
 
@@ -148,12 +158,22 @@ docker-compose up -d
 NODE_ENV=production
 LISTEN_HOST=0.0.0.0
 LISTEN_PORT=3000
-AUTH_TOKEN=your-secret-token
-STORAGE_DIR=/app/storage
-DATA_DIR=/app/data
+AUTH_ENABLED=true
+AUTH_SECRET_KEY=your-very-secure-production-key-minimum-32-characters-long
+STORAGE_PATH=/app/storage
 MAX_FILE_SIZE_MB=100
-MAX_TTL_MIN=60
-CLEANUP_CRON=0 */10 * * * *
+ALLOWED_MIME_TYPES=["image/jpeg","image/png","application/pdf","text/plain"]
+ENABLE_DEDUPLICATION=true
+DATE_FORMAT=YYYY-MM
+MIN_TTL_MIN=60
+MAX_TTL_MIN=1440
+CLEANUP_CRON=0 */5 * * * *
+MAX_FILES_COUNT=10000
+MAX_STORAGE_SIZE_MB=1000
+API_BASE_PATH=api
+API_VERSION=v1
+LOG_LEVEL=info
+CORS_ORIGIN=true
 ```
 
 ## API Документация
@@ -281,8 +301,10 @@ GET /api/v1/health
 
 - **Максимальный размер файла**: 100MB (настраивается через `MAX_FILE_SIZE_MB`)
 - **Максимальный TTL**: 60 минут (настраивается через `MAX_TTL_MIN`)
-- **Минимальный TTL**: 1 минута (внутренняя константа)
-- **Разрешенные типы файлов**: любые
+- **Минимальный TTL**: 60 минут (настраивается через `MIN_TTL_MIN`)
+- **Разрешенные типы файлов**: любые (настраивается через `ALLOWED_MIME_TYPES`)
+- **Максимальное количество файлов**: 10000 (настраивается через `MAX_FILES_COUNT`)
+- **Максимальный размер хранилища**: 1000MB (настраивается через `MAX_STORAGE_SIZE_MB`)
 
 ## Примеры использования
 
