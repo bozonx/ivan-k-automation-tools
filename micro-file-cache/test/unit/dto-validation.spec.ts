@@ -55,12 +55,12 @@ describe('DTO Validation Tests', () => {
       }).toThrow('Invalid JSON format for metadata');
     });
 
-    it('should use default values', async () => {
+    it('should require TTL parameter', async () => {
       const dto = plainToClass(UploadFileDto, {});
 
       const errors = await validate(dto);
-      expect(errors).toHaveLength(0);
-      expect(dto.ttl).toBe(3600);
+      expect(errors).toHaveLength(1);
+      expect(errors[0].property).toBe('ttl');
       expect(dto.allowDuplicate).toBe(true);
     });
   });

@@ -105,9 +105,6 @@ export interface StorageConfig {
 
   /** Максимальное время жизни файла в секундах */
   maxTtl: number;
-
-  /** Минимальное время жизни файла в секундах */
-  minTtl: number;
 }
 
 /**
@@ -229,8 +226,8 @@ export function validateConfig(config: AppConfig): string[] {
     errors.push('Max file size must be greater than 0');
   }
 
-  if (config.storage.maxTtl < config.storage.minTtl) {
-    errors.push('Max TTL must be greater than or equal to min TTL');
+  if (config.storage.maxTtl < 60) {
+    errors.push('Max TTL must be at least 60 seconds (1 minute)');
   }
 
   // Валидация аутентификации
@@ -278,7 +275,6 @@ export function createConfig(): AppConfig {
       dateFormat: process.env.DATE_FORMAT || 'YYYY-MM',
       enableDeduplication: process.env.ENABLE_DEDUPLICATION !== 'false',
       maxTtl: parseInt(process.env.MAX_TTL_MIN || '60', 10) * 60, // Конвертируем минуты в секунды
-      minTtl: 1 * 60, // 1 минута в секундах (внутренняя константа)
     },
 
     auth: {

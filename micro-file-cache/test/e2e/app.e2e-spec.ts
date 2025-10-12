@@ -333,7 +333,7 @@ describe('AppController (e2e)', () => {
         .post('/api/v1/files')
         .set('Authorization', `Bearer ${config.validToken}`)
         .attach('file', Buffer.from('test'), 'test.txt')
-        .field('ttl', '30') // Слишком маленький TTL
+        .field('ttl', '30') // Слишком маленький TTL (меньше 60 секунд)
         .expect(400);
     });
 

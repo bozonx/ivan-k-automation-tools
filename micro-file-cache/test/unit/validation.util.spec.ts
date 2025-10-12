@@ -128,7 +128,7 @@ describe('ValidationUtil', () => {
       const result = ValidationUtil.validateTTL(7200, minTtl, maxTtl); // 2 hours
 
       expect(result.isValid).toBe(false);
-      expect(result.errors).toContain('TTL must not exceed 3600 seconds');
+      expect(result.errors).toContain('TTL must not exceed 3600 seconds (MAX_TTL_MIN: 60 minutes)');
     });
 
     it('should accept minimum TTL', () => {

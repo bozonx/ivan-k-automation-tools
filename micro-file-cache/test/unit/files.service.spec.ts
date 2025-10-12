@@ -96,7 +96,6 @@ describe('FilesService', () => {
         MAX_TTL_MIN: 60, // 60 минут
         MAX_FILE_SIZE_MB: 100,
         storage: {
-          minTtl: 60, // 1 минута в секундах
           maxTtl: 3600, // 60 минут в секундах
         },
       };
@@ -798,11 +797,11 @@ describe('FilesService', () => {
   });
 
   describe('validateUploadParams', () => {
-    it('should normalize TTL to default value when not provided', async () => {
+    it('should require TTL parameter', async () => {
       // Arrange
       const uploadParams = {
         file: mockUploadedFile,
-        // ttl не указан
+        ttl: 3600, // TTL теперь обязательный параметр
       };
 
       (ValidationUtil.validateUploadedFile as jest.Mock).mockReturnValue({
@@ -831,7 +830,7 @@ describe('FilesService', () => {
       // Assert
       expect(storageService.saveFile).toHaveBeenCalledWith({
         file: mockUploadedFile,
-        ttl: 3600, // TTL не был передан, поэтому используется значение по умолчанию (60 минут * 60 секунд)
+        ttl: 3600, // TTL передан явно
         metadata: {},
       });
     });

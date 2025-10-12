@@ -101,7 +101,9 @@ export class ValidationUtil {
     } else if (ttl < minTtl) {
       errors.push(`TTL must be at least ${minTtl} seconds`);
     } else if (ttl > maxTtl) {
-      errors.push(`TTL must not exceed ${maxTtl} seconds`);
+      errors.push(
+        `TTL must not exceed ${maxTtl} seconds (MAX_TTL_MIN: ${Math.floor(maxTtl / 60)} minutes)`,
+      );
     }
 
     return {

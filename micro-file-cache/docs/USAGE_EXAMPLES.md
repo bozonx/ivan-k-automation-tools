@@ -259,7 +259,7 @@ class FileCacheClient:
         """Загрузка файла в кэш"""
         with open(file_path, 'rb') as f:
             files = {'file': f}
-            data = {'ttlMinutes': ttl_minutes}
+            data = {'ttl': ttl_minutes * 60}  # Конвертируем минуты в секунды
             return self._request('POST', '/files', files=files, data=data)
 
     def get_file_info(self, file_id: str) -> Dict[Any, Any]:
@@ -343,7 +343,7 @@ class AsyncFileCacheClient:
     async def upload_file(self, file_path: str, ttl_minutes: int) -> Dict[Any, Any]:
         """Асинхронная загрузка файла"""
         data = aiohttp.FormData()
-        data.add_field('ttlMinutes', str(ttl_minutes))
+        data.add_field('ttl', str(ttl_minutes * 60))  # Конвертируем минуты в секунды
 
         async with aiofiles.open(file_path, 'rb') as f:
             file_content = await f.read()
@@ -435,7 +435,7 @@ upload_file() {
     response=$(curl -s -H "Authorization: Bearer ${TOKEN}" \
         -X POST "${BASE_URL}/api/v1/files" \
         -F "file=@${file_path}" \
-        -F "ttlMinutes=${ttl_minutes}")
+        -F "ttl=$((ttl_minutes * 60))")  # Конвертируем минуты в секунды
 
     if [ $? -eq 0 ]; then
         file_id=$(echo "$response" | jq -r '.data.id')
@@ -672,12 +672,12 @@ def proxy_upload():
         return jsonify({'error': 'No file provided'}), 400
 
     file = request.files['file']
-    ttl_minutes = request.form.get('ttlMinutes', 60)
+    ttl_seconds = request.form.get('ttl', 3600)  # По умолчанию 1 час
 
     try:
         # Подготовка данных для загрузки
         files = {'file': (file.filename, file.stream, file.content_type)}
-        data = {'ttlMinutes': ttl_minutes}
+        data = {'ttl': ttl_seconds}
         headers = {'Authorization': f'Bearer {FILE_CACHE_TOKEN}'}
 
         # Загрузка в кэш

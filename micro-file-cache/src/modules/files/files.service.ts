@@ -29,7 +29,7 @@ import {
  */
 interface UploadFileParams {
   file: UploadedFile;
-  ttl?: number;
+  ttl: number; // Теперь обязательный параметр
   metadata?: Record<string, any>;
   allowDuplicate?: boolean;
   customFilename?: string;
@@ -128,7 +128,7 @@ export class FilesService {
       const config = this.configService.get('storage');
       const ttlValidation = ValidationUtil.validateTTL(
         validatedParams.ttl,
-        config.minTtl,
+        60, // Минимум 1 минута
         config.maxTtl,
       );
       if (!ttlValidation.isValid) {
@@ -528,10 +528,7 @@ export class FilesService {
   private validateUploadParams(params: UploadFileParams): UploadFileParams {
     const validatedParams = { ...params };
 
-    // Нормализация TTL
-    if (validatedParams.ttl === undefined || validatedParams.ttl === null) {
-      validatedParams.ttl = this.defaultTTL;
-    }
+    // TTL теперь обязательный параметр, нормализация не нужна
 
     // Нормализация метаданных
     if (!validatedParams.metadata) {

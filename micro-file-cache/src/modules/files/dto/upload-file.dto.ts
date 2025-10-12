@@ -1,4 +1,13 @@
-import { IsOptional, IsNumber, IsObject, Min, Max, IsString, IsBoolean } from 'class-validator';
+import {
+  IsOptional,
+  IsNumber,
+  IsObject,
+  Min,
+  Max,
+  IsString,
+  IsBoolean,
+  IsNotEmpty,
+} from 'class-validator';
 import { Transform, Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { UploadedFile } from '../../../common/interfaces/file.interface';
@@ -8,19 +17,19 @@ import { UploadedFile } from '../../../common/interfaces/file.interface';
  * Валидирует параметры загрузки файла через multipart/form-data
  */
 export class UploadFileDto {
-  @ApiPropertyOptional({
-    description: 'Time to live (TTL) for the file in seconds',
+  @ApiProperty({
+    description:
+      'Time to live (TTL) for the file in seconds. Must be specified and not exceed MAX_TTL_MIN',
     minimum: 60,
     maximum: 86400 * 30, // 30 days
-    default: 3600, // 1 hour
     example: 3600,
   })
-  @IsOptional()
+  @IsNotEmpty({ message: 'TTL is required' })
   @Type(() => Number)
   @IsNumber({}, { message: 'TTL must be a valid number' })
   @Min(60, { message: 'TTL must be at least 60 seconds (1 minute)' })
   @Max(86400 * 30, { message: 'TTL cannot exceed 30 days (2592000 seconds)' })
-  ttl?: number = 3600; // Default 1 hour
+  ttl: number;
 
   @ApiPropertyOptional({
     description: 'Additional metadata for the file',
@@ -79,18 +88,19 @@ export class FileValidationDto {
   })
   file: UploadedFile;
 
-  @ApiPropertyOptional({
-    description: 'Time to live (TTL) for the file in seconds',
+  @ApiProperty({
+    description:
+      'Time to live (TTL) for the file in seconds. Must be specified and not exceed MAX_TTL_MIN',
     minimum: 60,
     maximum: 86400 * 30,
-    default: 3600,
+    example: 3600,
   })
-  @IsOptional()
+  @IsNotEmpty({ message: 'TTL is required' })
   @Type(() => Number)
   @IsNumber({}, { message: 'TTL must be a valid number' })
   @Min(60, { message: 'TTL must be at least 60 seconds (1 minute)' })
   @Max(86400 * 30, { message: 'TTL cannot exceed 30 days (2592000 seconds)' })
-  ttl?: number = 3600;
+  ttl: number;
 
   @ApiPropertyOptional({
     description: 'Additional metadata for the file',

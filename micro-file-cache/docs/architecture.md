@@ -507,7 +507,7 @@ export class ConfigService {
   }
 
   get minTtlMinutes(): number {
-    return parseInt(process.env.MIN_TTL_MIN || '60', 10); // 60 минут
+    return parseInt(process.env.TTL_MIN || '60', 10); // 60 минут
   }
 
   get maxTtlMinutes(): number {

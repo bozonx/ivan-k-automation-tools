@@ -143,7 +143,7 @@ import requests
 def upload_file(file_path, ttl_minutes=60):
     with open(file_path, 'rb') as f:
         files = {'file': f}
-        data = {'ttlMinutes': ttl_minutes}
+        data = {'ttl': ttl_minutes * 60}  # Конвертируем минуты в секунды
         headers = {'Authorization': 'Bearer dev-secret-key-for-micro-file-cache-12345678901234567890'}
 
         response = requests.post(
@@ -165,7 +165,7 @@ import aiofiles
 
 async def upload_file_async(file_path, ttl_minutes=60):
     data = aiohttp.FormData()
-    data.add_field('ttlMinutes', str(ttl_minutes))
+    data.add_field('ttl', str(ttl_minutes * 60))  # Конвертируем минуты в секунды
 
     async with aiofiles.open(file_path, 'rb') as f:
         file_content = await f.read()

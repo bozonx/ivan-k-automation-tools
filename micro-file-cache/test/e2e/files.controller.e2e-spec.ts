@@ -52,6 +52,7 @@ describe('FilesController (e2e)', () => {
         .post('/api/v1/files')
         .set('Authorization', `Bearer ${config.validToken}`)
         .attach('file', Buffer.from('Hello, World!'), 'hello.txt')
+        .field('ttl', '3600') // TTL теперь обязательный
         .expect(201);
 
       expect(response.body).toHaveProperty('file');
@@ -66,7 +67,7 @@ describe('FilesController (e2e)', () => {
       expect(file).toHaveProperty('mimeType', 'text/plain');
       expect(file).toHaveProperty('size', 13);
       expect(file).toHaveProperty('uploadedAt');
-      expect(file).toHaveProperty('ttl', 3600); // Default TTL
+      expect(file).toHaveProperty('ttl', 3600); // TTL from request
       expect(file).toHaveProperty('expiresAt');
       expect(file).toHaveProperty('hash');
       expect(file).toHaveProperty('isExpired', false);
@@ -97,6 +98,7 @@ describe('FilesController (e2e)', () => {
         .post('/api/v1/files')
         .set('Authorization', `Bearer ${config.validToken}`)
         .attach('file', Buffer.from('Test content'), 'test.txt')
+        .field('ttl', '3600') // TTL теперь обязательный
         .field('metadata', JSON.stringify(metadata))
         .expect(201);
 
@@ -108,6 +110,7 @@ describe('FilesController (e2e)', () => {
         .post('/api/v1/files')
         .set('Authorization', `Bearer ${config.validToken}`)
         .attach('file', Buffer.from('Test content'), 'original.txt')
+        .field('ttl', '3600') // TTL теперь обязательный
         .field('customFilename', 'custom-name.txt')
         .expect(201);
 
@@ -122,6 +125,7 @@ describe('FilesController (e2e)', () => {
         .post('/api/v1/files')
         .set('Authorization', `Bearer ${config.validToken}`)
         .attach('file', Buffer.from(content), 'file1.txt')
+        .field('ttl', '3600') // TTL теперь обязательный
         .field('allowDuplicate', 'true')
         .expect(201);
 
@@ -130,6 +134,7 @@ describe('FilesController (e2e)', () => {
         .post('/api/v1/files')
         .set('Authorization', `Bearer ${config.validToken}`)
         .attach('file', Buffer.from(content), 'file2.txt')
+        .field('ttl', '3600') // TTL теперь обязательный
         .field('allowDuplicate', 'true')
         .expect(201);
 
@@ -172,6 +177,7 @@ describe('FilesController (e2e)', () => {
         .post('/api/v1/files')
         .set('Authorization', `Bearer ${config.validToken}`)
         .attach('file', Buffer.from('test'), 'test.txt')
+        .field('ttl', '3600') // TTL теперь обязательный
         .field('metadata', 'invalid json')
         .expect(400);
     });
@@ -180,6 +186,7 @@ describe('FilesController (e2e)', () => {
       return request(app.getHttpServer())
         .post('/api/v1/files')
         .attach('file', Buffer.from('test'), 'test.txt')
+        .field('ttl', '3600') // TTL теперь обязательный
         .expect(401);
     });
   });
@@ -193,6 +200,7 @@ describe('FilesController (e2e)', () => {
         .post('/api/v1/files')
         .set('Authorization', `Bearer ${config.validToken}`)
         .attach('file', Buffer.from('Test content'), 'test.txt')
+        .field('ttl', '3600') // TTL теперь обязательный
         .field('metadata', JSON.stringify({ description: 'Test file' }))
         .expect(201);
 
@@ -258,6 +266,7 @@ describe('FilesController (e2e)', () => {
         .post('/api/v1/files')
         .set('Authorization', `Bearer ${config.validToken}`)
         .attach('file', Buffer.from(fileContent), 'download-test.txt')
+        .field('ttl', '3600') // TTL теперь обязательный
         .expect(201);
 
       uploadedFileId = response.body.file.id;
@@ -319,6 +328,7 @@ describe('FilesController (e2e)', () => {
         .post('/api/v1/files')
         .set('Authorization', `Bearer ${config.validToken}`)
         .attach('file', Buffer.from('Delete test content'), 'delete-test.txt')
+        .field('ttl', '3600') // TTL теперь обязательный
         .expect(201);
 
       uploadedFileId = response.body.file.id;
@@ -385,6 +395,7 @@ describe('FilesController (e2e)', () => {
           .post('/api/v1/files')
           .set('Authorization', `Bearer ${config.validToken}`)
           .attach('file', Buffer.from(file.content), file.name)
+          .field('ttl', '3600') // TTL теперь обязательный
           .field('metadata', JSON.stringify(file.metadata))
           .expect(201);
       }
@@ -486,12 +497,14 @@ describe('FilesController (e2e)', () => {
         .post('/api/v1/files')
         .set('Authorization', `Bearer ${config.validToken}`)
         .attach('file', Buffer.from('Stats test 1'), 'stats1.txt')
+        .field('ttl', '3600') // TTL теперь обязательный
         .expect(201);
 
       await request(app.getHttpServer())
         .post('/api/v1/files')
         .set('Authorization', `Bearer ${config.validToken}`)
         .attach('file', Buffer.from('Stats test 2'), 'stats2.txt')
+        .field('ttl', '3600') // TTL теперь обязательный
         .expect(201);
     });
 
@@ -529,6 +542,7 @@ describe('FilesController (e2e)', () => {
         .post('/api/v1/files')
         .set('Authorization', `Bearer ${config.validToken}`)
         .attach('file', Buffer.from('Existence test'), 'exists-test.txt')
+        .field('ttl', '3600') // TTL теперь обязательный
         .expect(201);
 
       uploadedFileId = response.body.file.id;
@@ -599,6 +613,7 @@ describe('FilesController (e2e)', () => {
         .post('/api/v1/files')
         .set('Authorization', `Bearer ${config.validToken}`)
         .attach('file', Buffer.from('Special chars test'), 'файл с пробелами & символами.txt')
+        .field('ttl', '3600') // TTL теперь обязательный
         .expect(201);
 
       expect(response.body.file.originalName).toBe('файл с пробелами & символами.txt');
@@ -609,6 +624,7 @@ describe('FilesController (e2e)', () => {
         .post('/api/v1/files')
         .set('Authorization', `Bearer ${config.validToken}`)
         .attach('file', Buffer.from(''), 'empty.txt')
+        .field('ttl', '3600') // TTL теперь обязательный
         .expect(201);
 
       expect(response.body.file.size).toBe(0);
@@ -620,17 +636,21 @@ describe('FilesController (e2e)', () => {
         .post('/api/v1/files')
         .set('Authorization', `Bearer ${config.validToken}`)
         .attach('file', Buffer.from('Long name test'), longName)
+        .field('ttl', '3600') // TTL теперь обязательный
         .expect(201);
 
       expect(response.body.file.originalName).toBe(longName);
     });
 
     it('should handle concurrent uploads', async () => {
-      const uploadPromises = Array.from({ length: 5 }, (_, i) =>
-        request(app.getHttpServer())
-          .post('/api/v1/files')
-          .set('Authorization', `Bearer ${config.validToken}`)
-          .attach('file', Buffer.from(`Concurrent test ${i}`), `concurrent-${i}.txt`),
+      const uploadPromises = Array.from(
+        { length: 5 },
+        (_, i) =>
+          request(app.getHttpServer())
+            .post('/api/v1/files')
+            .set('Authorization', `Bearer ${config.validToken}`)
+            .attach('file', Buffer.from(`Concurrent test ${i}`), `concurrent-${i}.txt`)
+            .field('ttl', '3600'), // TTL теперь обязательный
       );
 
       const responses = await Promise.all(uploadPromises);

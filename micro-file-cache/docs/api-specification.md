@@ -101,16 +101,16 @@ curl -X POST http://localhost:3000/api/files \
 
 #### Параметры запроса
 
-| Параметр     | Тип    | Обязательный | Описание                                              |
-| ------------ | ------ | ------------ | ----------------------------------------------------- |
-| `file`       | File   | Да           | Загружаемый файл                                      |
-| `ttlMinutes` | number | Да           | Время жизни файла в минутах (MIN_TTL_MIN-MAX_TTL_MIN) |
+| Параметр | Тип    | Обязательный | Описание                                                          |
+| -------- | ------ | ------------ | ----------------------------------------------------------------- |
+| `file`   | File   | Да           | Загружаемый файл                                                  |
+| `ttl`    | number | Да           | Время жизни файла в секундах (обязательно, не больше MAX_TTL_MIN) |
 
 #### Ограничения
 
 - Максимальный размер файла: 100MB (настраивается через `MAX_FILE_SIZE_MB`)
 - Разрешенные MIME типы: любые (настраивается через `ALLOWED_MIME_TYPES`)
-- Минимальный TTL: 60 минут (настраивается через `MIN_TTL_MIN`)
+- Обязательный TTL: При загрузке файла обязательно указывать время жизни в секундах
 - Максимальный TTL: 60 минут (настраивается через `MAX_TTL_MIN`)
 
 #### Пример запроса
@@ -325,7 +325,7 @@ interface FileInfo {
   mimeType: string; // MIME тип файла
   uploadedAt: string; // ISO-8601 дата загрузки
   expiresAt: string; // ISO-8601 дата истечения
-  ttlMinutes: number; // TTL в минутах
+  ttl: number; // TTL в секундах (обязательный)
   remainingMinutes?: number; // Оставшееся время в минутах (только для GET)
 }
 ```
@@ -429,7 +429,7 @@ def upload_file(file_path: str, ttl_minutes: int, token: str):
     headers = {'Authorization': f'Bearer {token}'}
     with open(file_path, 'rb') as f:
         files = {'file': f}
-        data = {'ttlMinutes': ttl_minutes}
+        data = {'ttl': ttl_minutes * 60}  # Конвертируем минуты в секунды
         response = requests.post('http://localhost:3000/api/v1/files',
                                files=files, data=data, headers=headers)
     return response.json()
@@ -481,7 +481,7 @@ curl http://localhost:3000/api/v1/health
 - Максимальное количество файлов: 10000 (настраивается через `MAX_FILES_COUNT`)
 - Максимальный размер хранилища: 1000MB (настраивается через `MAX_STORAGE_SIZE_MB`)
 - Максимальный TTL: 60 минут (настраивается через `MAX_TTL_MIN`)
-- Минимальный TTL: 60 минут (настраивается через `MIN_TTL_MIN`)
+- Обязательный TTL: При загрузке файла обязательно указывать время жизни
 
 ### Рекомендации
 
