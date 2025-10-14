@@ -2,103 +2,7 @@
 alwaysApply: true
 ---
 
-## Specific to this project
-
-- Node version 22
-- Package manager: `pnpm`
-- Use relative imports within projects
-- Store unit tests in `<projectName>/test/unit/`
-- Store e2e tests in `<projectName>/test/e2e/`
-- Store guide docs in `<projectName>/docs/`
-- Store development stage docks in `<projectName>/dev_docs/`
-- Update `<projectName>/docs/CHANGELOG.md` for significant changes
-- Keep `<projectName>/README.md` current with setup instructions
-- Use file `.env.example` to undestand env variables of the project
-
-## Role & Context
-
-You are a senior TypeScript developer with expertise in NestJS, microservices, and clean architecture. You work in a multi-project repository containing automation tools and microservices.
-
-## Core Principles
-
-- Write self-documenting, maintainable TypeScript code
-- Follow SOLID principles and clean architecture patterns
-- Prioritize type safety and error handling
-- Use modern TypeScript features and best practices
-- Create modular, testable code
-
-## TypeScript Standards
-
-### Type Safety
-
-- Always declare explicit types for variables, functions, and return values
-- Avoid `any` - use `unknown` or proper typing instead
-- Use strict TypeScript configuration
-- Prefer interfaces over types for object shapes
-- Use generic types for reusable components
-
-### Code Organization
-
-- Use kebab-case for files and directories
-- Use PascalCase for classes and interfaces
-- Use camelCase for variables, functions, and methods
-- Use UPPERCASE for constants and environment variables
-- One export per file (default export preferred)
-
-### Function Design
-
-- Use descriptive names starting with verbs
-- Boolean functions: `isX`, `hasX`, `canX`
-- Action functions: `executeX`, `saveX`, `processX`
-- Use default parameters instead of null checks
-- Prefer object parameters for functions with 3+ arguments
-- Keep functions under 20 lines when possible
-
-### Error Handling
-
-- Use custom error classes for domain-specific errors
-- Implement proper error boundaries in NestJS
-- Log errors with context and stack traces
-- Use Result/Either patterns for operations that can fail
-
-## NestJS Architecture
-
-### Module Structure
-
-```
-src/
-├── common/           # Shared utilities and types
-├── modules/          # Feature modules
-│   └── feature/
-│       ├── dto/      # Data transfer objects
-│       ├── entities/ # Database entities
-│       ├── services/ # Business logic
-│       └── controllers/ # HTTP endpoints
-├── config/           # Configuration files
-└── main.ts          # Application entry point
-```
-
-### Common Module (`@app/common`)
-
-- **DTOs**: Input validation with class-validator
-- **Interfaces**: Shared type definitions
-- **Guards**: Authentication and authorization
-- **Interceptors**: Request/response transformation
-- **Filters**: Global exception handling
-- **Pipes**: Data validation and transformation
-- **Utils**: Helper functions and utilities
-
-### Best Practices
-
-- One module per domain/feature
-- Use dependency injection consistently
-- Implement proper validation with DTOs
-- Use decorators for cross-cutting concerns
-- Follow the repository pattern for data access
-
 ## Project Context
-
-### Repository Structure
 
 This repository contains multiple independent projects:
 
@@ -106,49 +10,26 @@ This repository contains multiple independent projects:
 - Docker containers for specific tools
 - Each project is self-contained with its own dependencies
 
-### Development Standards
+## Project Structure
 
-- Use Jest for testing with proper mocking
-- Define constants at file top, avoid magic numbers
+- Node version 22
+- Package manager: `pnpm`
+- Use relative imports within projects
+- Store unit tests in `<projectName>/test/unit/`
+- Store e2e tests in `<projectName>/test/e2e/`
+- Store guide docs in `<projectName>/docs/`
+- Store development stage docs in `<projectName>/dev_docs/`
+- Update `<projectName>/docs/CHANGELOG.md` for significant changes
+- Keep `<projectName>/README.md` current with setup instructions
+- Use file `.env.example` to understand env variables of the project
 
-## Testing Strategy
+## TypeScript Standards
 
-### Unit Tests
+- Prefer interfaces over types for object shapes
+- One export per file (default export preferred)
+- Prefer object parameters for functions with 3+ arguments
+- Keep functions under 20 lines when possible
 
-- Test each public method/function
-- Use descriptive test names: `should return X when Y`
-- Follow AAA pattern: Arrange, Act, Assert
-- Mock external dependencies
-- Aim for 80%+ code coverage
+## NestJS
 
-### Integration Tests
-
-- Test API endpoints end-to-end
-- Use test database for data operations
-- Test error scenarios and edge cases
-- Verify proper HTTP status codes and responses
-
-## Code Quality
-
-### Performance
-
-- Use async/await instead of callbacks
-- Implement proper caching strategies
-- Optimize database queries
-- Use streaming for large data processing
-
-### Security
-
-- Validate all inputs
-- Use proper authentication/authorization
-- Sanitize user data
-- Follow OWASP guidelines
-- Keep dependencies updated
-
-### Maintainability
-
-- Write self-documenting code
-- Use meaningful variable names
-- Keep functions small and focused
-- Avoid deep nesting (max 3 levels)
-- Use consistent formatting and linting
+- Follow the best practices of Nestjs
