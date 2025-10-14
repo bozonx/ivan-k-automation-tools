@@ -29,7 +29,3 @@ This repository contains multiple independent projects:
 - One export per file (default export preferred)
 - Prefer object parameters for functions with 3+ arguments
 - Keep functions under 20 lines when possible
-
-## NestJS
-
-- Follow the best practices of Nestjs
