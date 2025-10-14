@@ -2,7 +2,17 @@
 alwaysApply: true
 ---
 
-# Cursor AI Development Rules
+## Specific to this project
+
+- Package manager: `pnpm`
+- Use relative imports within projects
+- Store unit tests in `<projectName>/test/unit/`
+- Store e2e tests in `<projectName>/test/e2e/`
+- Store guide docs in `<projectName>/docs/`
+- Store development stage docks in `<projectName>/dev_docs/`
+- Update `<projectName>/docs/CHANGELOG.md` for significant changes
+- Keep `<projectName>/README.md` current with setup instructions
+- Use file `.env.example` to undestand env variables of the project
 
 ## Role & Context
 
@@ -97,20 +107,8 @@ This repository contains multiple independent projects:
 
 ### Development Standards
 
-- Package manager: `pnpm`
-- Use relative imports within projects
-- Store unit tests in `<projectName>/test/unit/`
-- Store e2e tests in `<projectName>/test/e2e/`
 - Use Jest for testing with proper mocking
 - Define constants at file top, avoid magic numbers
-
-### Documentation
-
-- Store guide docs in `<projectName>/docs/`
-- Store development stage docks in `<projectName>/dev_docs/`
-- Update `<projectName>/docs/CHANGELOG.md` for significant changes
-- Keep `<projectName>/README.md` current with setup instructions
-- Write clear commit messages following conventional commits
 
 ## Testing Strategy
 
@@ -153,9 +151,3 @@ This repository contains multiple independent projects:
 - Keep functions small and focused
 - Avoid deep nesting (max 3 levels)
 - Use consistent formatting and linting
-
-## Sub project specific
-
-### micro-file-cache
-
-- Use file `.env.example` to undestand env variables of the project
