@@ -2,32 +2,33 @@
 
 ### Project Context
 
-- **Monorepo with multiple independent projects**
+- Monorepo with multiple independent projects
   - Microservices (Node.js + TypeScript + NestJS)
   - Docker containers for specific tools
   - Each project is autonomous and has its own dependencies
 
 ### Structure and Practices
 
-- **Node.js**: version 22
-- **Package manager**: `pnpm`
+- Node.js: version 22
+- Package manager: `pnpm`
 - Microservices project directories names start with `micro-*`
-- **Imports**: use relative imports within projects
-- **Tests**:
+- Imports: use relative imports within projects
+- Tests:
   - Unit tests: `\<projectName\>/test/unit/`
   - E2E tests: `\<projectName\>/test/e2e/`
-- **Documentation**:
+- Documentation:
   - Guides: `\<projectName\>/docs/`
   - Development stage docs: `\<projectName\>/dev_docs/`
   - Update `\<projectName\>/docs/CHANGELOG.md` for significant changes
   - Keep `\<projectName\>/README.md` up to date (setup/run instructions)
-- **Environment variables**: `.env.example` is the source of truth for expected variables
+- Environment variables: `.env.example` is the source of truth for expected variables
 - `.env.example` reflects new/modified environment variables
 
 ### TypeScript Standards
 
-- **Prefer interfaces over types** for object shapes
-- **Use object parameters** for functions with **3+ arguments**
+- Prefer interfaces over types for object shapes
+- Use object parameters for functions with 3+ arguments
+- Use named exports over default exports
 
 ### Agent Expectations
 
