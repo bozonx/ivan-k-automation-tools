@@ -4,6 +4,7 @@ alwaysApply: true
 
 ## Specific to this project
 
+- Node version 22
 - Package manager: `pnpm`
 - Use relative imports within projects
 - Store unit tests in `<projectName>/test/unit/`
