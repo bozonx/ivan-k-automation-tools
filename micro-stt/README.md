@@ -38,3 +38,31 @@ docker compose up --build
 ## Эндпоинты
 
 - `GET /test` — возвращает `hellow world`.
+- `POST /api/v1/transcriptions/file` — синхронная транскрибация файла по URL (не стрим)
+
+Тело запроса:
+
+```
+{
+  "audioUrl": "https://.../audio.mp3",
+  "provider": "assemblyai", // опционально
+  "timestamps": false,       // заглушка, пока не реализовано
+  "apiKey": "..."           // опционально, перезапись ключа
+}
+```
+
+Ответ 200:
+
+```
+{
+  "text": "...",
+  "provider": "assemblyai",
+  "requestId": "prov-req-id",
+  "durationSec": 123.45,
+  "language": "en",
+  "confidenceAvg": 0.92,
+  "wordsCount": 204,
+  "processingMs": 8421,
+  "timestampsEnabled": false
+}
+```

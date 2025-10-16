@@ -8,3 +8,9 @@
 - Added unit test for controller
 - Added Dockerfile and docker-compose.yml
 - Added env example
+
+## 0.2.0
+
+### Added
+
+- Синхронный REST эндпоинт `POST /api/v1/transcriptions/file` для транскрибации аудио по URL через AssemblyAI
