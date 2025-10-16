@@ -19,7 +19,7 @@ pnpm install
 pnpm start:dev
 ```
 
-Сервис слушает хост/порт из переменных окружения `LISTEN_HOST` и `LISTEN_PORT` (по умолчанию `0.0.0.0:3001`).
+Сервис слушает хост/порт из переменных окружения `LISTEN_HOST` и `LISTEN_PORT` (по умолчанию `localhost:3001`).
 
 ## Переменные окружения
 
@@ -28,12 +28,12 @@ pnpm start:dev
 - `ASSEMBLYAI_API_KEY` — API ключ провайдера AssemblyAI (если не передаётся в запросе).
 - `STT_DEFAULT_PROVIDER` — провайдер по умолчанию (`assemblyai`).
 - `STT_ALLOWED_PROVIDERS` — список разрешённых провайдеров (через запятую).
-- `STT_MAX_FILE_MB` — максимальный размер файла в МБ (проверяется по `Content-Length`, если доступен).
+- `STT_MAX_FILE_SIZE_MB` — максимальный размер файла в МБ (проверяется по `Content-Length`, если доступен).
 - `STT_REQUEST_TIMEOUT_SEC` — таймаут HTTP-запросов к провайдеру.
 - `STT_POLL_INTERVAL_MS` — интервал опроса статуса задачи у провайдера.
 - `STT_MAX_SYNC_WAIT_MIN` — максимальное время ожидания синхронного результата.
-- `ALLOW_CUSTOM_API_KEY` — разрешить ли передавать свой ключ в теле запроса (true/false).
-- `LOG_LEVEL` — уровень логирования.
+- `ALLOW_CUSTOM_API_KEY` — разрешить ли передавать свой ключ в теле запроса (true/false, по умолчанию `true`).
+- `LOG_LEVEL` — уровень логирования (по умолчанию `warn`).
 
 ## Тесты
 
