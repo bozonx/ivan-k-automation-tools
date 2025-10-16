@@ -4,7 +4,7 @@
 
 - Scaffolded from `micro-file-cache`
 - Added minimal NestJS app
-- Implemented `GET /test` endpoint returning `hellow world`
+- Implemented initial test endpoint
 - Added unit test for controller
 - Added Dockerfile and docker-compose.yml
 - Added env example
@@ -14,3 +14,13 @@
 ### Added
 
 - Синхронный REST эндпоинт `POST /api/v1/transcriptions/file` для транскрибации аудио по URL через AssemblyAI
+
+## 0.3.0
+
+### Changed
+
+- Удалён тестовый эндпоинт `/test`
+
+### Added
+
+- Эндпоинт `GET /heartbeat` для проверки доступности сервиса

@@ -1,20 +1,23 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { AppController } from '../../src/app.controller';
-import { AppService } from '../../src/app.service';
+import { HealthController } from '../../src/health.controller';
 
-describe('AppController', () => {
-  let appController: AppController;
+describe('HealthController', () => {
+  let controller: HealthController;
 
   beforeAll(async () => {
-    const app: TestingModule = await Test.createTestingModule({
-      controllers: [AppController],
-      providers: [AppService],
+    const moduleRef: TestingModule = await Test.createTestingModule({
+      controllers: [HealthController],
     }).compile();
 
-    appController = app.get<AppController>(AppController);
+    controller = moduleRef.get<HealthController>(HealthController);
   });
 
-  it('should return "hello world" on GET /test', () => {
-    expect(appController.getTest()).toBe('hello world');
+  it('returns ok, uptime, and version on GET /heartbeat', () => {
+    const res = controller.heartbeat();
+    expect(res.status).toBe('ok');
+    expect(typeof res.uptime).toBe('number');
+    expect(res.uptime).toBeGreaterThanOrEqual(0);
+    expect(typeof res.version).toBe('string');
+    expect(res.version.length).toBeGreaterThan(0);
   });
 });
