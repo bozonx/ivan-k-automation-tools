@@ -1,6 +1,6 @@
 # micro-stt
 
-Микросервис распознавания речи (scaffold). На текущем этапе реализован один тестовый эндпоинт `GET /test`, который возвращает строку `hellow world` и покрыт unit-тестом.
+Микросервис распознавания речи (STT) на NestJS + Fastify. Поддерживает синхронную транскрибацию аудио по URL через провайдера AssemblyAI. Также сохранён тестовый эндпоинт `GET /test`.
 
 ## Требования
 
@@ -20,6 +20,20 @@ pnpm start:dev
 ```
 
 Сервис слушает хост/порт из переменных окружения `LISTEN_HOST` и `LISTEN_PORT` (по умолчанию `0.0.0.0:3001`).
+
+## Переменные окружения
+
+См. `.env.example`. Основные ключи:
+
+- `ASSEMBLYAI_API_KEY` — API ключ провайдера AssemblyAI (если не передаётся в запросе).
+- `STT_DEFAULT_PROVIDER` — провайдер по умолчанию (`assemblyai`).
+- `STT_ALLOWED_PROVIDERS` — список разрешённых провайдеров (через запятую).
+- `STT_MAX_FILE_MB` — максимальный размер файла в МБ (проверяется по `Content-Length`, если доступен).
+- `STT_REQUEST_TIMEOUT_SEC` — таймаут HTTP-запросов к провайдеру.
+- `STT_POLL_INTERVAL_MS` — интервал опроса статуса задачи у провайдера.
+- `STT_MAX_SYNC_WAIT_MIN` — максимальное время ожидания синхронного результата.
+- `ALLOW_CUSTOM_API_KEY` — разрешить ли передавать свой ключ в теле запроса (true/false).
+- `LOG_LEVEL` — уровень логирования.
 
 ## Тесты
 
@@ -66,3 +80,39 @@ docker compose up --build
   "timestampsEnabled": false
 }
 ```
+
+### Примеры запросов
+
+```bash
+curl -X POST \
+  http://localhost:3001/api/v1/transcriptions/file \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "audioUrl": "https://example.com/audio.mp3"
+  }'
+```
+
+С пользовательским API ключом (если `ALLOW_CUSTOM_API_KEY=true`):
+
+```bash
+curl -X POST \
+  http://localhost:3001/api/v1/transcriptions/file \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "audioUrl": "https://example.com/audio.mp3",
+    "apiKey": "YOUR_ASSEMBLYAI_KEY"
+  }'
+```
+
+### Ошибки
+
+- `400 Bad Request` — ошибки валидации (невалидный URL/провайдер, файл слишком большой и т.п.).
+- `401 Unauthorized` — отсутствует API ключ провайдера.
+- `408/504` — `TRANSCRIPTION_TIMEOUT` по превышению лимита ожидания.
+- `502 Bad Gateway` — ошибка со стороны провайдера.
+
+### Ограничения и примечания
+
+- Это синхронная операция: HTTP-запрос блокируется до завершения распознавания или таймаута.
+- Базовая защита от SSRF: разрешены только `http`/`https`, запрещены `localhost`/`127.0.0.1`/`::1`.
+- Проверка размера файла выполняется только если источник отдаёт заголовок `Content-Length`.
