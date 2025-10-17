@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.12.1
+
+### Improved
+
+- Улучшен формат даты и времени в логах согласно best practices
+  - JSON логи: добавлено поле `@timestamp` с ISO 8601 UTC
+  - Development логи: `pino-pretty` показывает полную дату/время в UTC
+  - Унифицированный формат времени для совместимости с ELK/Loki/Otel
+- Обновлена документация `docs/LOGGING.md` с новыми примерами
+
 ## 0.12.0
 
 ### Changed
@@ -27,11 +37,11 @@
 - Правильная работа с переменной окружения `LOG_LEVEL` (debug/log/warn/error)
 - Уменьшение нагрузки на I/O операции благодаря асинхронному логированию Pino
 - Developer Experience: читаемые и цветные логи в development с pino-pretty
- - Единая таймзона логов: добавлено принудительное использование UTC
-   - В JSON логах используется ISO timestamp в UTC (`timestamp: stdTimeFunctions.isoTime`)
-   - В pretty-логах установлен `translateTime: 'UTC:HH:MM:ss.l'`
-   - Добавлена переменная окружения `TZ=UTC` в `Dockerfile`, `docker-compose.yml`, `env.*.example`
-   - Обновлена документация (`README.md`, `docs/ENV_SETUP.md`)
+- Единая таймзона логов: добавлено принудительное использование UTC
+  - В JSON логах используется ISO timestamp в UTC (`timestamp: stdTimeFunctions.isoTime`)
+  - В pretty-логах установлен `translateTime: 'UTC:HH:MM:ss.l'`
+  - Добавлена переменная окружения `TZ=UTC` в `Dockerfile`, `docker-compose.yml`, `env.*.example`
+  - Обновлена документация (`README.md`, `docs/ENV_SETUP.md`)
 
 ### Documentation
 

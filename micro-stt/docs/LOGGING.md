@@ -66,22 +66,22 @@ LOG_LEVEL=warn
 
 ### Development режим
 
-В development используется `pino-pretty` для читаемого вывода:
+В development используется `pino-pretty` для читаемого вывода с полной датой и временем (UTC):
 
 ```
-[14:30:45.123] INFO (TranscriptionController): POST /api/v1/transcriptions/file Transcription request received for URL: https://example.com/audio.mp3
-[14:30:47.456] INFO (AssemblyAiProvider): Transcription request created with ID: abc123
-[14:30:50.789] INFO (TranscriptionController): Transcription request completed. Provider: assemblyai, Processing time: 5666ms
+[2025-10-17T14:30:45.123Z] INFO (TranscriptionController): POST /api/v1/transcriptions/file Transcription request received for URL: https://example.com/audio.mp3
+[2025-10-17T14:30:47.456Z] INFO (AssemblyAiProvider): Transcription request created with ID: abc123
+[2025-10-17T14:30:50.789Z] INFO (TranscriptionController): Transcription request completed. Provider: assemblyai, Processing time: 5666ms
 ```
 
 ### Production режим
 
-В production логи выводятся в JSON формате:
+В production логи выводятся в JSON формате с полем `@timestamp` (ISO 8601, UTC):
 
 ```json
 {
   "level": 30,
-  "time": 1697556645123,
+  "@timestamp": "2025-10-17T14:30:45.123Z",
   "pid": 12345,
   "hostname": "app-server-01",
   "req": {

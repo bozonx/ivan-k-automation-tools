@@ -28,8 +28,14 @@ import type { AppConfig } from '@config/app.config';
         return {
           pinoHttp: {
             level: appConfig.logLevel,
-            // Always emit ISO UTC timestamps in logs
-            timestamp: stdTimeFunctions.isoTime,
+            // Always emit ISO 8601 UTC timestamps under '@timestamp' field in logs
+            // This aligns with common observability stacks (ELK, Loki, OpenTelemetry collectors)
+            timestamp: () => `,"@timestamp":"${new Date().toISOString()}"`,
+            // Add service metadata to all logs for better observability
+            base: {
+              service: 'micro-stt',
+              environment: appConfig.nodeEnv,
+            },
             // Use pino-pretty for development, JSON for production
             transport: isDev
               ? {
@@ -37,10 +43,10 @@ import type { AppConfig } from '@config/app.config';
                   options: {
                     colorize: true,
                     singleLine: false,
-                    // Force UTC time in pretty logs as well
-                    translateTime: 'UTC:HH:MM:ss.l',
+                    // Force UTC time in pretty logs with full date in ISO 8601
+                    translateTime: "UTC:yyyy-mm-dd'T'HH:MM:ss.l'Z'",
                     ignore: 'pid,hostname',
-                    messageFormat: '{req.method} {req.url} {msg}',
+                    messageFormat: '[{context}] {msg}',
                   },
                 }
               : undefined,
