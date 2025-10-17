@@ -51,8 +51,8 @@ export default registerAs('app', (): AppConfig => {
   const authTokensEnv = process.env.AUTH_TOKENS ?? '';
 
   const config = plainToClass(AppConfig, {
-    port: parseInt(process.env.LISTEN_PORT ?? '3000', 10),
-    host: process.env.LISTEN_HOST ?? 'localhost',
+    port: parseInt(process.env.LISTEN_PORT ?? '80', 10),
+    host: process.env.LISTEN_HOST ?? '0.0.0.0',
     apiBasePath: (process.env.API_BASE_PATH ?? 'api').replace(/^\/+|\/+$/g, ''),
     apiVersion: (process.env.API_VERSION ?? 'v1').replace(/^\/+|\/+$/g, ''),
     nodeEnv: process.env.NODE_ENV ?? 'development',
