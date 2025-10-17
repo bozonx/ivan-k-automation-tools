@@ -1,6 +1,6 @@
 {
   "name": "micro-stt",
-  "version": "0.5.0",
+  "version": "0.7.0",
   "description": "Speech-to-Text microservice (scaffolded from micro-file-cache).",
   "main": "dist/main.js",
   "scripts": {

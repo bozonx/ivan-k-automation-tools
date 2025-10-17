@@ -44,3 +44,26 @@
 - Роут транскрибации переведён на контроллерный префикс: `POST /{API_BASE_PATH}/{API_VERSION}/transcriptions/file`
 - Добавлены e2e тесты (Jest + Fastify inject): `test/e2e/health.e2e-spec.ts`
 - Разделён тестовый setup на unit и e2e: `test/setup/unit.setup.ts`, `test/setup/e2e.setup.ts`; обновлены конфиги Jest и добавлен скрипт `test:e2e`
+
+## 0.6.0
+
+### Added
+
+- **Централизованное логирование**: добавлен `Logger` во все сервисы (`TranscriptionService`, `AssemblyAiProvider`) с различными уровнями (log, debug, warn, error)
+- **HTTP запросы логирование**: реализован `LoggingInterceptor` для автоматического логирования всех входящих HTTP запросов и ответов с измерением времени выполнения
+- Логирование в `main.ts` при старте приложения с отображением конфигурации (адрес, порт, окружение, уровень логов)
+
+### Changed
+
+- **Рефакторинг конфигурации**: все модули конфигурации переведены на `registerAs` с namespaced подходом
+  - `app.config.ts` с интерфейсом `AppConfig` (port, host, apiBasePath, apiVersion, nodeEnv, logLevel)
+  - `stt.config.ts` с интерфейсом `SttConfig` (все STT-специфичные настройки)
+- Конфигурация теперь загружается через `ConfigModule.load([appConfig, sttConfig])`
+- `TranscriptionService` и `AssemblyAiProvider` используют `ConfigService` вместо прямого доступа к `process.env`
+- `LoggingInterceptor` зарегистрирован глобально через `APP_INTERCEPTOR` в `AppModule`
+
+### Improved
+
+- Улучшена тестируемость за счет использования DI для конфигурации
+- Добавлены подробные логи на всех этапах обработки транскрибации
+- Добавлены unit тесты для `LoggingInterceptor` (100% покрытие)
