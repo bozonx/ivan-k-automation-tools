@@ -12,7 +12,7 @@ export interface AppConfig {
 export default registerAs(
   'app',
   (): AppConfig => ({
-    port: parseInt(process.env.LISTEN_PORT ?? '3001', 10),
+    port: parseInt(process.env.LISTEN_PORT ?? '3000', 10),
     host: process.env.LISTEN_HOST ?? 'localhost',
     apiBasePath: (process.env.API_BASE_PATH ?? 'api').replace(/^\/+|\/+$/g, ''),
     apiVersion: (process.env.API_VERSION ?? 'v1').replace(/^\/+|\/+$/g, ''),
