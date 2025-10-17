@@ -23,7 +23,7 @@
   - Development stage docs: `\<projectName\>/dev_docs/`
   - Update `\<projectName\>/docs/CHANGELOG.md` for significant changes
   - Keep `\<projectName\>/README.md` up to date (setup/run instructions)
-- Environment variables: `.env.example` is the source of truth for expected variables
+- Environment variables: `.env.production.example` is the source of truth for expected variables
 - `.env.example` reflects new/modified environment variables
 
 ### TypeScript Standards
