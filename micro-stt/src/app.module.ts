@@ -14,6 +14,8 @@ import sttConfig from '@config/stt.config';
     ConfigModule.forRoot({
       isGlobal: true,
       load: [appConfig, sttConfig],
+      envFilePath: [`.env.${process.env.NODE_ENV || 'development'}`, '.env'],
+      cache: true,
     }),
     TranscriptionModule,
     HealthModule,

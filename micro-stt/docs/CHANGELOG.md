@@ -1,5 +1,43 @@
 # Changelog
 
+## 0.11.0
+
+### Added
+
+- **Environment-specific configuration**: добавлена поддержка разных конфигурационных файлов для разных окружений
+  - `.env.development` — автоматически загружается при `NODE_ENV=development`
+  - `.env.production` — автоматически загружается при `NODE_ENV=production`
+  - `.env` — используется как fallback для значений по умолчанию
+  - Создан `env.development.example` с оптимизированными настройками для разработки (LOG_LEVEL=debug, AUTH_ENABLED=false)
+  - Создан `env.production.example` с настройками для production (LOG_LEVEL=warn, AUTH_ENABLED=true, LISTEN_HOST=0.0.0.0)
+- **Configuration caching**: включено кэширование переменных окружения в `ConfigModule` для улучшения производительности
+- **Comprehensive documentation**: добавлен подробный гид по настройке переменных окружения `docs/ENV_SETUP.md`
+  - Полное описание всех переменных окружения
+  - Рекомендации по настройке для development и production
+  - Инструкции по запуску в разных окружениях
+  - Troubleshooting и best practices
+  - Безопасность и валидация
+
+### Changed
+
+- **ConfigModule**: обновлена конфигурация в `app.module.ts` для поддержки множественных env файлов
+  - Добавлен `envFilePath: ['.env.${NODE_ENV}', '.env']` для автоматической загрузки environment-specific файлов
+  - Файлы загружаются с приоритетом: `.env.${NODE_ENV}` → `.env` → значения по умолчанию
+  - Включено `cache: true` для оптимизации производительности `ConfigService`
+- **Documentation**: обновлен `README.md` с подробной информацией о конфигурации окружений
+  - Добавлен раздел "Конфигурация окружений" с примерами быстрой настройки
+  - Разделён раздел "Запуск" на подразделы для Development и Production
+  - Добавлена ссылка на новый `docs/ENV_SETUP.md`
+  - Обновлён раздел "Переменные окружения" с информацией о environment-specific файлах
+- **.gitignore**: обновлены правила игнорирования для защиты всех `.env.*` файлов (кроме `.example`)
+
+### Improved
+
+- Следование лучшим практикам NestJS для конфигурации согласно официальной документации
+- Разделение конфигураций для разработки и production по рекомендациям 12-factor app
+- Улучшенная производительность за счёт кэширования переменных окружения
+- Упрощение onboarding новых разработчиков за счёт готовых example файлов
+
 ## 0.10.1
 
 ### Changed
