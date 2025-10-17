@@ -1,12 +1,18 @@
 import { HttpService } from '@nestjs/axios';
-import { Injectable, ServiceUnavailableException, GatewayTimeoutException } from '@nestjs/common';
+import {
+  Injectable,
+  ServiceUnavailableException,
+  GatewayTimeoutException,
+  Logger,
+} from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { lastValueFrom, timeout } from 'rxjs';
 import {
   SttProvider,
   TranscriptionRequestByUrl,
   TranscriptionResult,
 } from '../../common/interfaces/stt-provider.interface';
-import { loadSttConfig } from '../../config/stt.config';
+import { SttConfig } from '../../config/stt.config';
 
 interface AssemblyCreateResponse {
   id: string;
@@ -26,32 +32,55 @@ interface AssemblyTranscriptResponse {
 
 @Injectable()
 export class AssemblyAiProvider implements SttProvider {
-  private readonly cfg = loadSttConfig();
+  private readonly logger = new Logger(AssemblyAiProvider.name);
+  private readonly cfg: SttConfig;
 
-  constructor(private readonly http: HttpService) {}
+  constructor(
+    private readonly http: HttpService,
+    private readonly configService: ConfigService,
+  ) {
+    this.cfg = this.configService.get<SttConfig>('stt')!;
+  }
 
   public async submitAndWaitByUrl(params: TranscriptionRequestByUrl): Promise<TranscriptionResult> {
+    this.logger.debug(`Submitting transcription request to AssemblyAI for URL: ${params.audioUrl}`);
+
     const headers = { Authorization: params.apiKey as string };
     const create$ = this.http.post<AssemblyCreateResponse>(
       'https://api.assemblyai.com/v2/transcripts',
       { audio_url: params.audioUrl },
       { headers, validateStatus: () => true },
     );
+
     const createRes = await lastValueFrom(create$.pipe(timeout(this.cfg.requestTimeoutSec * 1000)));
     if (createRes.status >= 400 || !createRes.data?.id) {
+      this.logger.error(
+        `Failed to create transcription. Status: ${createRes.status}, Response: ${JSON.stringify(createRes.data)}`,
+      );
       throw new ServiceUnavailableException('Failed to create transcription');
     }
 
     const id = createRes.data.id;
+    this.logger.log(`Transcription request created with ID: ${id}`);
+
     const startedAt = Date.now();
     const deadline = startedAt + this.cfg.maxSyncWaitMin * 60 * 1000;
 
     // Poll loop
+    let pollCount = 0;
     for (;;) {
       if (Date.now() > deadline) {
+        this.logger.error(
+          `Transcription timeout after ${this.cfg.maxSyncWaitMin} minutes for ID: ${id}`,
+        );
         throw new GatewayTimeoutException('TRANSCRIPTION_TIMEOUT');
       }
+
       await new Promise(r => setTimeout(r, this.cfg.pollIntervalMs));
+      pollCount++;
+
+      this.logger.debug(`Polling transcription status (attempt ${pollCount}) for ID: ${id}`);
+
       const get$ = this.http.get<AssemblyTranscriptResponse>(
         `https://api.assemblyai.com/v2/transcripts/${id}`,
         {
@@ -61,8 +90,18 @@ export class AssemblyAiProvider implements SttProvider {
       );
       const getRes = await lastValueFrom(get$.pipe(timeout(this.cfg.requestTimeoutSec * 1000)));
       const body = getRes.data;
-      if (!body) continue;
+
+      if (!body) {
+        this.logger.debug(`No response body for ID: ${id}, continuing...`);
+        continue;
+      }
+
+      this.logger.debug(`Transcription status: ${body.status} for ID: ${id}`);
+
       if (body.status === 'completed') {
+        this.logger.log(
+          `Transcription completed for ID: ${id}. Text length: ${body.text?.length || 0} chars`,
+        );
         return {
           text: body.text ?? '',
           requestId: id,
@@ -72,7 +111,9 @@ export class AssemblyAiProvider implements SttProvider {
           words: body.words?.map(w => ({ start: w.start, end: w.end, text: w.text })) ?? undefined,
         };
       }
+
       if (body.status === 'error') {
+        this.logger.error(`Transcription failed for ID: ${id}. Error: ${body.error}`);
         throw new ServiceUnavailableException(body.error ?? 'Transcription failed');
       }
     }

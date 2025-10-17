@@ -4,12 +4,14 @@ import {
   UnauthorizedException,
   GatewayTimeoutException,
   HttpException,
+  Logger,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { lastValueFrom, timeout } from 'rxjs';
 import { HttpService } from '@nestjs/axios';
-import { loadSttConfig } from '../../config/stt.config';
 import { AssemblyAiProvider } from '../../providers/assemblyai/assemblyai.provider';
 import { SttProvider, TranscriptionResult } from '../../common/interfaces/stt-provider.interface';
+import { SttConfig } from '../../config/stt.config';
 
 function isPrivateHost(url: URL): boolean {
   const hostname = url.hostname.toLowerCase();
@@ -20,37 +22,59 @@ function isPrivateHost(url: URL): boolean {
 
 @Injectable()
 export class TranscriptionService {
-  private readonly cfg = loadSttConfig();
+  private readonly logger = new Logger(TranscriptionService.name);
+  private readonly cfg: SttConfig;
 
   constructor(
     private readonly http: HttpService,
     private readonly assembly: AssemblyAiProvider,
-  ) {}
+    private readonly configService: ConfigService,
+  ) {
+    this.cfg = this.configService.get<SttConfig>('stt')!;
+  }
 
   private selectProvider(name?: string): SttProvider {
     const providerName = (name ?? this.cfg.defaultProvider).toLowerCase();
+    this.logger.debug(`Selecting provider: ${providerName}`);
+
     if (!this.cfg.allowedProviders.includes(providerName)) {
+      this.logger.warn(`Unsupported provider requested: ${providerName}`);
       throw new BadRequestException('Unsupported provider');
     }
+
     switch (providerName) {
       case 'assemblyai':
+        this.logger.debug('Using AssemblyAI provider');
         return this.assembly;
       default:
+        this.logger.error(`Unknown provider: ${providerName}`);
         throw new BadRequestException('Unsupported provider');
     }
   }
 
   private async enforceSizeLimitIfKnown(audioUrl: string) {
+    this.logger.debug(`Checking file size for URL: ${audioUrl}`);
     try {
       const req$ = this.http.head(audioUrl, { validateStatus: () => true });
       const res = await lastValueFrom(req$.pipe(timeout(this.cfg.requestTimeoutSec * 1000)));
       const len = res.headers['content-length']
         ? parseInt(res.headers['content-length'] as string, 10)
         : undefined;
-      if (len && len > this.cfg.maxFileMb * 1024 * 1024) {
-        throw new BadRequestException('File too large');
+
+      if (len) {
+        this.logger.debug(`File size: ${len} bytes (${(len / 1024 / 1024).toFixed(2)} MB)`);
+        if (len > this.cfg.maxFileMb * 1024 * 1024) {
+          this.logger.warn(`File too large: ${len} bytes exceeds limit of ${this.cfg.maxFileMb}MB`);
+          throw new BadRequestException('File too large');
+        }
+      } else {
+        this.logger.debug('Content-Length header not available, skipping size check');
       }
-    } catch (_e) {
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      this.logger.debug('HEAD request failed, skipping size check', error);
       // HEAD may fail or be blocked; we ignore unless explicit oversized length was detected
     }
   }
@@ -71,16 +95,23 @@ export class TranscriptionService {
     processingMs: number;
     timestampsEnabled: boolean;
   }> {
+    this.logger.log(`Starting transcription for URL: ${params.audioUrl}`);
+
     let parsed: URL;
     try {
       parsed = new URL(params.audioUrl);
     } catch {
+      this.logger.error(`Invalid URL provided: ${params.audioUrl}`);
       throw new BadRequestException('audioUrl must be a valid URL');
     }
+
     if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+      this.logger.error(`Unsupported protocol: ${parsed.protocol}`);
       throw new BadRequestException('Only http(s) URLs are allowed');
     }
+
     if (isPrivateHost(parsed)) {
+      this.logger.error(`Private host not allowed: ${parsed.hostname}`);
       throw new BadRequestException('Private/loopback hosts are not allowed');
     }
 
@@ -91,21 +122,31 @@ export class TranscriptionService {
     const apiKeyToUse =
       this.cfg.allowCustomApiKey && params.apiKey ? params.apiKey : this.cfg.assemblyAiApiKey;
     if (!apiKeyToUse) {
+      this.logger.error('Missing provider API key');
       throw new UnauthorizedException('Missing provider API key');
     }
 
     const start = Date.now();
     let result: TranscriptionResult;
     try {
+      this.logger.debug('Submitting transcription request to provider');
       result = await provider.submitAndWaitByUrl({
         audioUrl: params.audioUrl,
         apiKey: apiKeyToUse,
       });
     } catch (err: unknown) {
-      if (err instanceof HttpException) throw err;
+      if (err instanceof HttpException) {
+        this.logger.error(`Transcription failed with HTTP error: ${err.message}`);
+        throw err;
+      }
+      this.logger.error('Transcription timeout or unknown error', err);
       throw new GatewayTimeoutException('TRANSCRIPTION_TIMEOUT');
     }
     const processingMs = Date.now() - start;
+
+    this.logger.log(
+      `Transcription completed in ${processingMs}ms. Text length: ${result.text.length} chars`,
+    );
 
     return {
       text: result.text,

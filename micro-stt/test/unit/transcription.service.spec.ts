@@ -1,14 +1,23 @@
 import { Test } from '@nestjs/testing';
 import { HttpModule } from '@nestjs/axios';
+import { ConfigModule } from '@nestjs/config';
 import { TranscriptionService } from '../../src/modules/transcription/transcription.service';
 import { AssemblyAiProvider } from '../../src/providers/assemblyai/assemblyai.provider';
 import { of } from 'rxjs';
 import { HttpService } from '@nestjs/axios';
+import { ConfigService } from '@nestjs/config';
+import appConfig from '../../src/config/app.config';
+import sttConfig from '../../src/config/stt.config';
 
 describe('TranscriptionService', () => {
   it('rejects private host url', async () => {
     const moduleRef = await Test.createTestingModule({
-      imports: [HttpModule],
+      imports: [
+        HttpModule,
+        ConfigModule.forRoot({
+          load: [appConfig, sttConfig],
+        }),
+      ],
       providers: [TranscriptionService, AssemblyAiProvider],
     })
       .overrideProvider(AssemblyAiProvider)
@@ -24,7 +33,12 @@ describe('TranscriptionService', () => {
   it('returns response shape on success', async () => {
     process.env.ASSEMBLYAI_API_KEY = 'x';
     const moduleRef = await Test.createTestingModule({
-      imports: [HttpModule],
+      imports: [
+        HttpModule,
+        ConfigModule.forRoot({
+          load: [appConfig, sttConfig],
+        }),
+      ],
       providers: [TranscriptionService, AssemblyAiProvider],
     })
       .overrideProvider(HttpService)

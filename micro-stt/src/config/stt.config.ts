@@ -1,3 +1,5 @@
+import { registerAs } from '@nestjs/config';
+
 export interface SttConfig {
   defaultProvider: string;
   allowedProviders: string[];
@@ -9,8 +11,9 @@ export interface SttConfig {
   assemblyAiApiKey?: string;
 }
 
-export const loadSttConfig = (): SttConfig => {
-  return {
+export default registerAs(
+  'stt',
+  (): SttConfig => ({
     defaultProvider: process.env.STT_DEFAULT_PROVIDER ?? 'assemblyai',
     allowedProviders: (process.env.STT_ALLOWED_PROVIDERS ?? 'assemblyai')
       .split(',')
@@ -22,5 +25,5 @@ export const loadSttConfig = (): SttConfig => {
     maxSyncWaitMin: parseInt(process.env.STT_MAX_SYNC_WAIT_MIN ?? '3', 10),
     allowCustomApiKey: (process.env.ALLOW_CUSTOM_API_KEY ?? 'true') === 'true',
     assemblyAiApiKey: process.env.ASSEMBLYAI_API_KEY,
-  };
-};
+  }),
+);
