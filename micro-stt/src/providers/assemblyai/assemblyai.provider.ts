@@ -11,8 +11,8 @@ import {
   SttProvider,
   TranscriptionRequestByUrl,
   TranscriptionResult,
-} from '../../common/interfaces/stt-provider.interface';
-import { SttConfig } from '../../config/stt.config';
+} from '@common/interfaces/stt-provider.interface';
+import { SttConfig } from '@config/stt.config';
 
 interface AssemblyCreateResponse {
   id: string;

@@ -8,8 +8,8 @@ import {
   ApiGatewayTimeoutResponse,
   ApiServiceUnavailableResponse,
 } from '@nestjs/swagger';
-import { TranscribeFileDto } from '../../common/dto/transcribe-file.dto';
-import { TranscriptionResponseDto } from '../../common/dto/transcription-response.dto';
+import { TranscribeFileDto } from '@common/dto/transcribe-file.dto';
+import { TranscriptionResponseDto } from '@common/dto/transcription-response.dto';
 import { TranscriptionService } from './transcription.service';
 
 @ApiTags('Transcriptions')

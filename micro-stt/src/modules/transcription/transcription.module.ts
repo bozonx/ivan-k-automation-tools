@@ -3,9 +3,9 @@ import { HttpModule } from '@nestjs/axios';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TranscriptionService } from './transcription.service';
 import { TranscriptionController } from './transcription.controller';
-import { AssemblyAiProvider } from '../../providers/assemblyai/assemblyai.provider';
-import { STT_PROVIDER } from '../../common/constants/tokens';
-import type { SttConfig } from '../../config/stt.config';
+import { AssemblyAiProvider } from '@providers/assemblyai/assemblyai.provider';
+import { STT_PROVIDER } from '@common/constants/tokens';
+import type { SttConfig } from '@config/stt.config';
 
 /**
  * Transcription module

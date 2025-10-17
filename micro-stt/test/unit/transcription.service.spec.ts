@@ -1,13 +1,13 @@
 import { Test } from '@nestjs/testing';
 import { HttpModule } from '@nestjs/axios';
 import { ConfigModule } from '@nestjs/config';
-import { TranscriptionService } from '../../src/modules/transcription/transcription.service';
-import { AssemblyAiProvider } from '../../src/providers/assemblyai/assemblyai.provider';
-import { STT_PROVIDER } from '../../src/common/constants/tokens';
+import { TranscriptionService } from '@modules/transcription/transcription.service';
+import { AssemblyAiProvider } from '@providers/assemblyai/assemblyai.provider';
+import { STT_PROVIDER } from '@common/constants/tokens';
 import { of } from 'rxjs';
 import { HttpService } from '@nestjs/axios';
-import appConfig from '../../src/config/app.config';
-import sttConfig from '../../src/config/stt.config';
+import appConfig from '@config/app.config';
+import sttConfig from '@config/stt.config';
 
 describe('TranscriptionService', () => {
   it('rejects private host url', async () => {

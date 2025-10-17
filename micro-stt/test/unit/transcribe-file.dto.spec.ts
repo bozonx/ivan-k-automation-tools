@@ -1,6 +1,6 @@
 import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
-import { TranscribeFileDto } from '../../src/common/dto/transcribe-file.dto';
+import { TranscribeFileDto } from '@common/dto/transcribe-file.dto';
 
 describe('TranscribeFileDto', () => {
   it('validates a correct payload', async () => {

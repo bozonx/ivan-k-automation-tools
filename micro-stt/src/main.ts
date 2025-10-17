@@ -3,8 +3,8 @@ import { FastifyAdapter, type NestFastifyApplication } from '@nestjs/platform-fa
 import { ValidationPipe, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
-import { AppModule } from './app.module';
-import type { AppConfig } from './config/app.config';
+import { AppModule } from '@/app.module';
+import type { AppConfig } from '@config/app.config';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(AppModule, new FastifyAdapter());
@@ -28,7 +28,7 @@ async function bootstrap() {
       'Speech-to-Text microservice API for transcribing audio files. ' +
         'Supports multiple STT providers and provides asynchronous transcription with polling.',
     )
-    .setVersion('0.8.1')
+    .setVersion('0.8.2')
     .addTag('Transcriptions', 'Endpoints for transcribing audio files')
     .addTag('Health', 'Health check endpoints for monitoring and orchestration')
     .addServer(`http://${appConfig.host}:${appConfig.port}`, 'Local development server')
