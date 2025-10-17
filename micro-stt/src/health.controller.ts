@@ -8,7 +8,7 @@ export class HealthController {
   private readonly version: string = this.readVersion();
 
   @Get('heartbeat')
-  heartbeat() {
+  public heartbeat() {
     const uptime = Date.now() - this.serviceStartMs;
     return { status: 'ok', uptime, version: this.version };
   }
@@ -22,7 +22,7 @@ export class HealthController {
     for (const pkgPath of candidates) {
       try {
         const raw = fs.readFileSync(pkgPath, 'utf-8');
-        const pkg = JSON.parse(raw);
+        const pkg = JSON.parse(raw) as { version?: string };
         if (typeof pkg.version === 'string' && pkg.version.length > 0) {
           return pkg.version;
         }

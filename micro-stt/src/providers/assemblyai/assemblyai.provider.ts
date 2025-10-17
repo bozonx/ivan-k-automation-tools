@@ -30,7 +30,7 @@ export class AssemblyAiProvider implements SttProvider {
 
   constructor(private readonly http: HttpService) {}
 
-  async submitAndWaitByUrl(params: TranscriptionRequestByUrl): Promise<TranscriptionResult> {
+  public async submitAndWaitByUrl(params: TranscriptionRequestByUrl): Promise<TranscriptionResult> {
     const headers = { Authorization: params.apiKey as string };
     const create$ = this.http.post<AssemblyCreateResponse>(
       'https://api.assemblyai.com/v2/transcripts',
@@ -64,16 +64,16 @@ export class AssemblyAiProvider implements SttProvider {
       if (!body) continue;
       if (body.status === 'completed') {
         return {
-          text: body.text || '',
+          text: body.text ?? '',
           requestId: id,
           durationSec: body.audio_duration,
           language: body.language_code,
           confidenceAvg: body.confidence,
-          words: body.words?.map(w => ({ start: w.start, end: w.end, text: w.text })) || undefined,
+          words: body.words?.map(w => ({ start: w.start, end: w.end, text: w.text })) ?? undefined,
         };
       }
       if (body.status === 'error') {
-        throw new ServiceUnavailableException(body.error || 'Transcription failed');
+        throw new ServiceUnavailableException(body.error ?? 'Transcription failed');
       }
     }
   }

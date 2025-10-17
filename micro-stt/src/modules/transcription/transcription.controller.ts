@@ -7,7 +7,7 @@ export class TranscriptionController {
   constructor(private readonly service: TranscriptionService) {}
 
   @Post('file')
-  async transcribe(@Body() dto: TranscribeFileDto) {
+  public async transcribe(@Body() dto: TranscribeFileDto) {
     return this.service.transcribeByUrl(dto);
   }
 }

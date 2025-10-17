@@ -28,7 +28,7 @@ export class TranscriptionService {
   ) {}
 
   private selectProvider(name?: string): SttProvider {
-    const providerName = (name || this.cfg.defaultProvider).toLowerCase();
+    const providerName = (name ?? this.cfg.defaultProvider).toLowerCase();
     if (!this.cfg.allowedProviders.includes(providerName)) {
       throw new BadRequestException('Unsupported provider');
     }
@@ -45,17 +45,17 @@ export class TranscriptionService {
       const req$ = this.http.head(audioUrl, { validateStatus: () => true });
       const res = await lastValueFrom(req$.pipe(timeout(this.cfg.requestTimeoutSec * 1000)));
       const len = res.headers['content-length']
-        ? parseInt(res.headers['content-length'], 10)
+        ? parseInt(res.headers['content-length'] as string, 10)
         : undefined;
       if (len && len > this.cfg.maxFileMb * 1024 * 1024) {
         throw new BadRequestException('File too large');
       }
-    } catch (e) {
+    } catch (_e) {
       // HEAD may fail or be blocked; we ignore unless explicit oversized length was detected
     }
   }
 
-  async transcribeByUrl(params: {
+  public async transcribeByUrl(params: {
     audioUrl: string;
     provider?: string;
     timestamps?: boolean;
@@ -101,7 +101,7 @@ export class TranscriptionService {
         audioUrl: params.audioUrl,
         apiKey: apiKeyToUse,
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
       if (err instanceof HttpException) throw err;
       throw new GatewayTimeoutException('TRANSCRIPTION_TIMEOUT');
     }
@@ -109,7 +109,7 @@ export class TranscriptionService {
 
     return {
       text: result.text,
-      provider: (params.provider || this.cfg.defaultProvider).toLowerCase(),
+      provider: (params.provider ?? this.cfg.defaultProvider).toLowerCase(),
       requestId: result.requestId,
       durationSec: result.durationSec,
       language: result.language,
