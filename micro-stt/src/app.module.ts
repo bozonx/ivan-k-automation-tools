@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_FILTER } from '@nestjs/core';
 import { LoggerModule } from 'nestjs-pino';
+import { stdTimeFunctions } from 'pino';
 import { TranscriptionModule } from '@modules/transcription/transcription.module';
 import { HealthModule } from '@modules/health/health.module';
 import { IndexModule } from '@modules/index/index.module';
@@ -27,6 +28,8 @@ import type { AppConfig } from '@config/app.config';
         return {
           pinoHttp: {
             level: appConfig.logLevel,
+            // Always emit ISO UTC timestamps in logs
+            timestamp: stdTimeFunctions.isoTime,
             // Use pino-pretty for development, JSON for production
             transport: isDev
               ? {
@@ -34,7 +37,8 @@ import type { AppConfig } from '@config/app.config';
                   options: {
                     colorize: true,
                     singleLine: false,
-                    translateTime: 'SYS:HH:MM:ss.l',
+                    // Force UTC time in pretty logs as well
+                    translateTime: 'UTC:HH:MM:ss.l',
                     ignore: 'pid,hostname',
                     messageFormat: '{req.method} {req.url} {msg}',
                   },

@@ -75,14 +75,16 @@ cp .env.example .env
 
 ### Логирование
 
-| Переменная  | Описание            | Значения                        | Development | Production |
-| ----------- | ------------------- | ------------------------------- | ----------- | ---------- |
-| `LOG_LEVEL` | Уровень логирования | `debug`, `log`, `warn`, `error` | `debug`     | `warn`     |
+| Переменная  | Описание                                  | Значения                        | Development | Production |
+| ----------- | ----------------------------------------- | ------------------------------- | ----------- | ---------- |
+| `LOG_LEVEL` | Уровень логирования                        | `debug`, `log`, `warn`, `error` | `debug`     | `warn`     |
+| `TZ`        | Таймзона процесса для логов (UTC рекомендуемо) | любой валидный TZ               | `UTC`       | `UTC`      |
 
 **Рекомендации:**
 
 - **Development:** используйте `debug` для подробного логирования
 - **Production:** используйте `warn` или `error` для минимизации логов
+ - Всегда устанавливайте `TZ=UTC` чтобы время в логах было стабильно и независимо от окружения. В JSON логах используется ISO в UTC, а в pretty-логах формат `UTC:HH:MM:ss.l`.
 
 ### Авторизация
 
@@ -172,6 +174,7 @@ services:
     environment:
       - NODE_ENV=production
       - LISTEN_HOST=0.0.0.0
+      - TZ=UTC
       - AUTH_ENABLED=true
       - AUTH_TOKENS=${AUTH_TOKENS}
       - ASSEMBLYAI_API_KEY=${ASSEMBLYAI_API_KEY}
@@ -192,6 +195,7 @@ ASSEMBLYAI_API_KEY=your-api-key-here
 
 ```bash
 docker run -e NODE_ENV=production \
+  -e TZ=UTC \
   -e AUTH_ENABLED=true \
   -e AUTH_TOKENS=token1,token2 \
   micro-stt
