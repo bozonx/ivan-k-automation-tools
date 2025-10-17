@@ -1,6 +1,6 @@
 # micro-stt
 
-**Версия:** 0.8.0
+**Версия:** 0.8.2
 
 Микросервис распознавания речи (STT) на NestJS + Fastify. Поддерживает синхронную транскрибацию аудио по URL через провайдера AssemblyAI.
 
@@ -125,6 +125,25 @@ docker compose up --build
 ```
 
 ## Эндпоинты
+
+### Index
+
+- `GET /{API_BASE_PATH}/{API_VERSION}` — индекс API (по умолчанию: `GET /api/v1`). Возвращает JSON:
+
+```json
+{
+  "name": "micro-stt",
+  "version": "0.8.2",
+  "status": "ok",
+  "time": "2025-10-17T10:00:00Z",
+  "links": {
+    "self": "/api/v1",
+    "docs": "/api/docs",
+    "health": "/api/v1/health",
+    "transcriptions": "/api/v1/transcriptions"
+  }
+}
+```
 
 ### Health Checks
 
