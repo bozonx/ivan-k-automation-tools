@@ -19,7 +19,7 @@ pnpm install
 pnpm start:dev
 ```
 
-Сервис слушает хост/порт из переменных окружения `LISTEN_HOST` и `LISTEN_PORT` (по умолчанию `localhost:3001`).
+Сервис слушает хост/порт из переменных окружения `LISTEN_HOST` и `LISTEN_PORT` (по умолчанию `localhost:3001`). Глобальный префикс API формируется из `API_BASE_PATH` и `API_VERSION` (по умолчанию `api/v1`).
 
 ## Переменные окружения
 
@@ -34,6 +34,8 @@ pnpm start:dev
 - `STT_MAX_SYNC_WAIT_MIN` — максимальное время ожидания синхронного результата.
 - `ALLOW_CUSTOM_API_KEY` — разрешить ли передавать свой ключ в теле запроса (true/false, по умолчанию `true`).
 - `LOG_LEVEL` — уровень логирования (по умолчанию `warn`).
+- `API_BASE_PATH` — базовый путь для всех эндпоинтов (по умолчанию `api`).
+- `API_VERSION` — версия API (по умолчанию `v1`).
 
 ## Тесты
 
@@ -51,7 +53,7 @@ docker compose up --build
 
 ## Эндпоинты
 
-- `GET /heartbeat` — проверка доступности сервиса.
+- `GET /heartbeat` — проверка доступности сервиса (без префикса, т.е. `/heartbeat`).
 
 Пример ответа:
 
@@ -63,7 +65,7 @@ docker compose up --build
 }
 ```
 
-- `POST /api/v1/transcriptions/file` — синхронная транскрибация файла по URL (не стрим)
+- `POST /{API_BASE_PATH}/{API_VERSION}/transcriptions/file` — синхронная транскрибация файла по URL (не стрим). По умолчанию: `POST /api/v1/transcriptions/file`.
 
 Тело запроса:
 
@@ -96,7 +98,7 @@ docker compose up --build
 
 ```bash
 curl -X POST \
-  http://localhost:3001/api/v1/transcriptions/file \
+  http://localhost:3001/${API_BASE_PATH:-api}/${API_VERSION:-v1}/transcriptions/file \
   -H 'Content-Type: application/json' \
   -d '{
     "audioUrl": "https://example.com/audio.mp3"
@@ -107,7 +109,7 @@ curl -X POST \
 
 ```bash
 curl -X POST \
-  http://localhost:3001/api/v1/transcriptions/file \
+  http://localhost:3001/${API_BASE_PATH:-api}/${API_VERSION:-v1}/transcriptions/file \
   -H 'Content-Type: application/json' \
   -d '{
     "audioUrl": "https://example.com/audio.mp3",

@@ -13,6 +13,12 @@ async function bootstrap() {
     new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }),
   );
 
+  // Configure global API prefix from environment variables
+  const apiBasePath = (process.env.API_BASE_PATH || 'api').replace(/^\/+|\/+$/g, '');
+  const apiVersion = (process.env.API_VERSION || 'v1').replace(/^\/+|\/+$/g, '');
+  const globalPrefix = `${apiBasePath}/${apiVersion}`;
+  app.setGlobalPrefix(globalPrefix);
+
   await app.listen(port, host);
 }
 
