@@ -69,7 +69,7 @@ cp .env.example .env
 | --------------- | ---------------------- | ------------- | ------------- | ------------ |
 | `NODE_ENV`      | Окружение              | `development` | `development` | `production` |
 | `LISTEN_HOST`   | Хост для прослушивания | `localhost`   | `localhost`   | `0.0.0.0`    |
-| `LISTEN_PORT`   | Порт                   | `3000`        | `3000`        | `3000`       |
+| `LISTEN_PORT`   | Порт                   | `3000`        | `3000`        | `80`         |
 | `API_BASE_PATH` | Базовый путь API       | `api`         | `api`         | `api`        |
 | `API_VERSION`   | Версия API             | `v1`          | `v1`          | `v1`         |
 
@@ -114,7 +114,7 @@ AUTH_TOKENS=prod-token-1,prod-token-2,prod-token-3
 | `STT_REQUEST_TIMEOUT_SEC` | Таймаут запроса (сек)                  | `15`         | `15-30`                                       |
 | `STT_POLL_INTERVAL_MS`    | Интервал опроса (мс)                   | `1500`       | `1500`                                        |
 | `STT_MAX_SYNC_WAIT_MIN`   | Макс. время синхронного ожидания (мин) | `3`          | `3-5`                                         |
-| `ALLOW_CUSTOM_API_KEY`    | Разрешить custom API ключи             | `true`       | dev: `true`, prod: `false`                    |
+| `ALLOW_CUSTOM_API_KEY`    | Разрешить custom API ключи             | `false`      | dev: `true`, prod: `false`                    |
 | `ASSEMBLYAI_API_KEY`      | API ключ AssemblyAI                    | —            | обязательно если `ALLOW_CUSTOM_API_KEY=false` |
 
 ## Запуск в разных окружениях

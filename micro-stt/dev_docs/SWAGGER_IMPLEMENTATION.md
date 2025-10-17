@@ -24,7 +24,7 @@ pnpm add @nestjs/swagger@11.2.1
 - Кастомизацией UI (скрытие topbar, сортировка, фильтрация)
 - Автоматическим отображением времени выполнения запросов
 
-**Доступ к документации:** `http://localhost:3001/api/docs`
+**Доступ к документации:** `http://localhost:3000/api/docs`
 
 ##### 2. Создан `TranscriptionResponseDto`
 
@@ -141,7 +141,7 @@ pnpm add @nestjs/swagger@11.2.1
 
 ### 2. Экспорт спецификации
 
-- JSON спецификация: `http://localhost:3001/api/docs-json`
+- JSON спецификация: `http://localhost:3000/api/docs-json`
 - Импорт в Postman, Insomnia, OpenAPI Generator
 
 ### 3. Детальная информация
@@ -174,7 +174,7 @@ pnpm add @nestjs/swagger@11.2.1
 После запуска сервиса (`pnpm start:dev`), откройте:
 
 ```
-http://localhost:3001/api/docs
+http://localhost:3000/api/docs
 ```
 
 Вы увидите интерактивную документацию со всеми эндпоинтами, возможностью их тестирования и подробными примерами.

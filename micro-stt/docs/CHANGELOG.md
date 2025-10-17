@@ -212,7 +212,7 @@
     - `@ApiTags`, `@ApiOperation` для описания эндпоинтов
     - `@ApiResponse`, `@ApiBadRequestResponse`, `@ApiUnauthorizedResponse`, `@ApiGatewayTimeoutResponse`, `@ApiServiceUnavailableResponse` для документирования всех возможных ответов
   - Добавлены декораторы к `HealthController` с примерами ответов
-  - Документация доступна по адресу: `http://localhost:3001/api/docs`
+  - Документация доступна по адресу: `http://localhost:3000/api/docs`
   - Настроена кастомизация Swagger UI (скрытие topbar, сортировка тегов, фильтрация, время выполнения запросов)
 
 ### Improved

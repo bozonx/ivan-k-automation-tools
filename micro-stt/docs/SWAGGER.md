@@ -9,12 +9,12 @@
 После запуска сервиса документация доступна по адресу:
 
 ```
-http://localhost:3001/api/docs
+http://localhost:3000/api/docs
 ```
 
 Где:
 
-- `localhost:3001` - адрес и порт, настраиваемые через `LISTEN_HOST` и `LISTEN_PORT`
+- `localhost:3000` - адрес и порт, настраиваемые через `LISTEN_HOST` и `LISTEN_PORT`
 - `/api/docs` - фиксированный путь к Swagger UI
 
 ## Возможности Swagger UI
@@ -87,7 +87,7 @@ Swagger UI позволяет отправлять запросы непосре
 Полная спецификация OpenAPI доступна в формате JSON:
 
 ```
-http://localhost:3001/api/docs-json
+http://localhost:3000/api/docs-json
 ```
 
 ### Использование в других инструментах

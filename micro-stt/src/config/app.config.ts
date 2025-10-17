@@ -55,7 +55,7 @@ export default registerAs('app', (): AppConfig => {
     host: process.env.LISTEN_HOST ?? '0.0.0.0',
     apiBasePath: (process.env.API_BASE_PATH ?? 'api').replace(/^\/+|\/+$/g, ''),
     apiVersion: (process.env.API_VERSION ?? 'v1').replace(/^\/+|\/+$/g, ''),
-    nodeEnv: process.env.NODE_ENV ?? 'development',
+    nodeEnv: process.env.NODE_ENV ?? 'production',
     logLevel: process.env.LOG_LEVEL ?? 'warn',
     authEnabled: authEnabledEnv,
     authTokens: authTokensEnv,

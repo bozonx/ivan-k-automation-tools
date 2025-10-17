@@ -24,7 +24,7 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 ENV LISTEN_HOST=0.0.0.0
-ENV LISTEN_PORT=3001
+ENV LISTEN_PORT=80
 
 # Install pnpm in runtime for potential exec; not required to run
 RUN corepack enable && corepack prepare pnpm@10.13.1 --activate
@@ -35,7 +35,7 @@ RUN pnpm install --prod --frozen-lockfile --prefer-offline || pnpm install --pro
 
 COPY --from=builder /app/dist ./dist
 
-EXPOSE 3001
+EXPOSE 80
 
 CMD ["node", "dist/main.js"]
 
