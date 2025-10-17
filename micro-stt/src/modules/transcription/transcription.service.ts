@@ -5,13 +5,17 @@ import {
   GatewayTimeoutException,
   HttpException,
   Logger,
+  Inject,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { lastValueFrom, timeout } from 'rxjs';
 import { HttpService } from '@nestjs/axios';
-import { AssemblyAiProvider } from '../../providers/assemblyai/assemblyai.provider';
-import { SttProvider, TranscriptionResult } from '../../common/interfaces/stt-provider.interface';
-import { SttConfig } from '../../config/stt.config';
+import {
+  type SttProvider,
+  type TranscriptionResult,
+} from '../../common/interfaces/stt-provider.interface';
+import { type SttConfig } from '../../config/stt.config';
+import { STT_PROVIDER } from '../../common/constants/tokens';
 
 function isPrivateHost(url: URL): boolean {
   const hostname = url.hostname.toLowerCase();
@@ -27,7 +31,7 @@ export class TranscriptionService {
 
   constructor(
     private readonly http: HttpService,
-    private readonly assembly: AssemblyAiProvider,
+    @Inject(STT_PROVIDER) private readonly provider: SttProvider,
     private readonly configService: ConfigService,
   ) {
     this.cfg = this.configService.get<SttConfig>('stt')!;
@@ -35,21 +39,17 @@ export class TranscriptionService {
 
   private selectProvider(name?: string): SttProvider {
     const providerName = (name ?? this.cfg.defaultProvider).toLowerCase();
-    this.logger.debug(`Selecting provider: ${providerName}`);
+    this.logger.debug(`Using provider: ${providerName}`);
 
     if (!this.cfg.allowedProviders.includes(providerName)) {
       this.logger.warn(`Unsupported provider requested: ${providerName}`);
       throw new BadRequestException('Unsupported provider');
     }
 
-    switch (providerName) {
-      case 'assemblyai':
-        this.logger.debug('Using AssemblyAI provider');
-        return this.assembly;
-      default:
-        this.logger.error(`Unknown provider: ${providerName}`);
-        throw new BadRequestException('Unsupported provider');
-    }
+    // Return the injected provider
+    // In the future, if multiple providers are supported,
+    // this can be enhanced to use a provider factory or registry
+    return this.provider;
   }
 
   private async enforceSizeLimitIfKnown(audioUrl: string) {

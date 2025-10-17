@@ -1,9 +1,10 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_INTERCEPTOR, APP_FILTER } from '@nestjs/core';
 import { TranscriptionModule } from './modules/transcription/transcription.module';
-import { HealthController } from './health.controller';
+import { HealthModule } from './modules/health/health.module';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
+import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import appConfig from './config/app.config';
 import sttConfig from './config/stt.config';
 
@@ -14,12 +15,17 @@ import sttConfig from './config/stt.config';
       load: [appConfig, sttConfig],
     }),
     TranscriptionModule,
+    HealthModule,
   ],
-  controllers: [HealthController],
+  controllers: [],
   providers: [
     {
       provide: APP_INTERCEPTOR,
       useClass: LoggingInterceptor,
+    },
+    {
+      provide: APP_FILTER,
+      useClass: AllExceptionsFilter,
     },
   ],
 })

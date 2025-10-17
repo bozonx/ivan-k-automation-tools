@@ -3,14 +3,16 @@ import { HttpModule } from '@nestjs/axios';
 import { ConfigModule } from '@nestjs/config';
 import { TranscriptionService } from '../../src/modules/transcription/transcription.service';
 import { AssemblyAiProvider } from '../../src/providers/assemblyai/assemblyai.provider';
+import { STT_PROVIDER } from '../../src/common/constants/tokens';
 import { of } from 'rxjs';
 import { HttpService } from '@nestjs/axios';
-import { ConfigService } from '@nestjs/config';
 import appConfig from '../../src/config/app.config';
 import sttConfig from '../../src/config/stt.config';
 
 describe('TranscriptionService', () => {
   it('rejects private host url', async () => {
+    const mockProvider = { submitAndWaitByUrl: jest.fn() };
+
     const moduleRef = await Test.createTestingModule({
       imports: [
         HttpModule,
@@ -18,11 +20,15 @@ describe('TranscriptionService', () => {
           load: [appConfig, sttConfig],
         }),
       ],
-      providers: [TranscriptionService, AssemblyAiProvider],
-    })
-      .overrideProvider(AssemblyAiProvider)
-      .useValue({ submitAndWaitByUrl: jest.fn() })
-      .compile();
+      providers: [
+        TranscriptionService,
+        AssemblyAiProvider,
+        {
+          provide: STT_PROVIDER,
+          useValue: mockProvider,
+        },
+      ],
+    }).compile();
 
     const svc = moduleRef.get(TranscriptionService);
     await expect(
@@ -32,6 +38,18 @@ describe('TranscriptionService', () => {
 
   it('returns response shape on success', async () => {
     process.env.ASSEMBLYAI_API_KEY = 'x';
+
+    const mockProvider = {
+      submitAndWaitByUrl: jest.fn().mockResolvedValue({
+        text: 'hello',
+        requestId: 'id1',
+        durationSec: 1,
+        language: 'en',
+        confidenceAvg: 0.9,
+        words: [{ start: 0, end: 100, text: 'hello' }],
+      }),
+    };
+
     const moduleRef = await Test.createTestingModule({
       imports: [
         HttpModule,
@@ -39,21 +57,17 @@ describe('TranscriptionService', () => {
           load: [appConfig, sttConfig],
         }),
       ],
-      providers: [TranscriptionService, AssemblyAiProvider],
+      providers: [
+        TranscriptionService,
+        AssemblyAiProvider,
+        {
+          provide: STT_PROVIDER,
+          useValue: mockProvider,
+        },
+      ],
     })
       .overrideProvider(HttpService)
       .useValue({ head: () => of({ headers: {} }) })
-      .overrideProvider(AssemblyAiProvider)
-      .useValue({
-        submitAndWaitByUrl: jest.fn().mockResolvedValue({
-          text: 'hello',
-          requestId: 'id1',
-          durationSec: 1,
-          language: 'en',
-          confidenceAvg: 0.9,
-          words: [{ start: 0, end: 100, text: 'hello' }],
-        }),
-      })
       .compile();
 
     const svc = moduleRef.get(TranscriptionService);

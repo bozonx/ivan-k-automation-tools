@@ -67,3 +67,35 @@
 - Улучшена тестируемость за счет использования DI для конфигурации
 - Добавлены подробные логи на всех этапах обработки транскрибации
 - Добавлены unit тесты для `LoggingInterceptor` (100% покрытие)
+
+## 0.7.0
+
+### Added
+
+- **Provider Pattern**: реализован паттерн Factory Provider для STT провайдеров
+  - Добавлен токен инжекции `STT_PROVIDER` в `common/constants/tokens.ts`
+  - `TranscriptionModule` теперь использует `useFactory` для создания провайдеров
+  - Упрощено добавление новых провайдеров в будущем
+- **Global Exception Filter**: добавлен централизованный обработчик исключений `AllExceptionsFilter`
+  - Унифицированный формат ошибок для всех эндпоинтов
+  - Автоматическое логирование ошибок с различными уровнями (warn для 4xx, error для 5xx)
+  - Поддержка Fastify-специфичных ответов
+- **Professional Health Checks**: интегрирован `@nestjs/terminus` для мониторинга
+  - Создан отдельный `HealthModule` с тремя эндпоинтами:
+    - `GET /health` - полная проверка здоровья с пингом AssemblyAI API
+    - `GET /health/ready` - проверка готовности к обработке запросов (readiness probe)
+    - `GET /health/live` - проверка работоспособности сервиса (liveness probe)
+  - Поддержка Kubernetes health probes
+
+### Changed
+
+- `TranscriptionService` использует инжекцию провайдера через токен `@Inject(STT_PROVIDER)` вместо прямой зависимости от `AssemblyAiProvider`
+- Удалён старый самописный `HealthController` из корня `src/`
+- `AppModule` теперь регистрирует `AllExceptionsFilter` глобально через `APP_FILTER`
+- `AppModule` использует новый `HealthModule` вместо старого контроллера
+
+### Improved
+
+- Улучшена архитектура: провайдеры теперь легко расширяемы и тестируемы
+- Стандартизирована обработка ошибок по всему приложению
+- Health checks теперь соответствуют best practices NestJS и Kubernetes
