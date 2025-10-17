@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Logger, HttpCode, HttpStatus } from '@nestjs/common';
+import { Body, Controller, Post, Logger, HttpCode, HttpStatus, UseGuards } from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
@@ -7,12 +7,16 @@ import {
   ApiUnauthorizedResponse,
   ApiGatewayTimeoutResponse,
   ApiServiceUnavailableResponse,
+  ApiBearerAuth,
 } from '@nestjs/swagger';
 import { TranscribeFileDto } from '@common/dto/transcribe-file.dto';
 import { TranscriptionResponseDto } from '@common/dto/transcription-response.dto';
+import { AuthGuard } from '@common/guards/auth.guard';
 import { TranscriptionService } from './transcription.service';
 
 @ApiTags('Transcriptions')
+@ApiBearerAuth()
+@UseGuards(AuthGuard)
 @Controller('transcriptions')
 export class TranscriptionController {
   private readonly logger = new Logger(TranscriptionController.name);
@@ -44,12 +48,33 @@ export class TranscriptionController {
     },
   })
   @ApiUnauthorizedResponse({
-    description: 'Missing or invalid API key',
+    description: 'Missing or invalid authorization token, or missing provider API key',
     schema: {
-      example: {
-        statusCode: 401,
-        message: 'Missing provider API key',
-        error: 'Unauthorized',
+      examples: {
+        missingAuthHeader: {
+          summary: 'Missing Authorization header',
+          value: {
+            statusCode: 401,
+            message: 'Missing Authorization header',
+            error: 'Unauthorized',
+          },
+        },
+        invalidAuthToken: {
+          summary: 'Invalid authorization token',
+          value: {
+            statusCode: 401,
+            message: 'Invalid authorization token',
+            error: 'Unauthorized',
+          },
+        },
+        missingProviderKey: {
+          summary: 'Missing provider API key',
+          value: {
+            statusCode: 401,
+            message: 'Missing provider API key',
+            error: 'Unauthorized',
+          },
+        },
       },
     },
   })
