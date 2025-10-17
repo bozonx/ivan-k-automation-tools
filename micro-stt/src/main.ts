@@ -28,7 +28,7 @@ async function bootstrap() {
       'Speech-to-Text microservice API for transcribing audio files. ' +
         'Supports multiple STT providers and provides asynchronous transcription with polling.',
     )
-    .setVersion('0.8.0')
+    .setVersion('0.8.1')
     .addTag('Transcriptions', 'Endpoints for transcribing audio files')
     .addTag('Health', 'Health check endpoints for monitoring and orchestration')
     .addServer(`http://${appConfig.host}:${appConfig.port}`, 'Local development server')
@@ -52,6 +52,9 @@ async function bootstrap() {
     },
   });
 
+  // Enable graceful shutdown
+  app.enableShutdownHooks();
+
   await app.listen(appConfig.port, appConfig.host);
 
   logger.log(
@@ -62,6 +65,17 @@ async function bootstrap() {
   );
   logger.log(`📊 Environment: ${appConfig.nodeEnv}`);
   logger.log(`📝 Log level: ${appConfig.logLevel}`);
+
+  // Handle shutdown signals for graceful shutdown
+  const signals: NodeJS.Signals[] = ['SIGTERM', 'SIGINT'];
+  signals.forEach(signal => {
+    process.on(signal, async () => {
+      logger.log(`Received ${signal}, closing server gracefully...`);
+      await app.close();
+      logger.log('Server closed successfully');
+      process.exit(0);
+    });
+  });
 }
 
 void bootstrap();

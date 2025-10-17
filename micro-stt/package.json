@@ -1,6 +1,6 @@
 {
   "name": "micro-stt",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "description": "Speech-to-Text microservice (scaffolded from micro-file-cache).",
   "main": "dist/main.js",
   "scripts": {
@@ -78,10 +78,13 @@
       "src/**/*.(t|j)s"
     ],
     "coverageDirectory": "coverage",
-    "globals": {
-      "ts-jest": {
-        "tsconfig": "tsconfig.spec.json"
-      }
+    "transform": {
+      "^.+\\.ts$": [
+        "ts-jest",
+        {
+          "tsconfig": "tsconfig.spec.json"
+        }
+      ]
     }
   },
   "keywords": [

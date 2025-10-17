@@ -12,7 +12,7 @@
 - Node.js: version 22
 - Package manager: `pnpm`
 - Microservices project directories names start with `micro-*`
-- Imports: prefer aliases
+- Imports: prefer path aliases
 - Tests:
   - Unit tests: `\<projectName\>/test/unit/`
   - E2E tests: `\<projectName\>/test/e2e/`
@@ -35,7 +35,7 @@
 ### Agent Expectations
 
 - Follow the above standards across all projects in the repository
-- Prefer targeted code edits over full rewrites
+- Prefer targeted code edits over full rewrites if you not asked to refactor
 - When adding or changing functionality:
   - Update tests and documentation in their respective directories
   - Record significant changes in the project's `CHANGELOG.md`

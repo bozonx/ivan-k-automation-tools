@@ -1,22 +1,47 @@
 import { registerAs } from '@nestjs/config';
+import { IsInt, IsString, IsIn, Min, Max, validateSync } from 'class-validator';
+import { plainToClass } from 'class-transformer';
 
-export interface AppConfig {
-  port: number;
-  host: string;
-  apiBasePath: string;
-  apiVersion: string;
-  nodeEnv: string;
-  logLevel: string;
+export class AppConfig {
+  @IsInt()
+  @Min(1)
+  @Max(65535)
+  public port!: number;
+
+  @IsString()
+  public host!: string;
+
+  @IsString()
+  public apiBasePath!: string;
+
+  @IsString()
+  public apiVersion!: string;
+
+  @IsIn(['development', 'production', 'test'])
+  public nodeEnv!: string;
+
+  @IsIn(['debug', 'log', 'warn', 'error'])
+  public logLevel!: string;
 }
 
-export default registerAs(
-  'app',
-  (): AppConfig => ({
+export default registerAs('app', (): AppConfig => {
+  const config = plainToClass(AppConfig, {
     port: parseInt(process.env.LISTEN_PORT ?? '3000', 10),
     host: process.env.LISTEN_HOST ?? 'localhost',
     apiBasePath: (process.env.API_BASE_PATH ?? 'api').replace(/^\/+|\/+$/g, ''),
     apiVersion: (process.env.API_VERSION ?? 'v1').replace(/^\/+|\/+$/g, ''),
     nodeEnv: process.env.NODE_ENV ?? 'development',
     logLevel: process.env.LOG_LEVEL ?? 'warn',
-  }),
-);
+  });
+
+  const errors = validateSync(config, {
+    skipMissingProperties: false,
+  });
+
+  if (errors.length > 0) {
+    const errorMessages = errors.map(err => Object.values(err.constraints ?? {}).join(', '));
+    throw new Error(`App config validation error: ${errorMessages.join('; ')}`);
+  }
+
+  return config;
+});
