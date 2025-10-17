@@ -23,5 +23,7 @@ export async function createTestApp(): Promise<NestFastifyApplication> {
   app.setGlobalPrefix(`${apiBasePath}/${apiVersion}`);
 
   await app.init();
+  // Ensure Fastify has completed plugin registration and routing before tests
+  await app.getHttpAdapter().getInstance().ready();
   return app;
 }

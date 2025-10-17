@@ -1,4 +1,5 @@
 import { INestApplication } from '@nestjs/common';
+import request from 'supertest';
 import { createTestApp } from './test-app.factory';
 
 describe('Health (e2e)', () => {
@@ -13,12 +14,11 @@ describe('Health (e2e)', () => {
   });
 
   it('GET /api/v1/heartbeat returns ok', async () => {
-    const fastify = (app as any).getHttpAdapter().getInstance();
-    const res = await fastify.inject({ method: 'GET', url: '/api/v1/heartbeat' });
-    expect(res.statusCode).toBe(200);
-    const body = res.json();
-    expect(body).toHaveProperty('status', 'ok');
-    expect(body).toHaveProperty('uptime');
-    expect(body).toHaveProperty('version');
+    const server = app.getHttpServer();
+    const res = await request(server).get('/api/v1/heartbeat');
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveProperty('status', 'ok');
+    expect(res.body).toHaveProperty('uptime');
+    expect(res.body).toHaveProperty('version');
   });
 });

@@ -19,12 +19,12 @@
     "strictBindCallApply": false,
     "forceConsistentCasingInFileNames": false,
     "noFallthroughCasesInSwitch": false,
-    "types": ["node", "jest"],
+    "types": ["node"],
     "paths": {
       "@/*": ["src/*"],
       "@/modules/*": ["src/modules/*"]
     }
   },
-  "include": ["src/**/*", "test/**/*"],
+  "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "coverage"]
 }
