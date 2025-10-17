@@ -1,6 +1,6 @@
 {
   "name": "micro-stt",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Speech-to-Text microservice (scaffolded from micro-file-cache).",
   "main": "dist/main.js",
   "scripts": {
@@ -14,7 +14,8 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
-    "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand"
+    "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
+    "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
     "@nestjs/axios": "^3.0.1",
@@ -58,11 +59,10 @@
     "rootDir": ".",
     "testMatch": [
       "<rootDir>/test/**/*.spec.ts",
-      "<rootDir>/test/**/*.e2e-spec.ts",
       "<rootDir>/src/**/*.spec.ts"
     ],
     "setupFilesAfterEnv": [
-      "<rootDir>/test/setup.ts"
+      "<rootDir>/test/setup/unit.setup.ts"
     ],
     "transform": {
       "^.+\\.(t|j)s$": [

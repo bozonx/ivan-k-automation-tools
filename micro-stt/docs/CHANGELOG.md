@@ -43,3 +43,4 @@
 - Глобальный префикс по умолчанию: `api/v1`
 - Роут транскрибации переведён на контроллерный префикс: `POST /{API_BASE_PATH}/{API_VERSION}/transcriptions/file`
 - Добавлены e2e тесты (Jest + Fastify inject): `test/e2e/health.e2e-spec.ts`
+- Разделён тестовый setup на unit и e2e: `test/setup/unit.setup.ts`, `test/setup/e2e.setup.ts`; обновлены конфиги Jest и добавлен скрипт `test:e2e`
