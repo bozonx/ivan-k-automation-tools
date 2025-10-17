@@ -42,3 +42,4 @@
 - Переменные окружения `API_BASE_PATH` и `API_VERSION` для формирования глобального префикса API
 - Глобальный префикс по умолчанию: `api/v1`
 - Роут транскрибации переведён на контроллерный префикс: `POST /{API_BASE_PATH}/{API_VERSION}/transcriptions/file`
+- Добавлены e2e тесты (Jest + Fastify inject): `test/e2e/health.e2e-spec.ts`

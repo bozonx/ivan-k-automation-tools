@@ -43,6 +43,17 @@ pnpm start:dev
 pnpm test
 ```
 
+### E2E тесты
+
+- Размещаются в `test/e2e/`.
+- Запуск вместе с unit-тестами:
+
+```bash
+pnpm test
+```
+
+- Пример: `test/e2e/health.e2e-spec.ts` использует Fastify `inject` и поднимает приложение в памяти через фабрику `test/e2e/test-app.factory.ts`, повторяя глобальные пайпы и префиксы из `src/main.ts`.
+
 ## Docker
 
 Сборка и запуск:
