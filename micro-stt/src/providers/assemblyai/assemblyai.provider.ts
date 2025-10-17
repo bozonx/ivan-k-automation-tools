@@ -51,7 +51,7 @@ export class AssemblyAiProvider implements SttProvider {
       if (Date.now() > deadline) {
         throw new GatewayTimeoutException('TRANSCRIPTION_TIMEOUT');
       }
-      await new Promise((r) => setTimeout(r, this.cfg.pollIntervalMs));
+      await new Promise(r => setTimeout(r, this.cfg.pollIntervalMs));
       const get$ = this.http.get<AssemblyTranscriptResponse>(
         `https://api.assemblyai.com/v2/transcripts/${id}`,
         {
@@ -69,8 +69,7 @@ export class AssemblyAiProvider implements SttProvider {
           durationSec: body.audio_duration,
           language: body.language_code,
           confidenceAvg: body.confidence,
-          words:
-            body.words?.map((w) => ({ start: w.start, end: w.end, text: w.text })) || undefined,
+          words: body.words?.map(w => ({ start: w.start, end: w.end, text: w.text })) || undefined,
         };
       }
       if (body.status === 'error') {

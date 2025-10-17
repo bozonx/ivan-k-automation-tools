@@ -14,7 +14,7 @@ export const loadSttConfig = (): SttConfig => {
     defaultProvider: process.env.STT_DEFAULT_PROVIDER || 'assemblyai',
     allowedProviders: (process.env.STT_ALLOWED_PROVIDERS || 'assemblyai')
       .split(',')
-      .map((s) => s.trim())
+      .map(s => s.trim())
       .filter(Boolean),
     maxFileMb: parseInt(process.env.STT_MAX_FILE_SIZE_MB || '100', 10),
     requestTimeoutSec: parseInt(process.env.STT_REQUEST_TIMEOUT_SEC || '15', 10),

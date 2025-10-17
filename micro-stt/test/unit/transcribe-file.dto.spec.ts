@@ -6,7 +6,7 @@ describe('TranscribeFileDto', () => {
   it('validates a correct payload', async () => {
     const obj = plainToInstance(TranscribeFileDto, { audioUrl: 'https://example.com/a.mp3' });
     const errs = await validate(obj);
-    expect(errs.length).toBe(0);
+    expect(errs).toHaveLength(0);
   });
 
   it('rejects non-http url', async () => {
