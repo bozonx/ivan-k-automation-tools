@@ -3,9 +3,10 @@ import {
   Injectable,
   ServiceUnavailableException,
   GatewayTimeoutException,
-  Logger,
+  Inject,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { PinoLogger } from 'nestjs-pino';
 import { lastValueFrom, timeout } from 'rxjs';
 import {
   SttProvider,
@@ -32,14 +33,15 @@ interface AssemblyTranscriptResponse {
 
 @Injectable()
 export class AssemblyAiProvider implements SttProvider {
-  private readonly logger = new Logger(AssemblyAiProvider.name);
   private readonly cfg: SttConfig;
 
   constructor(
     private readonly http: HttpService,
     private readonly configService: ConfigService,
+    @Inject(PinoLogger) private readonly logger: PinoLogger,
   ) {
     this.cfg = this.configService.get<SttConfig>('stt')!;
+    logger.setContext(AssemblyAiProvider.name);
   }
 
   public async submitAndWaitByUrl(params: TranscriptionRequestByUrl): Promise<TranscriptionResult> {
@@ -61,7 +63,7 @@ export class AssemblyAiProvider implements SttProvider {
     }
 
     const id = createRes.data.id;
-    this.logger.log(`Transcription request created with ID: ${id}`);
+    this.logger.info(`Transcription request created with ID: ${id}`);
 
     const startedAt = Date.now();
     const deadline = startedAt + this.cfg.maxSyncWaitMin * 60 * 1000;
@@ -99,7 +101,7 @@ export class AssemblyAiProvider implements SttProvider {
       this.logger.debug(`Transcription status: ${body.status} for ID: ${id}`);
 
       if (body.status === 'completed') {
-        this.logger.log(
+        this.logger.info(
           `Transcription completed for ID: ${id}. Text length: ${body.text?.length || 0} chars`,
         );
         return {

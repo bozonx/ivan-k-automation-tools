@@ -1,15 +1,22 @@
 import { ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { PinoLogger } from 'nestjs-pino';
 import { AuthGuard } from '@common/guards/auth.guard';
 import type { FastifyRequest } from 'fastify';
 
 describe('AuthGuard', () => {
   let guard: AuthGuard;
   let configService: ConfigService;
+  let mockLogger: PinoLogger;
 
   const mockTokens = ['valid-token-1', 'valid-token-2', 'valid-token-3'];
 
   beforeEach(() => {
+    mockLogger = {
+      setContext: jest.fn(),
+      warn: jest.fn(),
+    } as unknown as PinoLogger;
+
     configService = {
       get: jest.fn().mockImplementation((key: string) => {
         if (key === 'app.authEnabled') return true;
@@ -18,7 +25,7 @@ describe('AuthGuard', () => {
       }),
     } as unknown as ConfigService;
 
-    guard = new AuthGuard(configService);
+    guard = new AuthGuard(configService, mockLogger);
   });
 
   describe('constructor', () => {
@@ -31,7 +38,7 @@ describe('AuthGuard', () => {
         }),
       } as unknown as ConfigService;
 
-      expect(() => new AuthGuard(emptyConfigService)).toThrow(
+      expect(() => new AuthGuard(emptyConfigService, mockLogger)).toThrow(
         'AUTH_TOKENS configuration is missing or empty when AUTH_ENABLED is true',
       );
     });
@@ -45,7 +52,7 @@ describe('AuthGuard', () => {
         }),
       } as unknown as ConfigService;
 
-      expect(() => new AuthGuard(disabledAuthConfigService)).not.toThrow();
+      expect(() => new AuthGuard(disabledAuthConfigService, mockLogger)).not.toThrow();
     });
 
     it('should initialize with valid tokens when auth is enabled', () => {
@@ -136,7 +143,7 @@ describe('AuthGuard', () => {
         }),
       } as unknown as ConfigService;
 
-      guard = new AuthGuard(disabledAuthConfigService);
+      guard = new AuthGuard(disabledAuthConfigService, mockLogger);
     });
 
     const createMockContext = (authHeader?: string): ExecutionContext => {

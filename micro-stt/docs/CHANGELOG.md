@@ -1,5 +1,43 @@
 # Changelog
 
+## 0.12.0
+
+### Changed
+
+- **Миграция на Pino Logger**: заменён встроенный NestJS Logger на производительный Pino
+  - Установлены зависимости: `nestjs-pino@4.4.1`, `pino@9.13.1`, `pino-http@10.5.0`, `pino-pretty@13.1.2` (dev)
+  - Интегрирован `LoggerModule` из `nestjs-pino` с настройкой через `ConfigService`
+  - Структурированное JSON логирование в production для удобного парсинга (ELK, Grafana, CloudWatch)
+  - Красивый форматированный вывод в development режиме через `pino-pretty`
+  - Автоматическое логирование всех HTTP запросов с request ID и метаданными
+  - Custom serializers для безопасного логирования (удаление query params, redacting sensitive headers)
+  - Redaction чувствительной информации: `Authorization`, `x-api-key` заголовки
+  - Автоматический выбор уровня логов на основе HTTP status code
+  - Исключение health check эндпоинтов из логов в production для уменьшения шума
+  - Удалён устаревший `LoggingInterceptor` (заменён на встроенные возможности Pino)
+  - Все сервисы, контроллеры и провайдеры обновлены для использования `PinoLogger` через DI
+  - Переход с `Logger.log()` на `PinoLogger.info()` для соответствия стандартам Pino
+  - Добавлен `bufferLogs: true` в bootstrap для захвата ранних логов
+
+### Improved
+
+- Значительное улучшение производительности логирования (Pino — один из самых быстрых логгеров для Node.js)
+- Structured logging для production: все логи в JSON формате с timestamp, context, level
+- Лучшая интеграция с системами мониторинга и агрегации логов
+- Правильная работа с переменной окружения `LOG_LEVEL` (debug/log/warn/error)
+- Уменьшение нагрузки на I/O операции благодаря асинхронному логированию Pino
+- Developer Experience: читаемые и цветные логи в development с pino-pretty
+
+### Documentation
+
+- Добавлена документация по логированию: `docs/LOGGING.md`
+  - Описание архитектуры логирования с Pino
+  - Примеры структурированных логов в production
+  - Настройка уровней логирования
+  - Best practices для логирования в микросервисах
+  - Интеграция с системами мониторинга
+- Обновлён `CHANGELOG.md` с подробным описанием миграции на Pino
+
 ## 0.11.0
 
 ### Added

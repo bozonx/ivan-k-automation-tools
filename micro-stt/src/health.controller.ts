@@ -1,12 +1,16 @@
-import { Controller, Get, Logger } from '@nestjs/common';
+import { Controller, Get, Inject } from '@nestjs/common';
+import { PinoLogger } from 'nestjs-pino';
 import * as fs from 'fs';
 import * as path from 'path';
 
 @Controller()
 export class HealthController {
-  private readonly logger = new Logger(HealthController.name);
   private readonly serviceStartMs = Date.now();
   private readonly version: string = this.readVersion();
+
+  constructor(@Inject(PinoLogger) private readonly logger: PinoLogger) {
+    logger.setContext(HealthController.name);
+  }
 
   @Get('heartbeat')
   public heartbeat() {

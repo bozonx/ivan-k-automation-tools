@@ -3,18 +3,22 @@ import {
   CanActivate,
   ExecutionContext,
   UnauthorizedException,
-  Logger,
+  Inject,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { PinoLogger } from 'nestjs-pino';
 import type { FastifyRequest } from 'fastify';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
-  private readonly logger = new Logger(AuthGuard.name);
   private readonly authEnabled: boolean;
   private readonly authTokens: string[];
 
-  constructor(private readonly configService: ConfigService) {
+  constructor(
+    private readonly configService: ConfigService,
+    @Inject(PinoLogger) private readonly logger: PinoLogger,
+  ) {
+    logger.setContext(AuthGuard.name);
     this.authEnabled = this.configService.get<boolean>('app.authEnabled', false);
     this.authTokens = this.configService.get<string[]>('app.authTokens', []);
 

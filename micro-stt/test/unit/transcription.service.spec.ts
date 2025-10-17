@@ -1,6 +1,7 @@
 import { Test } from '@nestjs/testing';
 import { HttpModule } from '@nestjs/axios';
 import { ConfigModule } from '@nestjs/config';
+import { PinoLogger } from 'nestjs-pino';
 import { TranscriptionService } from '@modules/transcription/transcription.service';
 import { AssemblyAiProvider } from '@providers/assemblyai/assemblyai.provider';
 import { STT_PROVIDER } from '@common/constants/tokens';
@@ -8,6 +9,15 @@ import { of } from 'rxjs';
 import { HttpService } from '@nestjs/axios';
 import appConfig from '@config/app.config';
 import sttConfig from '@config/stt.config';
+
+// Mock для PinoLogger
+const mockPinoLogger = {
+  setContext: jest.fn(),
+  debug: jest.fn(),
+  info: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+};
 
 describe('TranscriptionService', () => {
   it('rejects private host url', async () => {
@@ -26,6 +36,10 @@ describe('TranscriptionService', () => {
         {
           provide: STT_PROVIDER,
           useValue: mockProvider,
+        },
+        {
+          provide: PinoLogger,
+          useValue: mockPinoLogger,
         },
       ],
     }).compile();
@@ -63,6 +77,10 @@ describe('TranscriptionService', () => {
         {
           provide: STT_PROVIDER,
           useValue: mockProvider,
+        },
+        {
+          provide: PinoLogger,
+          useValue: mockPinoLogger,
         },
       ],
     })

@@ -4,10 +4,10 @@ import {
   UnauthorizedException,
   GatewayTimeoutException,
   HttpException,
-  Logger,
   Inject,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { PinoLogger } from 'nestjs-pino';
 import { lastValueFrom, timeout } from 'rxjs';
 import { HttpService } from '@nestjs/axios';
 import type { SttProvider, TranscriptionResult } from '@common/interfaces/stt-provider.interface';
@@ -23,15 +23,16 @@ function isPrivateHost(url: URL): boolean {
 
 @Injectable()
 export class TranscriptionService {
-  private readonly logger = new Logger(TranscriptionService.name);
   private readonly cfg: SttConfig;
 
   constructor(
     private readonly http: HttpService,
     @Inject(STT_PROVIDER) private readonly provider: SttProvider,
     private readonly configService: ConfigService,
+    @Inject(PinoLogger) private readonly logger: PinoLogger,
   ) {
     this.cfg = this.configService.get<SttConfig>('stt')!;
+    logger.setContext(TranscriptionService.name);
   }
 
   private selectProvider(name?: string): SttProvider {
@@ -92,7 +93,7 @@ export class TranscriptionService {
     processingMs: number;
     timestampsEnabled: boolean;
   }> {
-    this.logger.log(`Starting transcription for URL: ${params.audioUrl}`);
+    this.logger.info(`Starting transcription for URL: ${params.audioUrl}`);
 
     let parsed: URL;
     try {
@@ -141,7 +142,7 @@ export class TranscriptionService {
     }
     const processingMs = Date.now() - start;
 
-    this.logger.log(
+    this.logger.info(
       `Transcription completed in ${processingMs}ms. Text length: ${result.text.length} chars`,
     );
 

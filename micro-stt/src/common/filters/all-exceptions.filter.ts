@@ -4,8 +4,9 @@ import {
   type ExceptionFilter,
   HttpException,
   HttpStatus,
-  Logger,
+  Inject,
 } from '@nestjs/common';
+import { PinoLogger } from 'nestjs-pino';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 
 /**
@@ -14,7 +15,9 @@ import type { FastifyReply, FastifyRequest } from 'fastify';
  */
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
-  private readonly logger = new Logger(AllExceptionsFilter.name);
+  constructor(@Inject(PinoLogger) private readonly logger: PinoLogger) {
+    logger.setContext(AllExceptionsFilter.name);
+  }
 
   public catch(exception: unknown, host: ArgumentsHost): void {
     const ctx = host.switchToHttp();
