@@ -12,10 +12,12 @@
 - Node.js: version 22
 - Package manager: `pnpm`
 - Microservices project directories names start with `micro-*`
-- Imports: use relative imports within projects
+- Imports: prefer aliases
 - Tests:
   - Unit tests: `\<projectName\>/test/unit/`
   - E2E tests: `\<projectName\>/test/e2e/`
+  - setup of unit tests: `\<projectName\>/test/setup/unit.setup.ts`
+  - setup of e2e tests: `\<projectName\>/test/setup/e2e.setup.ts`
 - Documentation:
   - Guides: `\<projectName\>/docs/`
   - Development stage docs: `\<projectName\>/dev_docs/`

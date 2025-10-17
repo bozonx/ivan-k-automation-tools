@@ -1,23 +1,16 @@
 {
-  "moduleFileExtensions": ["js", "json", "ts"],
-  "rootDir": ".",
+  "preset": "ts-jest",
   "testEnvironment": "node",
-  "testRegex": "e2e/.+\\.e2e-spec\\.ts$",
-  "transform": {
-    "^.+\\.(t|j)s$": [
-      "ts-jest",
-      {
-        "tsconfig": "<rootDir>/../tsconfig.spec.json",
-        "useESM": true
-      }
-    ]
-  },
+  "moduleFileExtensions": ["ts", "js", "json"],
+  "rootDir": ".",
+  "testRegex": ".*\\.e2e-spec\\.ts$",
   "setupFilesAfterEnv": ["<rootDir>/setup/e2e.setup.ts"],
-  "collectCoverageFrom": ["**/*.(t|j)s"],
+  "collectCoverageFrom": ["../src/**/*.(t|j)s"],
   "coverageDirectory": "../coverage",
   "testTimeout": 30000,
-  "moduleNameMapper": {
-    "^(\\.{1,2}/.*)\\.js$": "$1"
-  },
-  "extensionsToTreatAsEsm": [".ts"]
+  "globals": {
+    "ts-jest": {
+      "tsconfig": "<rootDir>/../tsconfig.spec.json"
+    }
+  }
 }
