@@ -10,11 +10,11 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { lastValueFrom, timeout } from 'rxjs';
 import { HttpService } from '@nestjs/axios';
-import {
-  type SttProvider,
-  type TranscriptionResult,
+import type {
+  SttProvider,
+  TranscriptionResult,
 } from '../../common/interfaces/stt-provider.interface';
-import { type SttConfig } from '../../config/stt.config';
+import type { SttConfig } from '../../config/stt.config';
 import { STT_PROVIDER } from '../../common/constants/tokens';
 
 function isPrivateHost(url: URL): boolean {

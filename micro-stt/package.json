@@ -1,6 +1,6 @@
 {
   "name": "micro-stt",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "Speech-to-Text microservice (scaffolded from micro-file-cache).",
   "main": "dist/main.js",
   "scripts": {
@@ -23,6 +23,7 @@
     "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.1.6",
     "@nestjs/platform-fastify": "^11.1.6",
+    "@nestjs/swagger": "^11.2.1",
     "@nestjs/terminus": "^11.0.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.2",
