@@ -1,6 +1,6 @@
 # micro-stt
 
-**Версия:** 0.10.0
+**Версия:** 0.10.1
 
 Микросервис распознавания речи (STT) на NestJS + Fastify. Поддерживает синхронную транскрибацию аудио по URL через провайдера AssemblyAI.
 
@@ -105,20 +105,39 @@ micro-stt/
 
 ## Тесты
 
+### Запуск всех тестов
+
+Запуск всех тестов (unit и e2e):
+
 ```bash
 pnpm test
 ```
+
+### Unit тесты
+
+Запуск только unit тестов:
+
+```bash
+pnpm test:unit
+```
+
+Unit тесты размещаются в `test/unit/`.
 
 ### E2E тесты
 
-- Размещаются в `test/e2e/`.
-- Запуск вместе с unit-тестами:
+Запуск только e2e тестов:
 
 ```bash
-pnpm test
+pnpm test:e2e
 ```
 
-- Пример: `test/e2e/health.e2e-spec.ts` использует Fastify `inject` и поднимает приложение в памяти через фабрику `test/e2e/test-app.factory.ts`, повторяя глобальные пайпы и префиксы из `src/main.ts`.
+E2E тесты размещаются в `test/e2e/`. Пример: `test/e2e/health.e2e-spec.ts` использует Fastify `inject` и поднимает приложение в памяти через фабрику `test/e2e/test-app.factory.ts`, повторяя глобальные пайпы и префиксы из `src/main.ts`.
+
+### Дополнительные команды
+
+- `pnpm test:watch` — запуск unit тестов в режиме watch
+- `pnpm test:cov` — запуск unit тестов с покрытием кода
+- `pnpm test:debug` — запуск тестов в режиме отладки
 
 ## Docker
 
@@ -137,7 +156,7 @@ docker compose up --build
 ```json
 {
   "name": "micro-stt",
-  "version": "0.10.0",
+  "version": "0.10.1",
   "status": "ok",
   "time": "2025-10-17T10:00:00Z",
   "links": {
