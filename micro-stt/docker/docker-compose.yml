@@ -3,7 +3,7 @@ services:
     image: bozonx/micro-stt:latest
     container_name: micro-stt
     ports:
-      - '80:80'
+      - '8080:80'
     environment:
       # Basic app settings
       - NODE_ENV=production

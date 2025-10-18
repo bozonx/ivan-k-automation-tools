@@ -3,7 +3,7 @@ node_modules/
 pnpm-lock.yaml
 
 # Build artifacts
-dist/
+# dist/ - needed for Docker image build
 *.tsbuildinfo
 coverage/
 
