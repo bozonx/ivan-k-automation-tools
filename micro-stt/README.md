@@ -464,14 +464,42 @@ Sensitive data is automatically redacted from logs:
 
 ### HTTP Security Headers (Helmet)
 
-The service uses **Helmet** (`@fastify/helmet`) to set secure HTTP headers automatically:
+The service uses **Helmet** (`@fastify/helmet` v13.0.2) to set secure HTTP headers automatically, following industry best practices for NestJS + Fastify applications.
 
-- **Content-Security-Policy (CSP):** Controls which resources can be loaded, protecting against XSS attacks
-- **X-Content-Type-Options:** Prevents MIME-sniffing attacks
-- **X-Frame-Options:** Protects against clickjacking attacks
-- **X-DNS-Prefetch-Control:** Controls DNS prefetching
-- **Strict-Transport-Security (HSTS):** Enforces HTTPS connections
-- **Referrer-Policy:** Controls referrer information sent to external sites
+#### Content Security Policy (CSP)
+
+Comprehensive CSP configuration protects against XSS, clickjacking, and code injection attacks:
+
+- **default-src:** `'self'` - Default policy for all resources
+- **base-uri:** `'self'` - Restricts `<base>` tag URLs
+- **font-src:** `'self'`, `https:`, `data:` - Controls font sources
+- **form-action:** `'self'` - Restricts form submission URLs
+- **frame-ancestors:** `'self'` - Prevents embedding in iframes (clickjacking protection)
+- **img-src:** `'self'`, `data:`, `validator.swagger.io` - Image sources (includes Swagger UI support)
+- **object-src:** `'none'` - Blocks plugins (Flash, Java, etc.)
+- **script-src:** `'self'`, `https:`, `'unsafe-inline'` - Script sources (configured for Swagger UI)
+- **script-src-attr:** `'none'` - Blocks inline event handlers
+- **style-src:** `'self'`, `https:`, `'unsafe-inline'` - Style sources (configured for Swagger UI)
+- **upgrade-insecure-requests:** Enabled in production - Automatically upgrades HTTP to HTTPS
+
+#### Strict Transport Security (HSTS)
+
+Forces secure HTTPS connections:
+
+- **max-age:** 31536000 seconds (1 year)
+- **includeSubDomains:** Enabled
+- **preload:** Enabled in production environments
+
+#### Additional Security Headers
+
+These headers are enabled by default:
+
+- **X-Content-Type-Options:** `nosniff` - Prevents MIME-sniffing attacks
+- **X-DNS-Prefetch-Control:** `off` - Controls DNS prefetching to prevent information leakage
+- **X-Download-Options:** `noopen` - Prevents opening downloads in browser context
+- **X-Frame-Options:** `SAMEORIGIN` - Legacy clickjacking protection
+- **X-Permitted-Cross-Domain-Policies:** `none` - Restricts cross-domain policies
+- **X-XSS-Protection:** `0` - Disabled as CSP provides superior protection
 
 These headers are automatically added to all responses, providing defense-in-depth security for the API and Swagger UI.
 

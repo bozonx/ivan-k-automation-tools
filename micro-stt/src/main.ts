@@ -28,19 +28,41 @@ async function bootstrap() {
 
   // Register Helmet for security headers
   // Using getInstance() to get Fastify instance directly
+  // Type assertion required due to Fastify version mismatch between @nestjs/platform-fastify and @fastify/helmet
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   await app
     .getHttpAdapter()
     .getInstance()
     .register(helmet as any, {
+      // Content Security Policy configuration
       contentSecurityPolicy: {
         directives: {
           defaultSrc: [`'self'`],
-          styleSrc: [`'self'`, `'unsafe-inline'`], // Required for Swagger UI
+          baseUri: [`'self'`],
+          fontSrc: [`'self'`, 'https:', 'data:'],
+          formAction: [`'self'`],
+          frameAncestors: [`'self'`],
           imgSrc: [`'self'`, 'data:', 'validator.swagger.io'], // Required for Swagger UI
-          scriptSrc: [`'self'`, `https: 'unsafe-inline'`], // Required for Swagger UI
+          objectSrc: [`'none'`],
+          scriptSrc: [`'self'`, 'https:', `'unsafe-inline'`], // Required for Swagger UI
+          scriptSrcAttr: [`'none'`],
+          styleSrc: [`'self'`, 'https:', `'unsafe-inline'`], // Required for Swagger UI
+          ...(appConfig.nodeEnv === 'production' && { upgradeInsecureRequests: [] }),
         },
       },
+      // Strict-Transport-Security (HSTS)
+      hsts: {
+        maxAge: 31536000, // 1 year
+        includeSubDomains: true,
+        preload: appConfig.nodeEnv === 'production',
+      },
+      // Additional security headers are enabled by default:
+      // - X-Content-Type-Options: nosniff
+      // - X-DNS-Prefetch-Control: off
+      // - X-Download-Options: noopen
+      // - X-Frame-Options: SAMEORIGIN
+      // - X-Permitted-Cross-Domain-Policies: none
+      // - X-XSS-Protection: 0 (disabled as CSP is more effective)
     });
 
   // Configure global API prefix from configuration

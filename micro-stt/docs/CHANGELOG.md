@@ -1,5 +1,42 @@
 # Changelog
 
+## 0.13.1 (2025-10-18)
+
+### Fixed
+
+- **Исправлена ошибка CSP при загрузке Swagger UI**: изменён способ условного добавления директивы `upgradeInsecureRequests`
+  - Директива теперь добавляется через spread оператор только для production окружения
+  - Исправлена ошибка: "Content-Security-Policy received an invalid directive value for upgrade-insecure-requests"
+  - Использован правильный подход: `...(condition && { directive: value })` вместо тернарного оператора с `undefined`
+
+### Improved
+
+- **Усиленная конфигурация Helmet (следуя лучшим практикам NestJS + Fastify)**
+  - Исправлена синтаксическая ошибка в CSP директиве `scriptSrc`: `'https: 'unsafe-inline''` → `'https:', 'unsafe-inline'`
+  - Добавлены критичные CSP директивы для комплексной защиты:
+    - `baseUri: 'self'` - защита от подмены базового URI
+    - `fontSrc: 'self', https:, data:` - контроль загрузки шрифтов
+    - `formAction: 'self'` - ограничение URL для отправки форм
+    - `frameAncestors: 'self'` - современная защита от clickjacking (заменяет X-Frame-Options)
+    - `objectSrc: 'none'` - блокировка опасных плагинов (Flash, Java)
+    - `scriptSrcAttr: 'none'` - блокировка inline event handlers
+    - `upgradeInsecureRequests` - автоматический апгрейд HTTP → HTTPS (только в production)
+  - Добавлена явная конфигурация HSTS (Strict-Transport-Security):
+    - `maxAge: 31536000` (1 год)
+    - `includeSubDomains: true`
+    - `preload: true` (только в production)
+  - Улучшены комментарии в коде с объяснением каждой группы настроек
+  - Добавлено условие для production окружения в критичных настройках безопасности
+
+### Documentation
+
+- Расширен раздел **HTTP Security Headers (Helmet)** в README.md
+  - Детальное описание всех CSP директив
+  - Документация HSTS настроек
+  - Полный список дополнительных заголовков безопасности с описаниями
+- Создан детальный документ анализа: `dev_docs/HELMET_ANALYSIS.md`
+- Обновлен CHANGELOG.md с информацией об улучшениях и исправлениях
+
 ## 0.13.0 (2025-10-18)
 
 ### Added
