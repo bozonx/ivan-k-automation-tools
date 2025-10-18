@@ -168,37 +168,99 @@ beforeAll(async () => {
 
 ### docker-compose.yml
 
+Docker конфигурация находится в директории `docker/`. Файл `docker-compose.yml` использует готовый образ `bozonx/micro-stt:latest`.
+
+**Вариант 1: Прямое указание значений в docker-compose.yml**
+
+```yaml
+services:
+  micro-stt:
+    image: bozonx/micro-stt:latest
+    ports:
+      - '8080:80'
+    environment:
+      - NODE_ENV=production
+      - LISTEN_HOST=0.0.0.0
+      - LISTEN_PORT=80
+      - TZ=UTC
+      - AUTH_ENABLED=true
+      - AUTH_TOKENS=your-token-1,your-token-2
+      - ASSEMBLYAI_API_KEY=your-api-key-here
+      - LOG_LEVEL=warn
+```
+
+**Вариант 2: Использование .env файла**
+
+Создайте файл `.env` в директории `docker/`:
+
+```bash
+# docker/.env
+AUTH_TOKENS=your-token-here
+ASSEMBLYAI_API_KEY=your-api-key-here
+LOG_LEVEL=warn
+```
+
+Обновите `docker-compose.yml`:
+
 ```yaml
 services:
   micro-stt:
     environment:
-      - NODE_ENV=production
-      - LISTEN_HOST=0.0.0.0
-      - TZ=UTC
-      - AUTH_ENABLED=true
       - AUTH_TOKENS=${AUTH_TOKENS}
       - ASSEMBLYAI_API_KEY=${ASSEMBLYAI_API_KEY}
+      - LOG_LEVEL=${LOG_LEVEL:-warn}
 ```
 
-### .env файл для docker-compose
-
-Создайте `.env` в директории с `docker-compose.yml`:
+### Запуск через docker-compose
 
 ```bash
-AUTH_TOKENS=your-token-here
-ASSEMBLYAI_API_KEY=your-api-key-here
+# Перейдите в директорию docker
+cd docker
+
+# Запустите сервис
+docker compose up -d
+
+# Просмотр логов
+docker compose logs -f
+
+# Остановка сервиса
+docker compose down
 ```
 
-### Dockerfile
+### Docker Run напрямую
 
 Переменные окружения устанавливаются при запуске контейнера:
 
 ```bash
-docker run -e NODE_ENV=production \
+docker run -d \
+  -p 8080:80 \
+  -e NODE_ENV=production \
   -e TZ=UTC \
   -e AUTH_ENABLED=true \
   -e AUTH_TOKENS=token1,token2 \
-  micro-stt
+  -e ASSEMBLYAI_API_KEY=your-key-here \
+  --name micro-stt \
+  bozonx/micro-stt:latest
+```
+
+### Сборка собственного образа
+
+Если нужно собрать кастомный образ:
+
+```bash
+# 1. Соберите приложение (из корня micro-stt/)
+pnpm install
+pnpm build
+
+# 2. Соберите Docker образ
+cd docker
+docker build -t micro-stt:custom -f Dockerfile ..
+
+# 3. Запустите
+docker run -d -p 8080:80 \
+  -e AUTH_TOKENS=your-tokens \
+  -e ASSEMBLYAI_API_KEY=your-key \
+  micro-stt:custom
 ```
 
 ## Валидация

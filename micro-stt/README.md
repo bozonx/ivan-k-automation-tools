@@ -1,6 +1,6 @@
 # micro-stt
 
-**Version:** 0.13.0
+**Version:** 0.13.2
 
 High-performance Speech-to-Text (STT) microservice built with NestJS + Fastify. Provides synchronous audio transcription via URL using AssemblyAI provider.
 
@@ -27,11 +27,12 @@ git clone <repository-url>
 cd micro-stt
 
 # 2. Configure environment
-cp env.production.example .env.production
-# Edit .env.production with your settings
+# Edit docker/docker-compose.yml with your API keys and tokens
+# Or create .env file in docker/ directory (see Docker Deployment section)
 
 # 3. Run with Docker Compose
-docker compose up --build
+cd docker
+docker compose up -d
 ```
 
 ### Manual Installation
@@ -348,47 +349,118 @@ All errors follow a consistent format:
 
 ## Docker Deployment
 
-### Using Docker Compose (Recommended)
+### Using Pre-built Image (Recommended)
 
-1. **Create environment file:**
+The service is available as a pre-built Docker image: `bozonx/micro-stt:latest`
+
+1. **Navigate to docker directory:**
 
    ```bash
-   cp env.production.example .env.production
+   cd docker
    ```
 
-2. **Configure your settings in `.env.production`:**
-   - Set `AUTH_TOKENS` if using authentication
-   - Set `ASSEMBLYAI_API_KEY`
-   - Adjust other settings as needed
+2. **Configure environment (Option A - Direct edit):**
 
-3. **Build and run:**
+   Edit `docker-compose.yml` and set your values:
+   - `AUTH_TOKENS` - Your authentication tokens
+   - `ASSEMBLYAI_API_KEY` - Your AssemblyAI API key
+
+3. **Configure environment (Option B - Using .env file):**
+
+   Create `.env` file in `docker/` directory:
+
    ```bash
-   docker compose up --build
+   AUTH_TOKENS=your-token-1,your-token-2
+   ASSEMBLYAI_API_KEY=your-api-key-here
+   LOG_LEVEL=warn
    ```
 
-The service will be available on the configured `LISTEN_HOST` and `LISTEN_PORT`.
+   Then update `docker-compose.yml` to use environment variables:
 
-### Using Docker Directly
+   ```yaml
+   environment:
+     - AUTH_TOKENS=${AUTH_TOKENS}
+     - ASSEMBLYAI_API_KEY=${ASSEMBLYAI_API_KEY}
+     - LOG_LEVEL=${LOG_LEVEL:-warn}
+   ```
+
+4. **Run the service:**
+   ```bash
+   docker compose up -d
+   ```
+
+The service will be available at `http://localhost:8080/api/v1`
+
+**Useful commands:**
 
 ```bash
-# Build the image
-docker build -t micro-stt .
+# View logs
+docker compose logs -f
 
-# Run the container
+# Stop service
+docker compose down
+
+# Restart service
+docker compose restart
+
+# Pull latest image
+docker compose pull
+```
+
+### Building Custom Image
+
+If you need to build a custom image:
+
+1. **Build the application:**
+
+   ```bash
+   # From micro-stt root directory
+   pnpm install
+   pnpm build
+   ```
+
+2. **Build Docker image:**
+
+   ```bash
+   cd docker
+   docker build -t micro-stt:custom -f Dockerfile ..
+   ```
+
+3. **Update docker-compose.yml:**
+   ```yaml
+   services:
+     micro-stt:
+       # image: bozonx/micro-stt:latest  # Comment this
+       build:
+         context: ..
+         dockerfile: docker/Dockerfile
+       # ... rest of config
+   ```
+
+### Using Docker Run Directly
+
+```bash
+# Pull and run the image
 docker run -d \
-  -p 3000:80 \
+  -p 8080:80 \
   -e NODE_ENV=production \
   -e TZ=UTC \
   -e AUTH_ENABLED=true \
   -e AUTH_TOKENS=your-token-here \
   -e ASSEMBLYAI_API_KEY=your-api-key-here \
   --name micro-stt \
-  micro-stt
+  bozonx/micro-stt:latest
 ```
 
 ### Health Check Configuration
 
-For Kubernetes deployments:
+**Docker Compose:** Health checks are pre-configured in `docker/docker-compose.yml`:
+
+- Checks `/api/v1/health` endpoint every 30 seconds
+- Allows 40 seconds for initial startup
+- Automatically restarts unhealthy containers
+
+**Kubernetes deployments:**
 
 ```yaml
 livenessProbe:
@@ -589,6 +661,7 @@ docker logs micro-stt
 
 ## Documentation
 
+- [Docker Deployment](docs/DOCKER.md) - Complete Docker deployment guide with troubleshooting
 - [Authentication Guide](docs/AUTH.md) - Detailed Bearer token authentication documentation
 - [Environment Setup](docs/ENV_SETUP.md) - Complete environment configuration guide
 - [Logging](docs/LOGGING.md) - Logging architecture and best practices
@@ -606,6 +679,6 @@ MIT
 
 ---
 
-**Version:** 0.13.0  
+**Version:** 0.13.2  
 **Built with:** NestJS + Fastify  
 **STT Provider:** AssemblyAI
