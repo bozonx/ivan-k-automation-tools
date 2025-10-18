@@ -1,5 +1,37 @@
 # Changelog
 
+## 0.13.0 (2025-10-18)
+
+### Added
+
+- **Helmet для HTTP заголовков безопасности**: интегрирован `@fastify/helmet` для защиты от веб-уязвимостей
+  - Установлен пакет `@fastify/helmet@13.0.2`
+  - Настроена Content-Security-Policy (CSP) с поддержкой Swagger UI
+    - `defaultSrc: 'self'` - ограничение загрузки ресурсов
+    - `styleSrc: 'self', 'unsafe-inline'` - стили для Swagger UI
+    - `imgSrc: 'self', data:, validator.swagger.io` - изображения для Swagger UI
+    - `scriptSrc: 'self', https: 'unsafe-inline'` - скрипты для Swagger UI
+  - Автоматические заголовки безопасности:
+    - `X-Content-Type-Options: nosniff` - защита от MIME-sniffing
+    - `X-Frame-Options` - защита от clickjacking
+    - `X-DNS-Prefetch-Control` - контроль DNS prefetching
+    - `Strict-Transport-Security` (HSTS) - принудительное использование HTTPS
+    - `Referrer-Policy` - контроль Referer заголовка
+  - Helmet зарегистрирован в `main.ts` через `app.getHttpAdapter().getInstance().register()`
+  - Добавлен комментарий с обходом типизационной ошибки из-за несовместимости версий Fastify
+
+### Improved
+
+- Значительное улучшение безопасности микросервиса за счёт HTTP заголовков
+- Защита Swagger UI документации от XSS и clickjacking атак
+- Соответствие современным best practices безопасности веб-приложений
+- Все тесты (unit и e2e) прошли успешно с новой конфигурацией Helmet
+
+### Documentation
+
+- Обновлён README.md с информацией о Helmet в разделе Security Features
+- Обновлён CHANGELOG.md с детальным описанием внедрения Helmet
+
 ## 0.12.3 (2025-10-18)
 
 ### Documentation

@@ -1,6 +1,6 @@
 # micro-stt
 
-**Version:** 0.12.2
+**Version:** 0.13.0
 
 High-performance Speech-to-Text (STT) microservice built with NestJS + Fastify. Provides synchronous audio transcription via URL using AssemblyAI provider.
 
@@ -15,7 +15,7 @@ High-performance Speech-to-Text (STT) microservice built with NestJS + Fastify. 
 - 📊 **Structured logging** - Production-ready JSON logging with Pino
 - ⚡ **High performance** - Powered by Fastify
 - 🐳 **Docker support** - Production-ready containerization
-- 🔒 **SSRF protection** - Built-in security against Server-Side Request Forgery
+- 🔒 **Security hardened** - Helmet for HTTP security headers, SSRF protection
 
 ## Quick Start
 
@@ -462,6 +462,19 @@ Sensitive data is automatically redacted from logs:
 
 ## Security Considerations
 
+### HTTP Security Headers (Helmet)
+
+The service uses **Helmet** (`@fastify/helmet`) to set secure HTTP headers automatically:
+
+- **Content-Security-Policy (CSP):** Controls which resources can be loaded, protecting against XSS attacks
+- **X-Content-Type-Options:** Prevents MIME-sniffing attacks
+- **X-Frame-Options:** Protects against clickjacking attacks
+- **X-DNS-Prefetch-Control:** Controls DNS prefetching
+- **Strict-Transport-Security (HSTS):** Enforces HTTPS connections
+- **Referrer-Policy:** Controls referrer information sent to external sites
+
+These headers are automatically added to all responses, providing defense-in-depth security for the API and Swagger UI.
+
 ### SSRF Protection
 
 The service includes built-in protection against Server-Side Request Forgery:
@@ -565,6 +578,6 @@ MIT
 
 ---
 
-**Version:** 0.12.2  
+**Version:** 0.13.0  
 **Built with:** NestJS + Fastify  
 **STT Provider:** AssemblyAI

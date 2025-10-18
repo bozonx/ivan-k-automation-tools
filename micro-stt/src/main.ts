@@ -4,6 +4,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { Logger } from 'nestjs-pino';
+import helmet from '@fastify/helmet';
 import { AppModule } from '@/app.module';
 import type { AppConfig } from '@config/app.config';
 
@@ -25,6 +26,23 @@ async function bootstrap() {
     new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }),
   );
 
+  // Register Helmet for security headers
+  // Using getInstance() to get Fastify instance directly
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await app
+    .getHttpAdapter()
+    .getInstance()
+    .register(helmet as any, {
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: [`'self'`],
+          styleSrc: [`'self'`, `'unsafe-inline'`], // Required for Swagger UI
+          imgSrc: [`'self'`, 'data:', 'validator.swagger.io'], // Required for Swagger UI
+          scriptSrc: [`'self'`, `https: 'unsafe-inline'`], // Required for Swagger UI
+        },
+      },
+    });
+
   // Configure global API prefix from configuration
   const globalPrefix = `${appConfig.apiBasePath}/${appConfig.apiVersion}`;
   app.setGlobalPrefix(globalPrefix);
@@ -36,7 +54,7 @@ async function bootstrap() {
       'Speech-to-Text microservice API for transcribing audio files. ' +
         'Supports multiple STT providers and provides asynchronous transcription with polling.',
     )
-    .setVersion('0.12.2')
+    .setVersion('0.13.0')
     .addTag('Transcriptions', 'Endpoints for transcribing audio files')
     .addTag('Health', 'Health check endpoints for monitoring and orchestration')
     .addBearerAuth(

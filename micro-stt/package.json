@@ -1,6 +1,6 @@
 {
   "name": "micro-stt",
-  "version": "0.12.2",
+  "version": "0.13.0",
   "description": "Speech-to-Text microservice (scaffolded from micro-file-cache).",
   "main": "dist/main.js",
   "scripts": {
@@ -21,6 +21,7 @@
     "test:e2e": "jest --selectProjects e2e"
   },
   "dependencies": {
+    "@fastify/helmet": "^13.0.2",
     "@fastify/static": "^8.2.0",
     "@nestjs/axios": "^4.0.1",
     "@nestjs/common": "^11.1.6",
