@@ -44,9 +44,9 @@ LoggerModule.forRootAsync({
 | Уровень | Описание                        | Использование                |
 | ------- | ------------------------------- | ---------------------------- |
 | `debug` | Детальная отладочная информация | Development, troubleshooting |
-| `info`  | Информационные сообщения        | Production (по умолчанию)    |
-| `warn`  | Предупреждения                  | Production                   |
-| `error` | Ошибки                          | Production                   |
+| `log`   | Общие логи                      | Development                  |
+| `warn`  | Предупреждения                  | Production (рекомендуется)   |
+| `error` | Ошибки                          | Production (минимальный)     |
 
 ### Настройка уровня логов
 
@@ -66,12 +66,12 @@ LOG_LEVEL=warn
 
 ### Development режим
 
-В development используется `pino-pretty` для читаемого вывода с полной датой и временем (UTC):
+В development используется `pino-pretty` для читаемого вывода с полной датой и временем в UTC формате (ISO 8601):
 
 ```
-[2025-10-17T14:30:45.123Z] INFO (TranscriptionController): POST /api/v1/transcriptions/file Transcription request received for URL: https://example.com/audio.mp3
-[2025-10-17T14:30:47.456Z] INFO (AssemblyAiProvider): Transcription request created with ID: abc123
-[2025-10-17T14:30:50.789Z] INFO (TranscriptionController): Transcription request completed. Provider: assemblyai, Processing time: 5666ms
+[2025-10-17T14:30:45.123Z] INFO [TranscriptionController]: Transcription request received for URL: https://example.com/audio.mp3
+[2025-10-17T14:30:47.456Z] INFO [AssemblyAiProvider]: Transcription request created with ID: abc123
+[2025-10-17T14:30:50.789Z] INFO [TranscriptionController]: Transcription request completed. Provider: assemblyai, Processing time: 5666ms
 ```
 
 ### Production режим
@@ -82,6 +82,8 @@ LOG_LEVEL=warn
 {
   "level": 30,
   "@timestamp": "2025-10-17T14:30:45.123Z",
+  "service": "micro-stt",
+  "environment": "production",
   "pid": 12345,
   "hostname": "app-server-01",
   "req": {
@@ -180,7 +182,9 @@ this.logger.info({
 ```json
 {
   "level": 30,
-  "time": 1697556645123,
+  "@timestamp": "2025-10-17T14:30:45.123Z",
+  "service": "micro-stt",
+  "environment": "production",
   "msg": "Transcription completed",
   "transcriptionId": "abc123",
   "processingTime": 5666,

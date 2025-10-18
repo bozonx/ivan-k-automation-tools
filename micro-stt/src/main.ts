@@ -36,7 +36,7 @@ async function bootstrap() {
       'Speech-to-Text microservice API for transcribing audio files. ' +
         'Supports multiple STT providers and provides asynchronous transcription with polling.',
     )
-    .setVersion('0.12.0')
+    .setVersion('0.12.2')
     .addTag('Transcriptions', 'Endpoints for transcribing audio files')
     .addTag('Health', 'Health check endpoints for monitoring and orchestration')
     .addBearerAuth(

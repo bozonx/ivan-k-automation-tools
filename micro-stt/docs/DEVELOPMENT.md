@@ -206,13 +206,24 @@ pnpm test:unit -- auth.guard.spec.ts
 ```typescript
 import { Test, TestingModule } from '@nestjs/testing';
 import { MyService } from './my.service';
+import { createMockLogger, createMockConfigService } from '@test/helpers/mocks';
 
 describe('MyService', () => {
   let service: MyService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [MyService],
+      providers: [
+        MyService,
+        {
+          provide: PinoLogger,
+          useValue: createMockLogger(),
+        },
+        {
+          provide: ConfigService,
+          useValue: createMockConfigService(),
+        },
+      ],
     }).compile();
 
     service = module.get<MyService>(MyService);
@@ -283,13 +294,26 @@ pnpm test:cov
 # Coverage report will be in coverage/lcov-report/index.html
 ```
 
+**Current coverage metrics:**
+
+- Statements: ~87%
+- Branches: ~76%
+- Functions: ~92%
+- Lines: ~87%
+
 ### Debug Tests
 
 ```bash
-# Run tests in debug mode
+# Run all tests in debug mode with open handles detection
 pnpm test:debug
 
-# Then attach your debugger to the Node process
+# Run only unit tests in debug mode
+pnpm test:unit:debug
+
+# Run only e2e tests in debug mode
+pnpm test:e2e:debug
+
+# Then attach your debugger to the Node process (usually port 9229)
 ```
 
 ## Building

@@ -20,9 +20,9 @@ export class IndexController {
     schema: {
       example: {
         name: 'micro-stt',
-        version: '0.10.0',
+        version: '0.12.2',
         status: 'ok',
-        time: '2025-10-17T10:00:00.000Z',
+        time: '2025-10-18T10:00:00.000Z',
         links: {
           self: '/api/v1',
           docs: '/api/docs',

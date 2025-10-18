@@ -1,6 +1,6 @@
 # micro-stt
 
-**Version:** 0.11.0
+**Version:** 0.12.2
 
 High-performance Speech-to-Text (STT) microservice built with NestJS + Fastify. Provides synchronous audio transcription via URL using AssemblyAI provider.
 
@@ -56,7 +56,7 @@ pnpm build
 NODE_ENV=production pnpm start:prod
 ```
 
-The service will be available at `http://localhost:3000` (configurable via environment variables).
+The service will be available at `http://0.0.0.0:80` by default (configurable via `LISTEN_HOST` and `LISTEN_PORT` environment variables). For local development, use `LISTEN_HOST=localhost` and `LISTEN_PORT=3000` in your `.env.development` file.
 
 ## Configuration
 
@@ -70,13 +70,13 @@ The service uses environment-specific configuration files:
 
 #### Application Settings
 
-| Variable        | Description      | Default       | Production Example |
-| --------------- | ---------------- | ------------- | ------------------ |
-| `NODE_ENV`      | Environment mode | `development` | `production`       |
-| `LISTEN_HOST`   | Server host      | `localhost`   | `0.0.0.0`          |
-| `LISTEN_PORT`   | Server port      | `3000`        | `80`               |
-| `API_BASE_PATH` | Base API path    | `api`         | `api`              |
-| `API_VERSION`   | API version      | `v1`          | `v1`               |
+| Variable        | Description      | Default      | Development Example | Production Example |
+| --------------- | ---------------- | ------------ | ------------------- | ------------------ |
+| `NODE_ENV`      | Environment mode | `production` | `development`       | `production`       |
+| `LISTEN_HOST`   | Server host      | `0.0.0.0`    | `localhost`         | `0.0.0.0`          |
+| `LISTEN_PORT`   | Server port      | `80`         | `3000`              | `80`               |
+| `API_BASE_PATH` | Base API path    | `api`        | `api`               | `api`              |
+| `API_VERSION`   | API version      | `v1`         | `v1`                | `v1`               |
 
 #### Authentication
 
@@ -107,10 +107,10 @@ The service uses environment-specific configuration files:
 
 #### Logging
 
-| Variable    | Description      | Values                           | Production |
-| ----------- | ---------------- | -------------------------------- | ---------- |
-| `LOG_LEVEL` | Logging level    | `debug`, `info`, `warn`, `error` | `warn`     |
-| `TZ`        | Process timezone | Any valid TZ                     | `UTC`      |
+| Variable    | Description      | Values                          | Production |
+| ----------- | ---------------- | ------------------------------- | ---------- |
+| `LOG_LEVEL` | Logging level    | `debug`, `log`, `warn`, `error` | `warn`     |
+| `TZ`        | Process timezone | Any valid TZ                    | `UTC`      |
 
 📖 **Detailed documentation:** See [docs/ENV_SETUP.md](docs/ENV_SETUP.md)
 
@@ -121,6 +121,8 @@ Interactive Swagger documentation is available after starting the service:
 ```
 http://localhost:3000/api/docs
 ```
+
+> **Note:** Examples in this documentation use `localhost:3000` which is typical for development. In production, use your configured `LISTEN_HOST` and `LISTEN_PORT` (default: `0.0.0.0:80`).
 
 The Swagger UI provides:
 
@@ -147,7 +149,7 @@ Returns API information and available endpoints.
 ```json
 {
   "name": "micro-stt",
-  "version": "0.11.0",
+  "version": "0.12.2",
   "status": "ok",
   "time": "2025-10-18T10:00:00Z",
   "links": {
@@ -434,6 +436,8 @@ The service uses **Pino** for high-performance structured logging.
 {
   "level": 30,
   "@timestamp": "2025-10-18T14:30:45.123Z",
+  "service": "micro-stt",
+  "environment": "production",
   "req": {
     "method": "POST",
     "url": "/api/v1/transcriptions/file"
@@ -561,6 +565,6 @@ MIT
 
 ---
 
-**Version:** 0.11.0  
+**Version:** 0.12.2  
 **Built with:** NestJS + Fastify  
 **STT Provider:** AssemblyAI

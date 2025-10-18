@@ -1,6 +1,24 @@
 # Changelog
 
-## 0.12.3 (Unreleased)
+## 0.12.3 (2025-10-18)
+
+### Documentation
+
+- **Актуализирована вся документация проекта** для соответствия текущему состоянию кода
+  - Обновлена версия проекта во всех файлах документации (0.11.0 → 0.12.2)
+  - Исправлены default значения переменных окружения в `README.md` и `docs/ENV_SETUP.md`
+    - `NODE_ENV`: default изменен на `production` (вместо `development`)
+    - `LISTEN_HOST`: default изменен на `0.0.0.0` (вместо `localhost`)
+    - `LISTEN_PORT`: default изменен на `80` (вместо `3000`)
+  - Обновлена документация по уровням логирования: `debug`, `log`, `warn`, `error` (вместо `info`)
+  - Добавлены поля `service` и `environment` в примеры JSON логов для соответствия реальному выводу Pino
+  - Обновлены примеры логов в `docs/LOGGING.md` с правильным форматом timestamp и структурой
+  - Улучшены примеры unit тестов в `docs/DEVELOPMENT.md` с использованием shared mock helpers
+  - Добавлена информация о новых debug скриптах: `test:unit:debug`, `test:e2e:debug`
+  - Добавлены актуальные метрики покрытия тестами (~87% statements, ~76% branches, ~92% functions)
+  - Обновлена версия в Swagger документации (`src/main.ts`: 0.12.0 → 0.12.2)
+
+## 0.12.2
 
 ### Improved
 
