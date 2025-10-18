@@ -1,6 +1,6 @@
 services:
   micro-stt:
-    build: .
+    image: bozonx/micro-stt:latest
     container_name: micro-stt
     ports:
       - '80:80'
@@ -9,4 +9,9 @@ services:
       - LISTEN_HOST=0.0.0.0
       - LISTEN_PORT=80
       - TZ=UTC
+      - LOG_LEVEL=warn
+      - AUTH_ENABLED=true
+      - ALLOW_CUSTOM_API_KEY=true
+      - AUTH_TOKENS=your-production-token-here
+      - ASSEMBLYAI_API_KEY=your-assemblyai-api-key-here
     restart: unless-stopped
