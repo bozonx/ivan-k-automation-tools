@@ -20,6 +20,29 @@
   - Общая оценка конфигурации: 4.5/5 (высокий профессиональный уровень)
   - Покрытие кода: 87.22% (statements), 76.66% (branches), 92.3% (functions)
 
+### Documentation
+
+- **Полная переработка документации** для соответствия лучшим практикам
+  - `README.md` полностью переписан на английский для пользователей
+    - Улучшена структура: Quick Start, Configuration, API Endpoints, Usage Examples
+    - Добавлены детальные таблицы с переменными окружения
+    - Расширены примеры использования (с/без авторизации, с timestamps, custom API keys)
+    - Добавлен раздел Security Considerations с рекомендациями
+    - Улучшена документация Docker deployment с примерами для Kubernetes
+    - Добавлен раздел Troubleshooting с частыми проблемами
+  - Создан `docs/DEVELOPMENT.md` - полное руководство для разработчиков на английском
+    - Development setup и prerequisites
+    - Детальная структура проекта с описанием каждой директории
+    - Running locally (development/production modes)
+    - Comprehensive testing guide (unit, e2e, coverage, debugging)
+    - Code style standards и best practices
+    - Development workflow и git practices
+    - Debugging секция с VSCode configuration
+    - Common tasks (update dependencies, generate modules, type checking)
+    - Contributing guidelines и code review checklist
+    - Troubleshooting development issues
+  - Разделение concerns: README для end-users, DEVELOPMENT для разработчиков
+
 ## 0.12.2
 
 ### Improved
