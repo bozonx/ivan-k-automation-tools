@@ -1,6 +1,6 @@
 {
   "name": "micro-stt",
-  "version": "0.12.0",
+  "version": "0.12.2",
   "description": "Speech-to-Text microservice (scaffolded from micro-file-cache).",
   "main": "dist/main.js",
   "scripts": {
@@ -58,88 +58,6 @@
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.9.3"
-  },
-  "jest": {
-    "projects": [
-      {
-        "displayName": "unit",
-        "preset": "ts-jest",
-        "testEnvironment": "node",
-        "moduleFileExtensions": [
-          "ts",
-          "js",
-          "json"
-        ],
-        "rootDir": ".",
-        "testMatch": [
-          "<rootDir>/test/unit/**/*.spec.ts",
-          "<rootDir>/src/**/*.spec.ts"
-        ],
-        "testPathIgnorePatterns": [
-          "<rootDir>/test/e2e/",
-          "<rootDir>/dist/"
-        ],
-        "setupFilesAfterEnv": [
-          "<rootDir>/test/setup/unit.setup.ts"
-        ],
-        "collectCoverageFrom": [
-          "src/**/*.(t|j)s"
-        ],
-        "coverageDirectory": "coverage",
-        "transform": {
-          "^.+\\.ts$": [
-            "ts-jest",
-            {
-              "tsconfig": "tsconfig.spec.json"
-            }
-          ]
-        },
-        "moduleNameMapper": {
-          "^@/(.*)$": "<rootDir>/src/$1",
-          "^@common/(.*)$": "<rootDir>/src/common/$1",
-          "^@modules/(.*)$": "<rootDir>/src/modules/$1",
-          "^@config/(.*)$": "<rootDir>/src/config/$1",
-          "^@providers/(.*)$": "<rootDir>/src/providers/$1",
-          "^@test/(.*)$": "<rootDir>/test/$1"
-        }
-      },
-      {
-        "displayName": "e2e",
-        "preset": "ts-jest",
-        "testEnvironment": "node",
-        "moduleFileExtensions": [
-          "ts",
-          "js",
-          "json"
-        ],
-        "rootDir": ".",
-        "testRegex": ".*\\.e2e-spec\\.ts$",
-        "setupFilesAfterEnv": [
-          "<rootDir>/test/setup/e2e.setup.ts"
-        ],
-        "collectCoverageFrom": [
-          "src/**/*.(t|j)s"
-        ],
-        "coverageDirectory": "coverage",
-        "testTimeout": 30000,
-        "transform": {
-          "^.+\\.ts$": [
-            "ts-jest",
-            {
-              "tsconfig": "tsconfig.spec.json"
-            }
-          ]
-        },
-        "moduleNameMapper": {
-          "^@/(.*)$": "<rootDir>/src/$1",
-          "^@common/(.*)$": "<rootDir>/src/common/$1",
-          "^@modules/(.*)$": "<rootDir>/src/modules/$1",
-          "^@config/(.*)$": "<rootDir>/src/config/$1",
-          "^@providers/(.*)$": "<rootDir>/src/providers/$1",
-          "^@test/(.*)$": "<rootDir>/test/$1"
-        }
-      }
-    ]
   },
   "keywords": [
     "nestjs",

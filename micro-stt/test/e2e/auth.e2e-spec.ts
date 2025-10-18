@@ -96,7 +96,7 @@ describe('Authorization E2E Tests', () => {
       // but not due to authorization
       expect(response.statusCode).not.toBe(401);
       expect(response.statusCode).toBe(503); // Expect 503 when external API fails
-    }, 20000); // Increase timeout to 20s to accommodate HTTP request timeout
+    });
 
     it('should reject when Bearer is lowercase', async () => {
       const response = await app.inject({
