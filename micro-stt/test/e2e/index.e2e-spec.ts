@@ -1,5 +1,4 @@
 import type { NestFastifyApplication } from '@nestjs/platform-fastify';
-import request from 'supertest';
 import { createTestApp } from './test-app.factory';
 
 describe('Index (e2e)', () => {
@@ -18,15 +17,19 @@ describe('Index (e2e)', () => {
   });
 
   it('GET /api/v1 returns API index with links', async () => {
-    const server = app.getHttpServer();
-    const res = await request(server).get('/api/v1');
-    expect(res.status).toBe(200);
-    expect(res.body).toHaveProperty('name', 'micro-stt');
-    expect(res.body).toHaveProperty('version');
-    expect(res.body).toHaveProperty('status', 'ok');
-    expect(res.body).toHaveProperty('time');
-    expect(res.body).toHaveProperty('links');
-    expect(res.body.links).toMatchObject({
+    const response = await app.inject({
+      method: 'GET',
+      url: '/api/v1',
+    });
+
+    expect(response.statusCode).toBe(200);
+    const body = JSON.parse(response.body);
+    expect(body).toHaveProperty('name', 'micro-stt');
+    expect(body).toHaveProperty('version');
+    expect(body).toHaveProperty('status', 'ok');
+    expect(body).toHaveProperty('time');
+    expect(body).toHaveProperty('links');
+    expect(body.links).toMatchObject({
       self: '/api/v1',
       docs: '/api/docs',
       health: '/api/v1/health',
