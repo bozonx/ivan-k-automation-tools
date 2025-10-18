@@ -1,16 +1,20 @@
-import type { INestApplication } from '@nestjs/common';
+import type { NestFastifyApplication } from '@nestjs/platform-fastify';
 import request from 'supertest';
 import { createTestApp } from './test-app.factory';
 
 describe('Index (e2e)', () => {
-  let app: INestApplication;
+  let app: NestFastifyApplication;
 
-  beforeAll(async () => {
+  beforeEach(async () => {
+    // Create fresh app instance for each test for better isolation
     app = await createTestApp();
   });
 
-  afterAll(async () => {
-    await app.close();
+  afterEach(async () => {
+    // Clean up app instance after each test
+    if (app) {
+      await app.close();
+    }
   });
 
   it('GET /api/v1 returns API index with links', async () => {

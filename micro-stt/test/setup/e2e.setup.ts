@@ -6,9 +6,10 @@
  * - If specific external calls must be mocked, do so per-test rather than globally
  *
  * Timeout:
- * - Global timeout for e2e tests is configured in jest.config.ts (30 seconds)
+ * - Global timeout for e2e tests is set to 30 seconds (see below)
  * - Override per-test if needed using jest.setTimeout() or passing timeout as third arg to it()
  */
 
-// Setup code can be added here if needed
-// For example: global test utilities, shared mocks, etc.
+// Set global timeout for all e2e tests to 30 seconds
+// This prevents individual tests from needing to specify timeout manually
+jest.setTimeout(30000);

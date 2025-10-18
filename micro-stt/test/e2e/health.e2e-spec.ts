@@ -1,56 +1,75 @@
-import type { INestApplication } from '@nestjs/common';
-import request from 'supertest';
+import type { NestFastifyApplication } from '@nestjs/platform-fastify';
 import { createTestApp } from './test-app.factory';
 
 describe('Health (e2e)', () => {
-  let app: INestApplication;
+  let app: NestFastifyApplication;
 
-  beforeAll(async () => {
+  beforeEach(async () => {
+    // Create fresh app instance for each test for better isolation
     app = await createTestApp();
   });
 
-  afterAll(async () => {
-    await app.close();
+  afterEach(async () => {
+    // Clean up app instance after each test
+    if (app) {
+      await app.close();
+    }
   });
 
   describe('GET /api/v1/health', () => {
     it('returns health check with status', async () => {
-      const server = app.getHttpServer();
-      const res = await request(server).get('/api/v1/health');
-      expect(res.status).toBe(200);
-      expect(res.body).toHaveProperty('status');
-      expect(res.body).toHaveProperty('info');
-      expect(res.body).toHaveProperty('details');
+      const response = await app.inject({
+        method: 'GET',
+        url: '/api/v1/health',
+      });
+
+      expect(response.statusCode).toBe(200);
+      const body = JSON.parse(response.body);
+      expect(body).toHaveProperty('status');
+      expect(body).toHaveProperty('info');
+      expect(body).toHaveProperty('details');
     });
 
     it('includes service health check', async () => {
-      const server = app.getHttpServer();
-      const res = await request(server).get('/api/v1/health');
-      expect(res.status).toBe(200);
-      expect(res.body.details).toHaveProperty('service');
-      expect(res.body.details.service).toHaveProperty('status', 'up');
+      const response = await app.inject({
+        method: 'GET',
+        url: '/api/v1/health',
+      });
+
+      expect(response.statusCode).toBe(200);
+      const body = JSON.parse(response.body);
+      expect(body.details).toHaveProperty('service');
+      expect(body.details.service).toHaveProperty('status', 'up');
     });
   });
 
   describe('GET /api/v1/health/ready', () => {
     it('returns readiness probe status', async () => {
-      const server = app.getHttpServer();
-      const res = await request(server).get('/api/v1/health/ready');
-      expect(res.status).toBe(200);
-      expect(res.body).toHaveProperty('status');
-      expect(res.body.details).toHaveProperty('ready');
+      const response = await app.inject({
+        method: 'GET',
+        url: '/api/v1/health/ready',
+      });
+
+      expect(response.statusCode).toBe(200);
+      const body = JSON.parse(response.body);
+      expect(body).toHaveProperty('status');
+      expect(body.details).toHaveProperty('ready');
     });
   });
 
   describe('GET /api/v1/health/live', () => {
     it('returns liveness probe with uptime', async () => {
-      const server = app.getHttpServer();
-      const res = await request(server).get('/api/v1/health/live');
-      expect(res.status).toBe(200);
-      expect(res.body).toHaveProperty('status');
-      expect(res.body.details).toHaveProperty('uptime');
-      expect(res.body.details.uptime).toHaveProperty('uptime');
-      expect(typeof res.body.details.uptime.uptime).toBe('number');
+      const response = await app.inject({
+        method: 'GET',
+        url: '/api/v1/health/live',
+      });
+
+      expect(response.statusCode).toBe(200);
+      const body = JSON.parse(response.body);
+      expect(body).toHaveProperty('status');
+      expect(body.details).toHaveProperty('uptime');
+      expect(body.details.uptime).toHaveProperty('uptime');
+      expect(typeof body.details.uptime.uptime).toBe('number');
     });
   });
 });

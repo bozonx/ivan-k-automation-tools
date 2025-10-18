@@ -1,23 +1,38 @@
 import type { NestFastifyApplication } from '@nestjs/platform-fastify';
 import { createTestApp } from './test-app.factory';
+import { saveEnvVars, restoreEnvVars } from './env-helper';
 
 describe('Authorization E2E Tests', () => {
   let app: NestFastifyApplication;
   const validToken = 'test-token-1';
   const invalidToken = 'invalid-token';
+  let envSnapshot: ReturnType<typeof saveEnvVars>;
 
-  beforeAll(async () => {
+  beforeAll(() => {
+    // Save current environment state before any modifications
+    envSnapshot = saveEnvVars('AUTH_ENABLED', 'AUTH_TOKENS', 'ASSEMBLYAI_API_KEY');
+  });
+
+  beforeEach(async () => {
+    // Set environment variables for each test
     process.env.AUTH_ENABLED = 'true';
     process.env.AUTH_TOKENS = `${validToken},test-token-2,test-token-3`;
     process.env.ASSEMBLYAI_API_KEY = 'test-key';
+
+    // Create fresh app instance for each test for better isolation
     app = await createTestApp();
   });
 
-  afterAll(async () => {
-    await app.close();
-    delete process.env.AUTH_ENABLED;
-    delete process.env.AUTH_TOKENS;
-    delete process.env.ASSEMBLYAI_API_KEY;
+  afterEach(async () => {
+    // Clean up app instance after each test
+    if (app) {
+      await app.close();
+    }
+  });
+
+  afterAll(() => {
+    // Restore original environment state
+    restoreEnvVars(envSnapshot);
   });
 
   describe('POST /api/v1/transcriptions/file', () => {

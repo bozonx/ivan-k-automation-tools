@@ -1,21 +1,37 @@
 import type { NestFastifyApplication } from '@nestjs/platform-fastify';
 import { createTestApp } from './test-app.factory';
+import { saveEnvVars, restoreEnvVars } from './env-helper';
 
 describe('Authorization Disabled E2E Tests', () => {
   let app: NestFastifyApplication;
+  let envSnapshot: ReturnType<typeof saveEnvVars>;
 
-  beforeAll(async () => {
+  beforeAll(() => {
+    // Save current environment state before any modifications
+    envSnapshot = saveEnvVars('AUTH_ENABLED', 'AUTH_TOKENS', 'ASSEMBLYAI_API_KEY');
+  });
+
+  beforeEach(async () => {
+    // Set environment variables for each test
     process.env.AUTH_ENABLED = 'false';
     // AUTH_TOKENS not required when auth is disabled
     delete process.env.AUTH_TOKENS;
     process.env.ASSEMBLYAI_API_KEY = 'test-key';
+
+    // Create fresh app instance for each test for better isolation
     app = await createTestApp();
   });
 
-  afterAll(async () => {
-    await app.close();
-    delete process.env.AUTH_ENABLED;
-    delete process.env.ASSEMBLYAI_API_KEY;
+  afterEach(async () => {
+    // Clean up app instance after each test
+    if (app) {
+      await app.close();
+    }
+  });
+
+  afterAll(() => {
+    // Restore original environment state
+    restoreEnvVars(envSnapshot);
   });
 
   describe('POST /api/v1/transcriptions/file with AUTH_ENABLED=false', () => {
@@ -35,7 +51,7 @@ describe('Authorization Disabled E2E Tests', () => {
       // Will return 503 due to AssemblyAI API call failure in test environment
       expect(response.statusCode).not.toBe(401);
       expect(response.statusCode).toBe(503); // Expect 503 when external API fails
-    }, 20000); // Increase timeout to 20s to accommodate HTTP request timeout
+    });
 
     it('should allow access with any invalid token when auth is disabled', async () => {
       const response = await app.inject({
@@ -50,7 +66,7 @@ describe('Authorization Disabled E2E Tests', () => {
       // Should not return 401 (authorization is disabled)
       expect(response.statusCode).not.toBe(401);
       expect(response.statusCode).toBe(503); // Expect 503 when external API fails
-    }, 20000); // Increase timeout to 20s to accommodate HTTP request timeout
+    });
 
     it('should allow access with malformed Authorization header when auth is disabled', async () => {
       const response = await app.inject({
@@ -65,7 +81,7 @@ describe('Authorization Disabled E2E Tests', () => {
       // Should not return 401 (authorization is disabled)
       expect(response.statusCode).not.toBe(401);
       expect(response.statusCode).toBe(503); // Expect 503 when external API fails
-    }, 20000); // Increase timeout to 20s to accommodate HTTP request timeout
+    });
 
     it('should allow access with empty Authorization header when auth is disabled', async () => {
       const response = await app.inject({
@@ -80,7 +96,7 @@ describe('Authorization Disabled E2E Tests', () => {
       // Should not return 401 (authorization is disabled)
       expect(response.statusCode).not.toBe(401);
       expect(response.statusCode).toBe(503); // Expect 503 when external API fails
-    }, 20000); // Increase timeout to 20s to accommodate HTTP request timeout
+    });
   });
 
   describe('Public endpoints should still work', () => {
