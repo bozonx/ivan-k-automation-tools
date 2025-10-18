@@ -32,9 +32,10 @@ describe('Authorization Disabled E2E Tests', () => {
       });
 
       // Should not return 401 (authorization is disabled)
-      // Will return other error codes due to missing ASSEMBLYAI_API_KEY or validation
+      // Will return 503 due to AssemblyAI API call failure in test environment
       expect(response.statusCode).not.toBe(401);
-    });
+      expect(response.statusCode).toBe(503); // Expect 503 when external API fails
+    }, 20000); // Increase timeout to 20s to accommodate HTTP request timeout
 
     it('should allow access with any invalid token when auth is disabled', async () => {
       const response = await app.inject({
@@ -48,7 +49,8 @@ describe('Authorization Disabled E2E Tests', () => {
 
       // Should not return 401 (authorization is disabled)
       expect(response.statusCode).not.toBe(401);
-    });
+      expect(response.statusCode).toBe(503); // Expect 503 when external API fails
+    }, 20000); // Increase timeout to 20s to accommodate HTTP request timeout
 
     it('should allow access with malformed Authorization header when auth is disabled', async () => {
       const response = await app.inject({
@@ -62,7 +64,8 @@ describe('Authorization Disabled E2E Tests', () => {
 
       // Should not return 401 (authorization is disabled)
       expect(response.statusCode).not.toBe(401);
-    });
+      expect(response.statusCode).toBe(503); // Expect 503 when external API fails
+    }, 20000); // Increase timeout to 20s to accommodate HTTP request timeout
 
     it('should allow access with empty Authorization header when auth is disabled', async () => {
       const response = await app.inject({
@@ -76,7 +79,8 @@ describe('Authorization Disabled E2E Tests', () => {
 
       // Should not return 401 (authorization is disabled)
       expect(response.statusCode).not.toBe(401);
-    });
+      expect(response.statusCode).toBe(503); // Expect 503 when external API fails
+    }, 20000); // Increase timeout to 20s to accommodate HTTP request timeout
   });
 
   describe('Public endpoints should still work', () => {

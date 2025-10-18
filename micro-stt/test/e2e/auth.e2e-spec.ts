@@ -92,10 +92,11 @@ describe('Authorization E2E Tests', () => {
       });
 
       // Should not return 401 (authorization passed)
-      // Will return 401 or 503 due to missing ASSEMBLYAI_API_KEY or other validation
+      // Will return 503 due to AssemblyAI API call failure in test environment
       // but not due to authorization
       expect(response.statusCode).not.toBe(401);
-    });
+      expect(response.statusCode).toBe(503); // Expect 503 when external API fails
+    }, 20000); // Increase timeout to 20s to accommodate HTTP request timeout
 
     it('should reject when Bearer is lowercase', async () => {
       const response = await app.inject({
