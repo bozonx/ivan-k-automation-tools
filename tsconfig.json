@@ -24,6 +24,10 @@
       "@/modules/*": ["src/modules/*"]
     }
   },
-  "include": ["**/src/**/*", "**/test/**/*"],
+  "include": [
+    "**/src/**/*",
+    "**/test/**/*",
+    "micro-stt/dev_docs/config-service-mock-example.spec.ts"
+  ],
   "exclude": ["**/node_modules", "**/dist", "**/coverage"]
 }

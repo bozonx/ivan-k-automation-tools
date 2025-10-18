@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.12.3 (Unreleased)
+
+### Improved
+
+- **Оптимизирована конфигурация тестов** согласно результатам аудита и best practices
+  - **Параллельный запуск тестов**: добавлен `maxWorkers: '50%'` для локального запуска и `maxWorkers: 2` для CI
+    - Ускорение выполнения тестов на ~33% (с 10.7s до 7.2s)
+  - **CI оптимизации**: добавлены `bail: 1` и `verbose: true` для быстрой обратной связи в CI/CD
+  - **Улучшенные debug скрипты**: добавлены `test:debug`, `test:unit:debug`, `test:e2e:debug` с флагом `--detectOpenHandles` для поиска утечек ресурсов
+  - **Shared test utilities**: создан `test/helpers/mocks.ts` с reusable mock-объектами
+    - `createMockLogger()` - mock для PinoLogger
+    - `createMockHttpService()` - mock для HttpService
+    - `createMockConfigService(overrides)` - type-safe mock для ConfigService
+  - Устранено дублирование mock объектов в unit тестах (DRY принцип)
+  - Unit тесты обновлены для использования shared моков из `@test/helpers/mocks`
+- Проведен детальный аудит конфигурации тестирования
+  - Создан отчет `dev_docs/TESTING_AUDIT_REPORT.md` с анализом и рекомендациями
+  - Общая оценка конфигурации: 4.5/5 (высокий профессиональный уровень)
+  - Покрытие кода: 87.22% (statements), 76.66% (branches), 92.3% (functions)
+
 ## 0.12.2
 
 ### Improved

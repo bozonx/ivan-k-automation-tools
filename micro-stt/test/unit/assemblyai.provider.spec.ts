@@ -1,21 +1,13 @@
 import { Test } from '@nestjs/testing';
 import { HttpModule, HttpService } from '@nestjs/axios';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { PinoLogger } from 'nestjs-pino';
 import { of } from 'rxjs';
 import { ServiceUnavailableException, GatewayTimeoutException } from '@nestjs/common';
+import { PinoLogger } from 'nestjs-pino';
 import { AssemblyAiProvider } from '@providers/assemblyai/assemblyai.provider';
 import appConfig from '@config/app.config';
 import sttConfig from '@config/stt.config';
-
-// Mock для PinoLogger
-const mockPinoLogger = {
-  setContext: jest.fn(),
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-};
+import { createMockLogger } from '@test/helpers/mocks';
 
 describe('AssemblyAiProvider', () => {
   let provider: AssemblyAiProvider;
@@ -42,7 +34,7 @@ describe('AssemblyAiProvider', () => {
         AssemblyAiProvider,
         {
           provide: PinoLogger,
-          useValue: mockPinoLogger,
+          useValue: createMockLogger(),
         },
       ],
     }).compile();
