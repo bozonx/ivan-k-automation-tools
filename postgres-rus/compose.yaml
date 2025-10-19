@@ -2,14 +2,24 @@ services:
   db:
     image: bozonx/postgres-rus
     container_name: pg-main
+    user: 1000:1000
     restart: always
     # set shared memory limit when using docker compose
     shm_size: 128mb
+    expose:
+      - 5432
     volumes:
-      - ../test-data/postgres:/var/lib/postgresql
+      - /data/pg-main/data:/var/lib/postgresql
+      - /data/_keys:/var/lib/postgresql/keys
     environment:
       # password of the user postgres - set in .env file
-      POSTGRES_PASSWORD: "123"
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_INITDB_ARGS: "--data-checksums --locale=ru_RU.UTF-8"
-    #ports:
-    #  - "5432:5432"
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
