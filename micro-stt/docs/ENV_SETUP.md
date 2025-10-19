@@ -93,6 +93,15 @@ cp .env.example .env
 | `AUTH_ENABLED` | Включить Bearer token авторизацию          | boolean | `false`     | `true`        |
 | `AUTH_TOKENS`  | Список разрешённых токенов (через запятую) | string  | —           | обязательно\* |
 
+### Rate limiting
+
+| Переменная          | Описание                                            | По умолчанию      | Development  | Production |
+| ------------------- | --------------------------------------------------- | ----------------- | ------------ | ---------- |
+| `RATE_LIMIT_MAX`    | Кол-во запросов на окно (на клиента)                | dev: `5`          | `5`          | `10`       |
+| `RATE_LIMIT_WINDOW` | Длительность окна (напр., `10 seconds`, `1 minute`) | dev: `10 seconds` | `10 seconds` | `1 minute` |
+
+**Как работает ключ клиента:** приоритет `Authorization` → `x-api-key` → IP. Из лимита исключены `/api/docs` и все `/api/v1/health*`.
+
 **Примечания:**
 
 - `AUTH_TOKENS` обязателен только если `AUTH_ENABLED=true`
