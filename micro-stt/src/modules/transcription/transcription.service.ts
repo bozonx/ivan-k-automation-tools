@@ -13,13 +13,7 @@ import { HttpService } from '@nestjs/axios';
 import type { SttProvider, TranscriptionResult } from '@common/interfaces/stt-provider.interface';
 import type { SttConfig } from '@config/stt.config';
 import { STT_PROVIDER } from '@common/constants/tokens';
-
-function isPrivateHost(url: URL): boolean {
-  const hostname = url.hostname.toLowerCase();
-  if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1') return true;
-  // Basic heuristic for private networks; full DNS/IP resolution is out-of-scope for now
-  return false;
-}
+import { isPrivateHost } from '@/utils/network.utils';
 
 @Injectable()
 export class TranscriptionService {

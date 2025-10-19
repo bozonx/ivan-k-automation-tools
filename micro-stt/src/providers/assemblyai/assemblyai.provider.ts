@@ -8,12 +8,13 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { PinoLogger } from 'nestjs-pino';
 import { lastValueFrom, timeout } from 'rxjs';
-import {
+import type {
   SttProvider,
   TranscriptionRequestByUrl,
   TranscriptionResult,
 } from '@common/interfaces/stt-provider.interface';
-import { SttConfig } from '@config/stt.config';
+import type { SttConfig } from '@config/stt.config';
+import { ASSEMBLYAI_API } from '@common/constants/app.constants';
 
 interface AssemblyCreateResponse {
   id: string;
@@ -48,8 +49,9 @@ export class AssemblyAiProvider implements SttProvider {
     this.logger.debug(`Submitting transcription request to AssemblyAI for URL: ${params.audioUrl}`);
 
     const headers = { Authorization: params.apiKey as string };
+    const apiUrl = `${ASSEMBLYAI_API.BASE_URL}${ASSEMBLYAI_API.TRANSCRIPTS_ENDPOINT}`;
     const create$ = this.http.post<AssemblyCreateResponse>(
-      'https://api.assemblyai.com/v2/transcripts',
+      apiUrl,
       { audio_url: params.audioUrl },
       { headers, validateStatus: () => true },
     );
@@ -83,13 +85,11 @@ export class AssemblyAiProvider implements SttProvider {
 
       this.logger.debug(`Polling transcription status (attempt ${pollCount}) for ID: ${id}`);
 
-      const get$ = this.http.get<AssemblyTranscriptResponse>(
-        `https://api.assemblyai.com/v2/transcripts/${id}`,
-        {
-          headers,
-          validateStatus: () => true,
-        },
-      );
+      const getUrl = `${ASSEMBLYAI_API.BASE_URL}${ASSEMBLYAI_API.TRANSCRIPTS_ENDPOINT}/${id}`;
+      const get$ = this.http.get<AssemblyTranscriptResponse>(getUrl, {
+        headers,
+        validateStatus: () => true,
+      });
       const getRes = await lastValueFrom(get$.pipe(timeout(this.cfg.requestTimeoutSec * 1000)));
       const body = getRes.data;
 

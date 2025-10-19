@@ -1,5 +1,20 @@
 # Changelog
 
+## [Unreleased]
+
+### Changed
+
+- **Рефакторинг структуры кода** (19.10.2025)
+  - Реорганизована структура `src/` в соответствии с лучшими практиками NestJS
+  - Добавлены barrel exports (index.ts) для упрощения импортов
+  - Извлечены утилитные функции в отдельные модули (`utils/network.utils.ts`, `utils/package-version.utils.ts`)
+  - Добавлены централизованные константы (`common/constants/app.constants.ts`)
+  - Оптимизированы импорты с использованием path aliases
+  - Удален дублирующийся `health.controller.ts` из корня src
+  - Все тесты проходят успешно (52 passed, 1 skipped)
+  - Нет ошибок линтера
+  - Подробности в `dev_docs/REFACTORING_2025_10_19.md`
+
 ## 0.13.2 (2025-10-18)
 
 ### Changed

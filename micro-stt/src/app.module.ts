@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_FILTER } from '@nestjs/core';
 import { LoggerModule } from 'nestjs-pino';
-import { stdTimeFunctions } from 'pino';
 import { TranscriptionModule } from '@modules/transcription/transcription.module';
 import { HealthModule } from '@modules/health/health.module';
 import { IndexModule } from '@modules/index/index.module';

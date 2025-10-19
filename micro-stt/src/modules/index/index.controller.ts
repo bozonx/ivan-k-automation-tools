@@ -2,13 +2,13 @@ import { Controller, Get } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import type { AppConfig } from '@config/app.config';
-import * as fs from 'fs';
-import * as path from 'path';
+import { readPackageVersion } from '@/utils/package-version.utils';
+import { SERVICE_METADATA } from '@common/constants/app.constants';
 
 @ApiTags('Meta')
 @Controller()
 export class IndexController {
-  private readonly version: string = this.readVersion();
+  private readonly version: string = readPackageVersion();
 
   constructor(private readonly configService: ConfigService) {}
 
@@ -36,7 +36,7 @@ export class IndexController {
     const appConfig = this.configService.get<AppConfig>('app')!;
     const base = `/${appConfig.apiBasePath}/${appConfig.apiVersion}`;
     return {
-      name: 'micro-stt',
+      name: SERVICE_METADATA.NAME,
       version: this.version,
       status: 'ok',
       time: new Date().toISOString(),
@@ -47,24 +47,5 @@ export class IndexController {
         transcriptions: `${base}/transcriptions`,
       },
     } as const;
-  }
-
-  private readVersion(): string {
-    const candidates = [
-      path.resolve(process.cwd(), 'package.json'),
-      path.resolve(__dirname, '..', '..', '..', 'package.json'),
-    ];
-    for (const pkgPath of candidates) {
-      try {
-        const raw = fs.readFileSync(pkgPath, 'utf-8');
-        const pkg = JSON.parse(raw) as { version?: string };
-        if (typeof pkg.version === 'string' && pkg.version.length > 0) {
-          return pkg.version;
-        }
-      } catch (_err) {
-        // continue
-      }
-    }
-    return '0.0.0';
   }
 }
