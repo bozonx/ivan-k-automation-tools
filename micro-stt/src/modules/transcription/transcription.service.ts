@@ -5,6 +5,7 @@ import {
   GatewayTimeoutException,
   HttpException,
   Inject,
+  Optional,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PinoLogger } from 'nestjs-pino';
@@ -12,8 +13,9 @@ import { lastValueFrom, timeout } from 'rxjs';
 import { HttpService } from '@nestjs/axios';
 import type { SttProvider, TranscriptionResult } from '@common/interfaces/stt-provider.interface';
 import type { SttConfig } from '@config/stt.config';
-import { STT_PROVIDER } from '@common/constants/tokens';
 import { isPrivateHost } from '@/utils/network.utils';
+import { SttProviderRegistry } from '@/providers/stt-provider.registry';
+import { STT_PROVIDER } from '@common/constants/tokens';
 
 @Injectable()
 export class TranscriptionService {
@@ -21,9 +23,10 @@ export class TranscriptionService {
 
   constructor(
     private readonly http: HttpService,
-    @Inject(STT_PROVIDER) private readonly provider: SttProvider,
+    @Optional() private readonly registry: SttProviderRegistry | undefined,
     private readonly configService: ConfigService,
     @Inject(PinoLogger) private readonly logger: PinoLogger,
+    @Optional() @Inject(STT_PROVIDER) private readonly legacyProvider?: SttProvider,
   ) {
     this.cfg = this.configService.get<SttConfig>('stt')!;
     logger.setContext(TranscriptionService.name);
@@ -38,10 +41,17 @@ export class TranscriptionService {
       throw new BadRequestException('Unsupported provider');
     }
 
-    // Return the injected provider
-    // In the future, if multiple providers are supported,
-    // this can be enhanced to use a provider factory or registry
-    return this.provider;
+    const selected = this.registry?.get(providerName);
+    if (selected) return selected;
+
+    // Backward compatibility for tests that inject STT_PROVIDER directly
+    if (this.legacyProvider) {
+      this.logger.debug('Falling back to legacy injected provider');
+      return this.legacyProvider;
+    }
+
+    this.logger.warn(`Provider not available: ${providerName}`);
+    throw new BadRequestException('Unsupported provider');
   }
 
   private async enforceSizeLimitIfKnown(audioUrl: string) {

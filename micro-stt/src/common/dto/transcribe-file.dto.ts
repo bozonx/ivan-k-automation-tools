@@ -1,8 +1,5 @@
-import { IsBoolean, IsIn, IsOptional, IsString, IsUrl, Matches } from 'class-validator';
+import { IsBoolean, IsOptional, IsString, IsUrl, Matches } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-
-const PROVIDERS = ['assemblyai'] as const;
-export type ProviderName = (typeof PROVIDERS)[number];
 
 export class TranscribeFileDto {
   @ApiProperty({
@@ -17,13 +14,11 @@ export class TranscribeFileDto {
 
   @ApiPropertyOptional({
     description: 'Speech-to-text provider to use for transcription.',
-    enum: PROVIDERS,
-    default: 'assemblyai',
     example: 'assemblyai',
   })
   @IsOptional()
-  @IsIn(PROVIDERS as unknown as string[], { message: 'Unsupported provider' })
-  public readonly provider?: ProviderName;
+  @IsString()
+  public readonly provider?: string;
 
   @ApiPropertyOptional({
     description: 'Whether to include word-level timestamps in the transcription result.',

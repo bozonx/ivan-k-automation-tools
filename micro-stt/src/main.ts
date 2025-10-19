@@ -7,6 +7,7 @@ import { Logger } from 'nestjs-pino';
 import helmet from '@fastify/helmet';
 import { AppModule } from '@/app.module';
 import type { AppConfig } from '@config/app.config';
+import { readPackageVersion } from '@/utils/package-version.utils';
 
 async function bootstrap() {
   // Create app with bufferLogs enabled to capture early logs
@@ -27,56 +28,51 @@ async function bootstrap() {
   );
 
   // Register Helmet for security headers
-  // Using getInstance() to get Fastify instance directly
-  // Type assertion required due to Fastify version mismatch between @nestjs/platform-fastify and @fastify/helmet
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  await app
-    .getHttpAdapter()
-    .getInstance()
-    .register(helmet as any, {
-      // Content Security Policy configuration
-      contentSecurityPolicy: {
-        directives: {
-          defaultSrc: [`'self'`],
-          baseUri: [`'self'`],
-          fontSrc: [`'self'`, 'https:', 'data:'],
-          formAction: [`'self'`],
-          frameAncestors: [`'self'`],
-          imgSrc: [`'self'`, 'data:', 'validator.swagger.io'], // Required for Swagger UI
-          objectSrc: [`'none'`],
-          scriptSrc: [`'self'`, 'https:', `'unsafe-inline'`], // Required for Swagger UI
-          scriptSrcAttr: [`'none'`],
-          styleSrc: [`'self'`, 'https:', `'unsafe-inline'`], // Required for Swagger UI
-          ...(appConfig.nodeEnv === 'production' && { upgradeInsecureRequests: [] }),
-        },
+  await app.register(helmet as any, {
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: [`'self'`],
+        baseUri: [`'self'`],
+        fontSrc: [`'self'`, 'https:', 'data:'],
+        formAction: [`'self'`],
+        frameAncestors: [`'self'`],
+        imgSrc: [`'self'`, 'data:', 'validator.swagger.io'],
+        objectSrc: [`'none'`],
+        scriptSrc: [
+          `'self'`,
+          'https:',
+          appConfig.nodeEnv !== 'production' ? `'unsafe-inline'` : undefined,
+        ].filter(Boolean) as string[],
+        scriptSrcAttr: [`'none'`],
+        styleSrc: [
+          `'self'`,
+          'https:',
+          appConfig.nodeEnv !== 'production' ? `'unsafe-inline'` : undefined,
+        ].filter(Boolean) as string[],
+        ...(appConfig.nodeEnv === 'production' && { upgradeInsecureRequests: [] }),
       },
-      // Strict-Transport-Security (HSTS)
-      hsts: {
-        maxAge: 31536000, // 1 year
-        includeSubDomains: true,
-        preload: appConfig.nodeEnv === 'production',
-      },
-      // Additional security headers are enabled by default:
-      // - X-Content-Type-Options: nosniff
-      // - X-DNS-Prefetch-Control: off
-      // - X-Download-Options: noopen
-      // - X-Frame-Options: SAMEORIGIN
-      // - X-Permitted-Cross-Domain-Policies: none
-      // - X-XSS-Protection: 0 (disabled as CSP is more effective)
-    });
+    },
+    hsts: {
+      maxAge: 31536000,
+      includeSubDomains: true,
+      preload: appConfig.nodeEnv === 'production',
+    },
+  });
 
   // Configure global API prefix from configuration
   const globalPrefix = `${appConfig.apiBasePath}/${appConfig.apiVersion}`;
   app.setGlobalPrefix(globalPrefix);
 
   // Setup Swagger/OpenAPI documentation
+  const version = readPackageVersion();
   const config = new DocumentBuilder()
     .setTitle('Micro STT API')
     .setDescription(
       'Speech-to-Text microservice API for transcribing audio files. ' +
         'Supports multiple STT providers and provides asynchronous transcription with polling.',
     )
-    .setVersion('0.13.2')
+    .setVersion(version)
     .addTag('Transcriptions', 'Endpoints for transcribing audio files')
     .addTag('Health', 'Health check endpoints for monitoring and orchestration')
     .addBearerAuth(
@@ -125,16 +121,7 @@ async function bootstrap() {
   logger.log(`📊 Environment: ${appConfig.nodeEnv}`, 'Bootstrap');
   logger.log(`📝 Log level: ${appConfig.logLevel}`, 'Bootstrap');
 
-  // Handle shutdown signals for graceful shutdown
-  const signals: NodeJS.Signals[] = ['SIGTERM', 'SIGINT'];
-  signals.forEach(signal => {
-    process.on(signal, async () => {
-      logger.log(`Received ${signal}, closing server gracefully...`, 'Bootstrap');
-      await app.close();
-      logger.log('Server closed successfully', 'Bootstrap');
-      process.exit(0);
-    });
-  });
+  // Rely on enableShutdownHooks for graceful shutdown
 }
 
 void bootstrap();

@@ -4,34 +4,46 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TranscriptionService } from './transcription.service';
 import { TranscriptionController } from './transcription.controller';
 import { AssemblyAiProvider } from '@providers/assemblyai/assemblyai.provider';
-import { STT_PROVIDER } from '@common/constants/tokens';
 import type { SttConfig } from '@config/stt.config';
+import { SttProviderRegistry } from '@/providers/stt-provider.registry';
+import { STT_PROVIDER } from '@common/constants/tokens';
 
 /**
  * Transcription module
  * Provides speech-to-text transcription functionality with pluggable provider support
  */
 @Module({
-  imports: [HttpModule, ConfigModule],
+  imports: [
+    ConfigModule,
+    HttpModule.registerAsync({
+      inject: [ConfigService],
+      useFactory: (cfg: ConfigService) => {
+        const timeoutSec = cfg.get<number>('stt.requestTimeoutSec', 15);
+        return {
+          timeout: timeoutSec * 1000,
+          maxRedirects: 3,
+          validateStatus: () => true,
+        };
+      },
+    }),
+  ],
   controllers: [TranscriptionController],
   providers: [
     TranscriptionService,
     AssemblyAiProvider,
+    SttProviderRegistry,
     {
       provide: STT_PROVIDER,
-      useFactory: (configService: ConfigService, assemblyAi: AssemblyAiProvider) => {
-        const config = configService.get<SttConfig>('stt');
-        const provider = config?.defaultProvider ?? 'assemblyai';
-
-        // Factory pattern: select provider based on configuration
-        if (provider === 'assemblyai') {
-          return assemblyAi;
-        }
-
-        // Future providers can be added here
-        throw new Error(`Unknown STT provider: ${provider}`);
+      inject: [ConfigService, SttProviderRegistry, AssemblyAiProvider],
+      useFactory: (
+        configService: ConfigService,
+        registry: SttProviderRegistry,
+        assembly: AssemblyAiProvider,
+      ) => {
+        const cfg = configService.get<SttConfig>('stt');
+        const name = (cfg?.defaultProvider ?? 'assemblyai').toLowerCase();
+        return registry.get(name) ?? assembly;
       },
-      inject: [ConfigService, AssemblyAiProvider],
     },
   ],
 })

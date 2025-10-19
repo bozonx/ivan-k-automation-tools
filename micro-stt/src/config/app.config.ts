@@ -20,7 +20,8 @@ export class AppConfig {
   @IsIn(['development', 'production', 'test'])
   public nodeEnv!: string;
 
-  @IsIn(['debug', 'log', 'warn', 'error'])
+  // Allow only Pino log levels
+  @IsIn(['trace', 'debug', 'info', 'warn', 'error', 'fatal', 'silent'])
   public logLevel!: string;
 
   @IsBoolean()
