@@ -5,6 +5,7 @@ import { LoggerModule } from 'nestjs-pino';
 import { TranscriptionModule } from '@modules/transcription/transcription.module';
 import { HealthModule } from '@modules/health/health.module';
 import { IndexModule } from '@modules/index/index.module';
+import { GraphqlApiModule } from './graphql/graphql.module';
 import { AllExceptionsFilter } from '@common/filters/all-exceptions.filter';
 import appConfig from '@config/app.config';
 import sttConfig from '@config/stt.config';
@@ -103,6 +104,7 @@ import type { AppConfig } from '@config/app.config';
     TranscriptionModule,
     HealthModule,
     IndexModule,
+    GraphqlApiModule,
   ],
   controllers: [],
   providers: [

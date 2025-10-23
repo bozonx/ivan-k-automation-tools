@@ -46,5 +46,6 @@ import { STT_PROVIDER } from '@common/constants/tokens';
       },
     },
   ],
+  exports: [TranscriptionService],
 })
 export class TranscriptionModule {}

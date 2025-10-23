@@ -2,9 +2,25 @@
 
 ## [Unreleased]
 
+### Added
+
+- **GraphQL API с Apollo Server** (23.10.2025)
+  - Добавлен GraphQL API с использованием Apollo Server (Code First подход)
+  - Поддержка Apollo Federation для интеграции в API Gateway
+  - GraphQL Query `apiInfo` - метаинформация API
+  - GraphQL Mutation `transcribeFile` - транскрибация аудио
+  - Apollo Sandbox для разработки (доступен в development режиме)
+  - Полная документация GraphQL API в `docs/GRAPHQL.md`
+  - Unit и E2E тесты для GraphQL резолверов
+  - Чёткое разделение: REST API в `src/modules/`, GraphQL в `src/graphql/`
+  - Переиспользование бизнес-логики через существующие сервисы
+  - Единая аутентификация для REST и GraphQL
+  - Готовность к Apollo Federation для API Gateway
+
 ### Changed
 
 - **Рефакторинг структуры кода** (19.10.2025)
+- **Обновлен README с информацией о GraphQL API** (23.10.2025)
 
 ### Added
 

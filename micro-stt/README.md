@@ -153,6 +153,34 @@ The Swagger UI provides:
 
 📖 **More details:** [docs/SWAGGER.md](docs/SWAGGER.md)
 
+## GraphQL API
+
+В дополнение к REST API, сервис предоставляет **GraphQL API** на том же порту с поддержкой **Apollo Federation** для интеграции в API Gateway.
+
+### Endpoints
+
+- **GraphQL API:** `http://localhost:3000/api/graphql`
+- **Apollo Sandbox:** `http://localhost:3000/api/graphql` (только в development режиме)
+
+### Quick Example
+
+```bash
+# Mutation - транскрибировать аудио
+curl -X POST http://localhost:3000/api/graphql \
+  -H 'Content-Type: application/json' \
+  -H 'Authorization: Bearer YOUR_TOKEN' \
+  -d '{
+    "query": "mutation($input: TranscribeFileInput!) { transcribeFile(input: $input) { text provider } }",
+    "variables": { "input": { "audioUrl": "https://example.com/audio.mp3" } }
+  }'
+```
+
+### Apollo Federation Ready
+
+Сервис готов к интеграции в **Apollo Gateway** для построения единого API из нескольких микросервисов. Используется `@apollo/subgraph` для federation поддержки.
+
+📖 **Полная документация GraphQL:** [docs/GRAPHQL.md](docs/GRAPHQL.md)
+
 ## API Endpoints
 
 The service exposes the following endpoints (default prefix: `/api/v1`):
