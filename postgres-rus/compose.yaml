@@ -1,5 +1,5 @@
 services:
-  db:
+  postgres:
     image: bozonx/postgres-rus
     container_name: pg-main
     user: 1000:1000
