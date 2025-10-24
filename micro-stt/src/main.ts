@@ -5,8 +5,6 @@ import { ConfigService } from '@nestjs/config';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { Logger } from 'nestjs-pino';
 import helmet from '@fastify/helmet';
-import rateLimit from '@fastify/rate-limit';
-import type { FastifyRequest } from 'fastify';
 import { AppModule } from '@/app.module';
 import type { AppConfig } from '@config/app.config';
 import { readPackageVersion } from '@/utils/package-version.utils';
@@ -60,20 +58,6 @@ async function bootstrap() {
       includeSubDomains: true,
       preload: appConfig.nodeEnv === 'production',
     },
-  });
-
-  // Register Fastify rate limiter to protect against runaway clients/loops
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  await app.register(rateLimit as any, {
-    // Defaults are intentionally strict to quickly catch loops
-    max: parseInt((configService.get<string>('RATE_LIMIT_MAX') ?? '5') as string, 10),
-    timeWindow: (configService.get<string>('RATE_LIMIT_WINDOW') ?? '10 seconds') as string,
-    keyGenerator: (req: FastifyRequest) =>
-      // Prefer auth token or api key for per-client limiting; fall back to IP
-      (req.headers['authorization'] as string) || (req.headers['x-api-key'] as string) || req.ip,
-    allowList: (req: FastifyRequest) =>
-      // Exclude health endpoints and Swagger UI from rate limiting
-      (req.url?.includes('/health') ?? false) || (req.url?.includes('/api/docs') ?? false),
   });
 
   // Configure global API prefix from configuration

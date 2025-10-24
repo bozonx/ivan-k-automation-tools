@@ -161,9 +161,6 @@ services:
 
       # Логирование
       - LOG_LEVEL=warn
-      # Rate limiting
-      - RATE_LIMIT_MAX=10
-      - RATE_LIMIT_WINDOW=1 minute
 
       # Авторизация
       - AUTH_ENABLED=true
@@ -188,8 +185,6 @@ services:
 AUTH_TOKENS=prod-token-1,prod-token-2
 ASSEMBLYAI_API_KEY=your-assemblyai-key-here
 LOG_LEVEL=warn
-RATE_LIMIT_MAX=10
-RATE_LIMIT_WINDOW=1 minute
 ```
 
 2. **Обновите `docker-compose.yml`:**
@@ -258,8 +253,6 @@ docker run -d \
   -e AUTH_ENABLED=true \
   -e AUTH_TOKENS=your-token-here \
   -e ASSEMBLYAI_API_KEY=your-key-here \
-  -e RATE_LIMIT_MAX=10 \
-  -e RATE_LIMIT_WINDOW="1 minute" \
   bozonx/micro-stt:latest
 ```
 
@@ -276,8 +269,6 @@ docker run -d \
   -e API_BASE_PATH=api \
   -e API_VERSION=v1 \
   -e LOG_LEVEL=warn \
-  -e RATE_LIMIT_MAX=10 \
-  -e RATE_LIMIT_WINDOW="1 minute" \
   -e AUTH_ENABLED=true \
   -e AUTH_TOKENS=token1,token2 \
   -e ASSEMBLYAI_API_KEY=your-key \

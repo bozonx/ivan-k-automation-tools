@@ -78,9 +78,6 @@ API_VERSION=v1
 # Timezone
 TZ=UTC
 
-# Rate limiting (development defaults)
-RATE_LIMIT_MAX=5
-RATE_LIMIT_WINDOW=10 seconds
 ```
 
 ### 4. Verify Installation

@@ -24,7 +24,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const response = ctx.getResponse<FastifyReply>();
     const request = ctx.getRequest<FastifyRequest>();
 
-    // Preserve statusCode from non-HttpException errors (e.g., Fastify plugins like rate-limit)
+    // Preserve statusCode from non-HttpException errors (e.g., Fastify plugins)
     const status =
       exception instanceof HttpException
         ? exception.getStatus()

@@ -16,7 +16,6 @@ High-performance Speech-to-Text (STT) microservice built with NestJS + Fastify. 
 - ⚡ **High performance** - Powered by Fastify
 - 🐳 **Docker support** - Production-ready containerization
 - 🔒 **Security hardened** - Helmet for HTTP security headers, SSRF protection
-- 🚦 **Built-in rate limiting** - Fastify-level protection against runaway clients
 
 ## Quick Start
 
@@ -80,13 +79,6 @@ The service uses environment-specific configuration files:
 | `API_BASE_PATH` | Base API path    | `api`        | `api`               | `api`              |
 | `API_VERSION`   | API version      | `v1`         | `v1`                | `v1`               |
 
-#### Rate Limiting
-
-| Variable            | Description                                  | Default      | Development Example | Production Example |
-| ------------------- | -------------------------------------------- | ------------ | ------------------- | ------------------ |
-| `RATE_LIMIT_MAX`    | Requests per time window (per client key)    | `5` (dev)    | `5`                 | `10`               |
-| `RATE_LIMIT_WINDOW` | Time window (e.g., `10 seconds`, `1 minute`) | `10 seconds` | `10 seconds`        | `1 minute`         |
-
 #### Authentication
 
 | Variable       | Description                          | Required                 | Default |
@@ -123,15 +115,9 @@ The service uses environment-specific configuration files:
 
 📖 **Detailed documentation:** See [docs/ENV_SETUP.md](docs/ENV_SETUP.md)
 
-### Rate Limiting Behavior
+### Rate Limiting
 
-The service uses Fastify's `@fastify/rate-limit` plugin:
-
-- Client key: prefers `Authorization` or `x-api-key` header; falls back to IP
-- Excluded paths: `/api/docs` and all `/api/v1/health*`
-- Configure via `RATE_LIMIT_MAX` and `RATE_LIMIT_WINDOW`
-
-For multi-replica deployments, configure a shared store (e.g., Redis) in the plugin options.
+Rate limiting has been removed from the service. It should be implemented at the API Gateway or reverse proxy level.
 
 ## API Documentation
 
@@ -655,7 +641,7 @@ node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 1. Enable authentication or use external auth mechanisms
 2. Use HTTPS with valid certificates
 3. Set appropriate `LOG_LEVEL` (warn or error)
-4. Configure reverse proxy with rate limiting
+4. Configure reverse proxy with rate limiting (recommended)
 5. Monitor logs for suspicious activity
 6. Keep dependencies updated
 7. Use containerization for isolation
