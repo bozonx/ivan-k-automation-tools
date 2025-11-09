@@ -15,6 +15,7 @@ export class RedisCache implements INodeType {
     name: 'bozonxRedisCache',
     group: ['transform'],
     version: 1,
+    subtitle: '={{$parameter["mode"] + ": " + $parameter["key"]}}',
     description: 'Read and write JSON values in Redis',
     defaults: { name: 'Redis Cache' },
     icon: 'file:redis-cache.svg',
@@ -154,6 +155,7 @@ export class RedisCache implements INodeType {
         displayName: 'TTL Value',
         name: 'ttl',
         type: 'number',
+        typeOptions: { minValue: 0 },
         default: 0,
         placeholder: '0',
         description: 'Time-to-live value. Set 0 for no expiration',
@@ -222,8 +224,12 @@ export class RedisCache implements INodeType {
                 let value: unknown;
                 switch (type) {
                   case 'number': {
-                    const n = Number((pair as any).valueNumber);
-                    value = Number.isFinite(n) ? n : 0;
+                    const raw = (pair as any).valueNumber;
+                    const n = Number(raw);
+                    if (!Number.isFinite(n)) {
+                      throw new NodeOperationError(this.getNode(), `Invalid number for field "${k}"`, { itemIndex: i });
+                    }
+                    value = n;
                     break;
                   }
                   case 'boolean': {

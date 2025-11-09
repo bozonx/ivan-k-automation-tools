@@ -1,6 +1,6 @@
 import type { ICredentialType, INodeProperties } from 'n8n-workflow';
 
-export class RedisStreams implements ICredentialType {
+export class Redis implements ICredentialType {
 	name = 'bozonxRedisStreams';
 	displayName = 'Redis (Streams)';
 	properties: INodeProperties[] = [
@@ -54,3 +54,4 @@ export class RedisStreams implements ICredentialType {
 		},
 	];
 }
+

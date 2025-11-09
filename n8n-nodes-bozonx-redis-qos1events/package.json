@@ -1,7 +1,7 @@
 {
-    "name": "n8n-nodes-bozonx-stt-gateway-microservice",
-    "version": "0.2.0",
-    "description": "n8n node for synchronous transcription via STT Gateway microservice (AssemblyAI)",
+    "name": "n8n-nodes-bozonx-redis-qos1events",
+    "version": "0.4.0",
+    "description": "n8n node for Redis QoS1 events",
     "license": "MIT",
     "homepage": "",
     "keywords": [
@@ -13,7 +13,7 @@
     },
     "repository": {
         "type": "git",
-        "url": "https://github.com/bozonx/stt-gateway-microservice"
+        "url": "https://github.com/bozonx/ivan-k-automation-tools"
     },
     "scripts": {
         "build": "n8n-node build",
@@ -31,11 +31,9 @@
         "n8nNodesApiVersion": 1,
         "strict": true,
         "nodes": [
-            "dist/nodes/SttGateway/SttGateway.node.js",
             "dist/nodes/RedisStreamProducer/RedisStreamProducer.node.js"
         ],
         "credentials": [
-            "dist/credentials/BozonxMicroservicesApi.credentials.js",
             "dist/credentials/Redis.credentials.js"
         ]
     },
