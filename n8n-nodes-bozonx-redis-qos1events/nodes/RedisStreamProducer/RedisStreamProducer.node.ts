@@ -16,6 +16,7 @@ export class RedisStreamProducer implements INodeType {
     version: 1,
     description: 'Append events to a Redis Stream using XADD',
     defaults: { name: 'Redis Stream Producer' },
+    icon: 'file:redis-stream-producer.svg',
     inputs: ['main'],
     outputs: ['main'],
     credentials: [
@@ -52,6 +53,15 @@ export class RedisStreamProducer implements INodeType {
         ],
         default: 'json',
         description: 'Select how to build message fields',
+      },
+      {
+        displayName: 'Payload',
+        name: 'jsonPayload',
+        type: 'string',
+        displayOptions: { show: { payloadMode: ['json'] } },
+        typeOptions: { rows: 8 },
+        default: '',
+        description: 'JSON to send as the single "data" field. If empty, the incoming item JSON will be used.',
       },
       {
         displayName: 'Payload',
@@ -132,8 +142,18 @@ export class RedisStreamProducer implements INodeType {
         const fields: Array<[string, string]> = [];
 
         if (payloadMode === 'json') {
-          const json = items[i].json as IDataObject;
-          fields.push(['data', JSON.stringify(json)]);
+          const jsonText = (this.getNodeParameter('jsonPayload', i, '') as string).trim();
+          let dataObj: unknown;
+          if (jsonText) {
+            try {
+              dataObj = JSON.parse(jsonText);
+            } catch (e) {
+              throw new NodeOperationError(this.getNode(), 'Invalid JSON in Payload', { itemIndex: i });
+            }
+          } else {
+            dataObj = items[i].json as IDataObject;
+          }
+          fields.push(['data', JSON.stringify(dataObj)]);
         } else {
           const payload = this.getNodeParameter('payload', i, {}) as IDataObject;
           const pairs = ((payload.pair as IDataObject[]) || [])
