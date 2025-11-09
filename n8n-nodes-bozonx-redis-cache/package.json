@@ -1,7 +1,7 @@
 {
-    "name": "n8n-nodes-bozonx-stt-gateway-microservice",
+    "name": "n8n-nodes-bozonx-redis-cache",
     "version": "0.2.0",
-    "description": "n8n node for synchronous transcription via STT Gateway microservice (AssemblyAI)",
+    "description": "n8n node for Redis cache",
     "license": "MIT",
     "homepage": "",
     "keywords": [
@@ -13,7 +13,7 @@
     },
     "repository": {
         "type": "git",
-        "url": "https://github.com/bozonx/stt-gateway-microservice"
+        "url": "https://github.com/bozonx/redis-cache"
     },
    "scripts": {
 		"build": "n8n-node build",
@@ -31,10 +31,10 @@
       "n8nNodesApiVersion": 1,
       "strict": true,
       "nodes": [
-          "dist/nodes/SttGateway/SttGateway.node.js"
+          "dist/nodes/RedisCache/RedisCache.node.js"
       ],
       "credentials": [
-          "dist/credentials/SttGatewayApi.credentials.js"
+          "dist/credentials/Redis.credentials.js"
       ]
   },
     "devDependencies": {
@@ -46,5 +46,8 @@
     },
     "peerDependencies": {
         "n8n-workflow": "*"
+    },
+    "dependencies": {
+        "redis": "^5.0.0"
     }
 }

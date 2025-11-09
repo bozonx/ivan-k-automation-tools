@@ -104,3 +104,46 @@ Built and tested with n8n `1.60.0+`.
 
 - Service docs and API reference: see the repository root `README.md` and `docs/API.md`.
 - n8n community nodes docs: https://docs.n8n.io/integrations/#community-nodes
+
+---
+
+## Redis Cache (новая нода)
+
+Простая нода для кэширования JSON-данных в Redis с режимами записи и чтения.
+
+### Установка
+
+Следуйте общим инструкциям community nodes. После установки пакет добавит ноду `Redis Cache` и креды `Redis`.
+
+### Как работает
+
+- Режимы:
+  - `Write` — запись значения по ключу, опционально с TTL.
+  - `Read` — чтение значения по ключу и парсинг JSON.
+- Значение хранится как строка JSON. При чтении строка парсится обратно в объект.
+
+### Параметры
+
+- **Mode** — `Write` или `Read`.
+- **Key** — ключ в Redis (обязателен).
+- Для `Write`:
+  - **Data (JSON)** — строка с JSON (обязательна).
+  - **TTL Value** — число, 0 означает без срока жизни.
+  - **TTL Unit** — единицы TTL: seconds, minutes, hours, days.
+
+### Креды
+
+Используйте креды `Redis`:
+
+- Host (по умолчанию `localhost`)
+- Port (по умолчанию `6379`)
+- Username (опционально)
+- Password (опционально)
+- TLS (включение защищённого соединения)
+- DB Index (по умолчанию `0`)
+
+### Поведение и ошибки
+
+- При отсутствии значения при чтении возвращается `{ found: false, key }`.
+- При успешной записи возвращается `{ ok: true, key, ttlSeconds }`.
+- Нода поддерживает «Continue On Fail». В случае ошибки текущий элемент вернёт `{ error: "..." }` и выполнение продолжится для остальных элементов.
