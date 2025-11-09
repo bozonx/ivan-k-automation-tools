@@ -15,28 +15,28 @@
         "type": "git",
         "url": "https://github.com/bozonx/stt-gateway-microservice"
     },
-   "scripts": {
-		"build": "n8n-node build",
-		"build:watch": "tsc --watch",
-		"dev": "n8n-node dev",
-		"lint": "n8n-node lint",
+    "scripts": {
+        "build": "n8n-node build",
+        "build:watch": "tsc --watch",
+        "dev": "n8n-node dev",
+        "lint": "n8n-node lint",
         "lint:fix": "n8n-node lint --fix",
-		"release": "n8n-node release",
-		"prepublishOnly": "n8n-node prerelease"
-	},
+        "release": "n8n-node release",
+        "prepublishOnly": "n8n-node prerelease"
+    },
     "files": [
         "dist"
     ],
     "n8n": {
-      "n8nNodesApiVersion": 1,
-      "strict": true,
-      "nodes": [
-          "dist/nodes/SttGateway/SttGateway.node.js"
-      ],
-      "credentials": [
-          "dist/credentials/SttGatewayApi.credentials.js"
-      ]
-  },
+        "n8nNodesApiVersion": 1,
+        "strict": true,
+        "nodes": [
+            "dist/nodes/SttGateway/SttGateway.node.js"
+        ],
+        "credentials": [
+            "dist/credentials/SttGatewayApi.credentials.js"
+        ]
+    },
     "devDependencies": {
         "@n8n/node-cli": "*",
         "eslint": "9.32.0",
@@ -46,5 +46,8 @@
     },
     "peerDependencies": {
         "n8n-workflow": "*"
+    },
+    "dependencies": {
+        "redis": "^5.9.0"
     }
 }

@@ -23,20 +23,20 @@
 
 ## Параметры ноды (черновик)
 - **Credentials**: `Redis` (host, port, username, password, TLS — опционально, DB index).
-- **Stream Key**: string (обязательно). Ключ Redis Stream, например `events:stt`.
+- **Stream Key**: string (обязательно). Ключ Redis Stream, например `events:stt`. по умолчанию `events:default`.
 - **Message ID**: string (по умолчанию `*`). При необходимости задать фиксированный ID.
-- **Payload Mode**: options — `json` | `flatten`.
+- **Payload Mode**: options — `json` | `kv`.
   - `json`: отправлять одной парой `field:"data"`, значение — `JSON.stringify($json)`.
-  - `flatten`: разворачивать `item.json` в пары field=value (все значения строковые, вложенные объекты — `JSON.stringify`).
-- **Additional Fields**: коллекция пользовательских полей (добавляются к сообщению помимо входных данных).
-- **MAXLEN Approx**: number (опционально). Использовать `MAXLEN ~ <N>` для ограничения длины потока.
+  - `kv`: поля берутся из параметра `Payload` (UI-коллекция ключ-значение). Можно добавлять несколько пар; `item.json` не используется.
+- **Payload**: коллекция ключ-значение для режима `kv` (формирует пары поля сообщения). В режиме `json` игнорируется.
+- **MAXLEN Approx**: number (опционально). Использовать `MAXLEN ~ <N>` для ограничения длины потока. Если не указать — `MAXLEN` не применяется; по требованию можно захардкодить константу в реализации.
 - **EXPIRATION (stream key TTL)**: number (секунды, опционально). Выполнить `EXPIRE <key> <ttl>` после `XADD`.
 - **Return**: вернуть сгенерированный `id` сообщения и echo-данные.
 
 ## Поведение `execute`
 1. Инициализировать singleton Redis клиента из кредов.
 2. На каждый входной item:
-   - Сформировать поля сообщения по выбранному режиму + дополнительные поля.
+   - Сформировать поля сообщения: для `json` — пара `data=JSON.stringify($json)`; для `kv` — пары из параметра `Payload`.
    - Выполнить `XADD <stream> [MAXLEN ~ N] <messageId|*> field1 value1 field2 value2 ...`.
    - Если задан `TTL`, выполнить `EXPIRE <stream> <ttl>` (best-effort).
    - Вернуть `{ stream, id, fields }` с привязкой к item.
