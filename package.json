@@ -1,6 +1,6 @@
 {
   "name": "ivan-k-automation-tools",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Набор микросервисов и инструментов для автоматизации",
   "main": "index.js",
   "scripts": {

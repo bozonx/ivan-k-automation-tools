@@ -98,53 +98,11 @@ export class BozonxRedisCache implements INodeType {
             displayName: 'Field',
             values: [
               {
-                displayName: 'Boolean Value',
-                name: 'valueBoolean',
-                type: 'boolean',
-                default: false,
-              },
-              {
-                displayName: 'Field Type',
-                name: 'fieldType',
-                type: 'options',
-                options: [
-                  { name: 'Array', value: 'array' },
-                  { name: 'Boolean', value: 'boolean' },
-                  { name: 'JSON (Any)', value: 'json' },
-                  { name: 'Null', value: 'null' },
-                  { name: 'Number', value: 'number' },
-                  { name: 'Object', value: 'object' },
-                  { name: 'String', value: 'string' },
-                ],
-                default: 'string',
-                description: 'Target JSON type for the field value; validated and converted on write',
-              },
-              {
-                displayName: 'JSON Value',
-                name: 'valueJson',
-                type: 'string',
-                default: '',
-                placeholder: '{ \'nested\': true }',
-                description: 'Provide a valid JSON to be parsed as the field value',
-              },
-              {
                 displayName: 'Key',
                 name: 'key',
                 type: 'string',
                 default: '',
                 required: true,
-              },
-              {
-                displayName: 'Number Value',
-                name: 'valueNumber',
-                type: 'number',
-                default: 0,
-              },
-              {
-                displayName: 'String Value',
-                name: 'valueString',
-                type: 'string',
-                default: '',
               },
               {
                 displayName: 'Value Type',
@@ -159,6 +117,36 @@ export class BozonxRedisCache implements INodeType {
                 ],
                 default: 'string',
                 description: 'Type of the value to serialize into JSON',
+              },
+              {
+                displayName: 'String Value',
+                name: 'valueString',
+                type: 'string',
+                default: '',
+                displayOptions: { show: { valueType: ['string'] } },
+              },
+              {
+                displayName: 'Number Value',
+                name: 'valueNumber',
+                type: 'number',
+                default: 0,
+                displayOptions: { show: { valueType: ['number'] } },
+              },
+              {
+                displayName: 'Boolean Value',
+                name: 'valueBoolean',
+                type: 'boolean',
+                default: false,
+                displayOptions: { show: { valueType: ['boolean'] } },
+              },
+              {
+                displayName: 'JSON Value',
+                name: 'valueJson',
+                type: 'string',
+                default: '',
+                placeholder: '{ \'nested\': true }',
+                description: 'Provide a valid JSON to be parsed as the field value',
+                displayOptions: { show: { valueType: ['json'] } },
               },
             ],
           },
@@ -279,107 +267,11 @@ export class BozonxRedisCache implements INodeType {
                   }
                   case 'string':
                   default: {
-                    // No coercion needed for string type
+                    value = pair.valueString ?? '';
                     break;
                   }
                 }
-
-              const fieldType = (pair.fieldType ?? 'string') as NonNullable<FieldPair['fieldType']>;
-              let coerced: unknown = value;
-              switch (fieldType) {
-                case 'string': {
-                  if (typeof value === 'string') {
-                    coerced = value;
-                  } else if (value === null || value === undefined) {
-                    coerced = '';
-                  } else if (typeof value === 'object') {
-                    try {
-                      coerced = JSON.stringify(value);
-                    } catch {
-                      throw new NodeOperationError(this.getNode(), `Cannot convert field "${k}" to string`, { itemIndex: i });
-                    }
-                  } else {
-                    coerced = String(value);
-                  }
-                  break;
-                }
-                case 'number': {
-                  if (typeof value === 'number' && Number.isFinite(value)) {
-                    coerced = value;
-                  } else if (typeof value === 'string' && value.trim() !== '' && Number.isFinite(Number(value))) {
-                    coerced = Number(value);
-                  } else {
-                    throw new NodeOperationError(this.getNode(), `Invalid number for field "${k}"`, { itemIndex: i });
-                  }
-                  break;
-                }
-                case 'boolean': {
-                  if (typeof value === 'boolean') {
-                    coerced = value;
-                  } else if (typeof value === 'string') {
-                    const v = value.toLowerCase().trim();
-                    if (v === 'true' || v === '1') coerced = true;
-                    else if (v === 'false' || v === '0') coerced = false;
-                    else throw new NodeOperationError(this.getNode(), `Invalid boolean for field "${k}"`, { itemIndex: i });
-                  } else if (typeof value === 'number') {
-                    if (value === 1) coerced = true;
-                    else if (value === 0) coerced = false;
-                    else throw new NodeOperationError(this.getNode(), `Invalid boolean for field "${k}"`, { itemIndex: i });
-                  } else {
-                    throw new NodeOperationError(this.getNode(), `Invalid boolean for field "${k}"`, { itemIndex: i });
-                  }
-                  break;
-                }
-                case 'null': {
-                  coerced = null;
-                  break;
-                }
-                case 'object': {
-                  if (value && typeof value === 'object' && !Array.isArray(value)) {
-                    coerced = value;
-                  } else if (typeof value === 'string') {
-                    try {
-                      const parsed = JSON.parse(value);
-                      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
-                        coerced = parsed;
-                      } else {
-                        throw new NodeOperationError(this.getNode(), `Invalid object for field "${k}"`, { itemIndex: i });
-                      }
-                    } catch {
-                      throw new NodeOperationError(this.getNode(), `Invalid object for field "${k}"`, { itemIndex: i });
-                    }
-                  } else {
-                    throw new NodeOperationError(this.getNode(), `Invalid object for field "${k}"`, { itemIndex: i });
-                  }
-                  break;
-                }
-                case 'array': {
-                  if (Array.isArray(value)) {
-                    coerced = value;
-                  } else if (typeof value === 'string') {
-                    try {
-                      const parsed = JSON.parse(value);
-                      if (Array.isArray(parsed)) {
-                        coerced = parsed;
-                      } else {
-                        throw new NodeOperationError(this.getNode(), `Invalid array for field "${k}"`, { itemIndex: i });
-                      }
-                    } catch {
-                      throw new NodeOperationError(this.getNode(), `Invalid array for field "${k}"`, { itemIndex: i });
-                    }
-                  } else {
-                    throw new NodeOperationError(this.getNode(), `Invalid array for field "${k}"`, { itemIndex: i });
-                  }
-                  break;
-                }
-                case 'json':
-                default: {
-                  coerced = value;
-                  break;
-                }
-              }
-
-              obj[k] = coerced;
+              obj[k] = value;
             }
             normalized = JSON.stringify(obj);
             }
