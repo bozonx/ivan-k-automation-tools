@@ -7,16 +7,36 @@ Community node для n8n для кэширования данных в Redis: �
 Sections:
 
 - [Installation](#installation)
+- [Quick start](#quick-start)
 - [How it works](#how-it-works)
 - [Parameters](#parameters)
 - [Credentials](#credentials)
 - [Advanced](#advanced)
+- [Ошибки и Continue On Fail](#ошибки-и-continue-on-fail)
 - [Compatibility](#compatibility)
 - [Resources](#resources)
 
 ## Installation
 
 Follow the official community nodes installation guide: https://docs.n8n.io/integrations/community-nodes/installation/
+
+## Quick start
+
+1. Настройте креды `Redis`.
+   - Host: `{{$env.REDIS_HOST}}` (пример)
+   - Password: `{{$env.REDIS_PASSWORD}}` (пример)
+2. Запись (Write):
+   - Mode: `Write`
+   - Key: `cache:hello`
+   - Payload Type: `JSON`
+   - Data (JSON): `{ "msg": "world" }`
+   - TTL Unit: `hours`, TTL Value: `1` (или `0` для бесконечного)
+   - Результат: `{ "ok": true, "key": "cache:hello", "ttlSeconds": 3600 }`
+3. Чтение (Read):
+   - Mode: `Read`
+   - Key: `cache:hello`
+   - Результат при попадании: `{ "found": true, "key": "cache:hello", "value": { "msg": "world" } }`
+   - Результат при промахе: `{ "found": false, "key": "cache:hello" }`
 
 ## How it works
 
@@ -51,6 +71,11 @@ Follow the official community nodes installation guide: https://docs.n8n.io/inte
     - `Boolean` — ввод в поле "Boolean Value".
     - `Null` — значение будет `null`.
     - `JSON` — ввод валидного JSON в поле "JSON Value" (парсится в объект/массив/примитив).
+    Также доступен параметр **Field Type** — целевой тип JSON для каждого поля. Значение будет приведено к выбранному типу и провалидировано:
+    - `String`, `Number`, `Boolean`, `Null` — примитивные типы
+    - `Object` — требуются объекты (либо строка с валидным JSON-объектом)
+    - `Array` — требуются массивы (либо строка с валидным JSON-массивом)
+    - `JSON (any)` — допускает любой валидный JSON без дополнительного приведения
   - **TTL Unit** (options)
     Единицы измерения TTL: `seconds`, `minutes`, `hours`, `days`. По умолчанию — `hours`.
   - **TTL Value** (number)
@@ -77,6 +102,30 @@ Follow the official community nodes installation guide: https://docs.n8n.io/inte
 - Поддерживается настройка ноды **Continue On Fail** — при ошибке айтем вернёт `{ "error": "..." }`, и обработка продолжится для остальных.
 - Одно подключение к Redis создаётся на запуск `execute` и закрывается после обработки всех айтемов.
 - При записи `ttl > 0` используется `SET key value EX <seconds>`, иначе — обычный `SET`.
+
+## Ошибки и Continue On Fail
+
+Нода валидирует ввод и может генерировать ошибки. Примеры ситуаций:
+
+- Невалидный JSON в поле `Data (JSON)` — ошибка: `Invalid JSON provided in Data`.
+- Невалидный JSON в `JSON Value` для Custom Fields — ошибка: `Invalid JSON for field "<key>"`.
+- Пустой ключ поля в Custom Fields — ошибка: `Field key must not be empty`.
+- Невалидное число в Custom Fields (тип `Number`) — ошибка: `Invalid number for field "<key>"`.
+- Невалидный объект для `Field Type = Object` — ошибка: `Invalid object for field "<key>"`.
+- Невалидный массив для `Field Type = Array` — ошибка: `Invalid array for field "<key>"`.
+- При чтении обнаружено не-JSON значение — ошибка: `Stored value is not valid JSON`.
+- TTL < 0 — ошибка: `TTL must be >= 0`.
+
+Если в настройках ноды включить **Continue On Fail**, то при ошибке айтем не прервёт весь запуск и вернёт структуру вида:
+
+```json
+{ "error": "<message>" }
+```
+
+Примечания:
+
+- Параметр `TTL Value` имеет ограничение минимального значения `0` (значение `0` означает отсутствие срока жизни).
+- В заголовке узла отображается подзаголовок вида `Write: cache:hello` — помогает различать режим и ключ прямо на канвасе.
 
 ## Compatibility
 

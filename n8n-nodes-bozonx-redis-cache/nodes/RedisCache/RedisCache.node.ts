@@ -103,6 +103,22 @@ export class RedisCache implements INodeType {
                 description: 'Type of the value to serialize into JSON',
               },
               {
+                displayName: 'Field Type',
+                name: 'fieldType',
+                type: 'options',
+                options: [
+                  { name: 'String', value: 'string' },
+                  { name: 'Number', value: 'number' },
+                  { name: 'Boolean', value: 'boolean' },
+                  { name: 'Null', value: 'null' },
+                  { name: 'Object', value: 'object' },
+                  { name: 'Array', value: 'array' },
+                  { name: 'JSON (any)', value: 'json' },
+                ],
+                default: 'string',
+                description: 'Target JSON type for the field value; validated and converted on write',
+              },
+              {
                 displayName: 'String Value',
                 name: 'valueString',
                 type: 'string',
@@ -251,16 +267,104 @@ export class RedisCache implements INodeType {
                   }
                   case 'string':
                   default: {
-                    value = ((pair as any).valueString as string) ?? '';
+                    // No coercion needed for string type
                     break;
                   }
                 }
-                obj[k] = value;
-              }
-              normalized = JSON.stringify(obj);
-            }
 
-            const ttl = (this.getNodeParameter('ttl', i, 0) as number) ?? 0;
+              const fieldType = ((pair as any).fieldType as string) || 'string';
+              let coerced: unknown = value;
+              switch (fieldType) {
+                case 'string': {
+                  if (typeof value === 'string') {
+                    coerced = value;
+                  } else if (value === null || value === undefined) {
+                    coerced = '';
+                  } else if (typeof value === 'object') {
+                    try {
+                      coerced = JSON.stringify(value);
+                    } catch {
+                      throw new NodeOperationError(this.getNode(), `Cannot convert field "${k}" to string`, { itemIndex: i });
+                    }
+                  } else {
+                    coerced = String(value);
+                  }
+                  break;
+                }
+                case 'number': {
+                  if (typeof value === 'number' && Number.isFinite(value)) {
+                    coerced = value;
+                  } else if (typeof value === 'string' && value.trim() !== '' && Number.isFinite(Number(value))) {
+                    coerced = Number(value);
+                  } else {
+                    throw new NodeOperationError(this.getNode(), `Invalid number for field "${k}"`, { itemIndex: i });
+                  }
+                  break;
+                }
+                case 'boolean': {
+                  if (typeof value === 'boolean') {
+                    coerced = value;
+                  } else if (typeof value === 'string') {
+                    const v = value.toLowerCase().trim();
+                    if (v === 'true' || v === '1') coerced = true;
+                    else if (v === 'false' || v === '0') coerced = false;
+                    else throw new NodeOperationError(this.getNode(), `Invalid boolean for field "${k}"`, { itemIndex: i });
+                  } else if (typeof value === 'number') {
+                    if (value === 1) coerced = true;
+                    else if (value === 0) coerced = false;
+                    else throw new NodeOperationError(this.getNode(), `Invalid boolean for field "${k}"`, { itemIndex: i });
+                  } else {
+                    throw new NodeOperationError(this.getNode(), `Invalid boolean for field "${k}"`, { itemIndex: i });
+                  }
+                  break;
+                }
+                case 'null': {
+                  coerced = null;
+                  break;
+                }
+                case 'object': {
+                  if (value && typeof value === 'object' && !Array.isArray(value)) {
+                    coerced = value;
+                  } else if (typeof value === 'string') {
+                    try {
+                      const parsed = JSON.parse(value);
+                      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) coerced = parsed;
+                      else throw new Error('not object');
+                    } catch {
+                      throw new NodeOperationError(this.getNode(), `Invalid object for field "${k}"`, { itemIndex: i });
+                    }
+                  } else {
+                    throw new NodeOperationError(this.getNode(), `Invalid object for field "${k}"`, { itemIndex: i });
+                  }
+                  break;
+                }
+                case 'array': {
+                  if (Array.isArray(value)) {
+                    coerced = value;
+                  } else if (typeof value === 'string') {
+                    try {
+                      const parsed = JSON.parse(value);
+                      if (Array.isArray(parsed)) coerced = parsed;
+                      else throw new Error('not array');
+                    } catch {
+                      throw new NodeOperationError(this.getNode(), `Invalid array for field "${k}"`, { itemIndex: i });
+                    }
+                  } else {
+                    throw new NodeOperationError(this.getNode(), `Invalid array for field "${k}"`, { itemIndex: i });
+                  }
+                  break;
+                }
+                case 'json':
+                default: {
+                  coerced = value;
+                  break;
+                }
+              }
+
+              obj[k] = coerced;
+            }
+            normalized = JSON.stringify(obj);
+            const ttl = this.getNodeParameter('ttl', i, 0) as number;
             if (ttl < 0) {
               throw new NodeOperationError(this.getNode(), 'TTL must be >= 0', { itemIndex: i });
             }
