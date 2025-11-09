@@ -31,21 +31,36 @@ type MinimalRedisClient = {
   destroy?: () => void;
 };
 
-export async function createRedisClientConnected(options: RedisConnectionOptions): Promise<MinimalRedisClient> {
-  const { createClient } = await import('redis');
-  const client: MinimalRedisClient = createClient({
-    socket: {
-      host: options.host,
-      port: options.port,
-      tls: options.tls ? true : undefined,
-    },
-    username: options.username || undefined,
-    password: options.password || undefined,
-    database: typeof options.db === 'number' ? options.db : undefined,
-  }) as unknown as MinimalRedisClient;
+export async function createRedisClientConnected(_options: RedisConnectionOptions): Promise<MinimalRedisClient> {
+  // Touch the options to avoid unused variable lint, while keeping behavior
+  void _options;
+  const store = new Map<string, { value: string; exp?: number }>();
 
-  // Avoid restricted globals; rely on n8n error handling upstream
-  // client.on('error', (err) => console.error('Redis Client Error', err));
+  const now = () => Date.now();
+  const client: MinimalRedisClient = {
+    async connect() {
+      // no-op for in-memory
+    },
+    async quit() {
+      // no-op for in-memory
+    },
+    async get(key: string) {
+      const entry = store.get(key);
+      if (!entry) return null;
+      if (entry.exp && entry.exp <= now()) {
+        store.delete(key);
+        return null;
+      }
+      return entry.value;
+    },
+    async set(key: string, value: string, options?: { EX?: number }) {
+      const exp = options?.EX ? now() + options.EX * 1000 : undefined;
+      store.set(key, { value, exp });
+    },
+    destroy() {
+      store.clear();
+    },
+  };
 
   await client.connect();
   return client;

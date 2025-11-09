@@ -431,7 +431,6 @@ export class RedisCache implements INodeType {
           await client.quit();
         } catch {
           // Fallback in case quit fails
-          // @ts-expect-error
           client.destroy?.();
         }
       }
