@@ -15,6 +15,7 @@ Sections:
 - [Ошибки и Continue On Fail](#ошибки-и-continue-on-fail)
 - [Compatibility](#compatibility)
 - [Resources](#resources)
+- [Dev](#dev)
 
 ## Installation
 
@@ -135,3 +136,23 @@ Built and tested with n8n `1.60.0+`.
 
 - n8n community nodes docs: https://docs.n8n.io/integrations/#community-nodes
 - node-redis (официальный клиент): https://github.com/redis/node-redis
+
+## Dev
+
+- **Local scripts**
+  - Install deps: `pnpm install`
+  - Lint: `pnpm lint`
+  - Build: `pnpm build`
+  - Dev (watch): `pnpm dev` or `pnpm run build:watch`
+
+- **Publish to npm (via pnpm)**
+  1. Login to npm (once): `pnpm login`
+  2. Bump version: `pnpm version patch` (or `minor`/`major`)
+  3. Build artifacts: `pnpm build`
+  4. Publish as public package: `pnpm publish --access public`
+  5. Verify: `npm info n8n-nodes-bozonx-redis-cache`
+
+- **Notes**
+  - `prepublishOnly` runs `n8n-node prerelease` automatically before publishing.
+  - If you use 2FA, the CLI will ask for a one-time code during `publish`.
+  - Dry run: `pnpm publish --dry-run` to preview the package contents.

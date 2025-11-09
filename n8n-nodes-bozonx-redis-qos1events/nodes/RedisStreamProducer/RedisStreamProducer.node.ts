@@ -36,14 +36,6 @@ export class RedisStreamProducer implements INodeType {
           'Redis Stream key to append messages to, e.g. "events:stt"',
       },
       {
-        displayName: 'Message ID',
-        name: 'messageId',
-        type: 'string',
-        default: '*',
-        description:
-          'Message ID to use for XADD. Use * to let Redis assign an auto-generated ID.',
-      },
-      {
         displayName: 'Payload Mode',
         name: 'payloadMode',
         type: 'options',
@@ -130,7 +122,7 @@ export class RedisStreamProducer implements INodeType {
     for (let i = 0; i < items.length; i++) {
       try {
         const streamKey = (this.getNodeParameter('streamKey', i) as string).trim();
-        const messageIdParam = (this.getNodeParameter('messageId', i) as string).trim() || '*';
+        const messageIdParam = '*';
         const payloadMode = this.getNodeParameter('payloadMode', i) as string;
         const maxLen = (this.getNodeParameter('maxLen', i) as number) || 0;
         const ttlSec = (this.getNodeParameter('ttlSec', i) as number) || 0;

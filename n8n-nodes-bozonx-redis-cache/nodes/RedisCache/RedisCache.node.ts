@@ -364,6 +364,7 @@ export class RedisCache implements INodeType {
               obj[k] = coerced;
             }
             normalized = JSON.stringify(obj);
+            }
             const ttl = this.getNodeParameter('ttl', i, 0) as number;
             if (ttl < 0) {
               throw new NodeOperationError(this.getNode(), 'TTL must be >= 0', { itemIndex: i });

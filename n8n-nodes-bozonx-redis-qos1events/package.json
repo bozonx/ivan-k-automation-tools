@@ -38,16 +38,16 @@
         ]
     },
     "devDependencies": {
-        "@n8n/node-cli": "*",
-        "eslint": "9.32.0",
+        "@n8n/node-cli": "^0.14.0",
+        "eslint": "9.39.1",
         "prettier": "3.6.2",
-        "release-it": "^19.0.4",
-        "typescript": "5.9.2"
+        "release-it": "^19.0.6",
+        "typescript": "5.9.3"
     },
     "peerDependencies": {
         "n8n-workflow": "*"
     },
     "dependencies": {
-    "redis": "^5.9.0"
-  }
+        "redis": "^5.9.0"
+    }
 }
