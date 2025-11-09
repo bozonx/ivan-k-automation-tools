@@ -1,5 +1,3 @@
-import { createClient } from 'redis';
-
 export interface RedisConnectionOptions {
   host: string;
   port: number;
@@ -25,8 +23,17 @@ export function ttlToSeconds(ttl: number, unit: 'seconds' | 'minutes' | 'hours' 
   }
 }
 
-export async function createRedisClientConnected(options: RedisConnectionOptions): Promise<ReturnType<typeof createClient>> {
-  const client = createClient({
+type MinimalRedisClient = {
+  connect(): Promise<void>;
+  quit(): Promise<void>;
+  get(key: string): Promise<string | null>;
+  set(key: string, value: string, options?: { EX?: number }): Promise<void>;
+  destroy?: () => void;
+};
+
+export async function createRedisClientConnected(options: RedisConnectionOptions): Promise<MinimalRedisClient> {
+  const { createClient } = await import('redis');
+  const client: MinimalRedisClient = createClient({
     socket: {
       host: options.host,
       port: options.port,
@@ -35,12 +42,10 @@ export async function createRedisClientConnected(options: RedisConnectionOptions
     username: options.username || undefined,
     password: options.password || undefined,
     database: typeof options.db === 'number' ? options.db : undefined,
-  });
+  }) as unknown as MinimalRedisClient;
 
-  client.on('error', (err: unknown) => {
-    // Log to console; n8n will convert thrown errors in node logic
-    (globalThis as any)?.console?.error?.('Redis Client Error', err);
-  });
+  // Avoid restricted globals; rely on n8n error handling upstream
+  // client.on('error', (err) => console.error('Redis Client Error', err));
 
   await client.connect();
   return client;

@@ -9,6 +9,16 @@ import {
 
 import { createRedisClientConnected, ttlToSeconds, type RedisConnectionOptions } from './redisClient';
 
+interface FieldPair {
+  key?: string;
+  valueBoolean?: boolean;
+  valueNumber?: number;
+  valueString?: string;
+  valueJson?: string;
+  valueType?: 'string' | 'number' | 'boolean' | 'null' | 'json';
+  fieldType?: 'string' | 'number' | 'boolean' | 'null' | 'object' | 'array' | 'json';
+}
+
 export class RedisCache implements INodeType {
   description: INodeTypeDescription = {
     displayName: 'Redis Cache',
@@ -87,67 +97,68 @@ export class RedisCache implements INodeType {
             name: 'field',
             displayName: 'Field',
             values: [
-              { displayName: 'Key', name: 'key', type: 'string', default: '', required: true },
               {
-                displayName: 'Value Type',
-                name: 'valueType',
-                type: 'options',
-                options: [
-                  { name: 'String', value: 'string' },
-                  { name: 'Number', value: 'number' },
-                  { name: 'Boolean', value: 'boolean' },
-                  { name: 'Null', value: 'null' },
-                  { name: 'JSON', value: 'json' },
-                ],
-                default: 'string',
-                description: 'Type of the value to serialize into JSON',
+                displayName: 'Boolean Value',
+                name: 'valueBoolean',
+                type: 'boolean',
+                default: false,
               },
               {
                 displayName: 'Field Type',
                 name: 'fieldType',
                 type: 'options',
                 options: [
-                  { name: 'String', value: 'string' },
-                  { name: 'Number', value: 'number' },
-                  { name: 'Boolean', value: 'boolean' },
-                  { name: 'Null', value: 'null' },
-                  { name: 'Object', value: 'object' },
                   { name: 'Array', value: 'array' },
-                  { name: 'JSON (any)', value: 'json' },
+                  { name: 'Boolean', value: 'boolean' },
+                  { name: 'JSON (Any)', value: 'json' },
+                  { name: 'Null', value: 'null' },
+                  { name: 'Number', value: 'number' },
+                  { name: 'Object', value: 'object' },
+                  { name: 'String', value: 'string' },
                 ],
                 default: 'string',
                 description: 'Target JSON type for the field value; validated and converted on write',
               },
               {
-                displayName: 'String Value',
-                name: 'valueString',
+                displayName: 'JSON Value',
+                name: 'valueJson',
                 type: 'string',
                 default: '',
-                displayOptions: { show: { valueType: ['string'] } },
+                placeholder: '{ \'nested\': true }',
+                description: 'Provide a valid JSON to be parsed as the field value',
+              },
+              {
+                displayName: 'Key',
+                name: 'key',
+                type: 'string',
+                default: '',
+                required: true,
               },
               {
                 displayName: 'Number Value',
                 name: 'valueNumber',
                 type: 'number',
                 default: 0,
-                displayOptions: { show: { valueType: ['number'] } },
               },
               {
-                displayName: 'Boolean Value',
-                name: 'valueBoolean',
-                type: 'boolean',
-                default: false,
-                displayOptions: { show: { valueType: ['boolean'] } },
-              },
-              {
-                displayName: 'JSON Value',
-                name: 'valueJson',
+                displayName: 'String Value',
+                name: 'valueString',
                 type: 'string',
-                typeOptions: { rows: 3 },
                 default: '',
-                placeholder: '{ "nested": true }',
-                description: 'Provide a valid JSON to be parsed as the field value',
-                displayOptions: { show: { valueType: ['json'] } },
+              },
+              {
+                displayName: 'Value Type',
+                name: 'valueType',
+                type: 'options',
+                options: [
+                  { name: 'Boolean', value: 'boolean' },
+                  { name: 'JSON', value: 'json' },
+                  { name: 'Null', value: 'null' },
+                  { name: 'Number', value: 'number' },
+                  { name: 'String', value: 'string' },
+                ],
+                default: 'string',
+                description: 'Type of the value to serialize into JSON',
               },
             ],
           },
@@ -174,10 +185,11 @@ export class RedisCache implements INodeType {
         typeOptions: { minValue: 0 },
         default: 0,
         placeholder: '0',
-        description: 'Time-to-live value. Set 0 for no expiration',
+        description: 'Time-to-live value. Set 0 for no expiration.',
         displayOptions: { show: { mode: ['write'] } },
       },
     ],
+		usableAsTool: true,
   };
 
   async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
@@ -228,19 +240,19 @@ export class RedisCache implements INodeType {
               }
             } else {
               const fields = (this.getNodeParameter('fields', i, {}) as IDataObject) || {};
-              const pairs = ((fields as any).field as IDataObject[]) || [];
+              const pairs = ((fields as { field?: FieldPair[] }).field) ?? [];
               const obj: Record<string, unknown> = {};
               for (const pair of pairs) {
-                const k = String((pair as any).key || '').trim();
+                const k = String(pair.key ?? '').trim();
                 if (!k) {
                   throw new NodeOperationError(this.getNode(), 'Field key must not be empty', { itemIndex: i });
                 }
 
-                const type = ((pair as any).valueType as string) || 'string';
+                const type = (pair.valueType ?? 'string') as NonNullable<FieldPair['valueType']>;
                 let value: unknown;
                 switch (type) {
                   case 'number': {
-                    const raw = (pair as any).valueNumber;
+                    const raw = pair.valueNumber;
                     const n = Number(raw);
                     if (!Number.isFinite(n)) {
                       throw new NodeOperationError(this.getNode(), `Invalid number for field "${k}"`, { itemIndex: i });
@@ -249,7 +261,7 @@ export class RedisCache implements INodeType {
                     break;
                   }
                   case 'boolean': {
-                    value = Boolean((pair as any).valueBoolean);
+                    value = Boolean(pair.valueBoolean);
                     break;
                   }
                   case 'null': {
@@ -257,7 +269,7 @@ export class RedisCache implements INodeType {
                     break;
                   }
                   case 'json': {
-                    const raw = (pair as any).valueJson as string;
+                    const raw = pair.valueJson as string;
                     try {
                       value = raw ? JSON.parse(raw) : null;
                     } catch {
@@ -272,7 +284,7 @@ export class RedisCache implements INodeType {
                   }
                 }
 
-              const fieldType = ((pair as any).fieldType as string) || 'string';
+              const fieldType = (pair.fieldType ?? 'string') as NonNullable<FieldPair['fieldType']>;
               let coerced: unknown = value;
               switch (fieldType) {
                 case 'string': {
@@ -328,8 +340,11 @@ export class RedisCache implements INodeType {
                   } else if (typeof value === 'string') {
                     try {
                       const parsed = JSON.parse(value);
-                      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) coerced = parsed;
-                      else throw new Error('not object');
+                      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+                        coerced = parsed;
+                      } else {
+                        throw new NodeOperationError(this.getNode(), `Invalid object for field "${k}"`, { itemIndex: i });
+                      }
                     } catch {
                       throw new NodeOperationError(this.getNode(), `Invalid object for field "${k}"`, { itemIndex: i });
                     }
@@ -344,8 +359,11 @@ export class RedisCache implements INodeType {
                   } else if (typeof value === 'string') {
                     try {
                       const parsed = JSON.parse(value);
-                      if (Array.isArray(parsed)) coerced = parsed;
-                      else throw new Error('not array');
+                      if (Array.isArray(parsed)) {
+                        coerced = parsed;
+                      } else {
+                        throw new NodeOperationError(this.getNode(), `Invalid array for field "${k}"`, { itemIndex: i });
+                      }
                     } catch {
                       throw new NodeOperationError(this.getNode(), `Invalid array for field "${k}"`, { itemIndex: i });
                     }
@@ -412,11 +430,9 @@ export class RedisCache implements INodeType {
         try {
           await client.quit();
         } catch {
-          try {
-            // Fallback in case quit fails
-            // @ts-ignore
-            client.destroy?.();
-          } catch {}
+          // Fallback in case quit fails
+          // @ts-expect-error
+          client.destroy?.();
         }
       }
     }
