@@ -50,6 +50,18 @@ export class RedisCache implements INodeType {
         description: 'Redis key to store or read the value',
       },
       {
+        displayName: 'Payload Type',
+        name: 'payloadType',
+        type: 'options',
+        options: [
+          { name: 'JSON', value: 'json' },
+          { name: 'Custom Fields', value: 'fields' },
+        ],
+        default: 'json',
+        description: 'Select the payload source',
+        displayOptions: { show: { mode: ['write'] } },
+      },
+      {
         displayName: 'Data (JSON)',
         name: 'data',
         type: 'string',
@@ -58,16 +70,27 @@ export class RedisCache implements INodeType {
         required: true,
         placeholder: '{ "foo": "bar" }',
         description: 'JSON string to store as the Redis value',
-        displayOptions: { show: { mode: ['write'] } },
+        displayOptions: { show: { mode: ['write'], payloadType: ['json'] } },
       },
       {
-        displayName: 'TTL Value',
-        name: 'ttl',
-        type: 'number',
-        default: 0,
-        placeholder: '0',
-        description: 'Time-to-live value. Set 0 for no expiration',
-        displayOptions: { show: { mode: ['write'] } },
+        displayName: 'Fields',
+        name: 'fields',
+        type: 'fixedCollection',
+        typeOptions: { multipleValues: true },
+        default: {},
+        placeholder: 'Add Field',
+        description: 'Key-value pairs to build a JSON object',
+        displayOptions: { show: { mode: ['write'], payloadType: ['fields'] } },
+        options: [
+          {
+            name: 'field',
+            displayName: 'Field',
+            values: [
+              { displayName: 'Key', name: 'key', type: 'string', default: '', required: true },
+              { displayName: 'Value', name: 'value', type: 'string', default: '' },
+            ],
+          },
+        ],
       },
       {
         displayName: 'TTL Unit',
@@ -79,8 +102,17 @@ export class RedisCache implements INodeType {
           { name: 'Hours', value: 'hours' },
           { name: 'Days', value: 'days' },
         ],
-        default: 'seconds',
+        default: 'hours',
         description: 'Unit for the TTL value',
+        displayOptions: { show: { mode: ['write'] } },
+      },
+      {
+        displayName: 'TTL Value',
+        name: 'ttl',
+        type: 'number',
+        default: 0,
+        placeholder: '0',
+        description: 'Time-to-live value. Set 0 for no expiration',
         displayOptions: { show: { mode: ['write'] } },
       },
     ],
@@ -117,25 +149,40 @@ export class RedisCache implements INodeType {
           }
 
           if (mode === 'write') {
-            const dataStr = this.getNodeParameter('data', i) as string;
-            if (!dataStr) {
-              throw new NodeOperationError(this.getNode(), 'Data (JSON) is required', { itemIndex: i });
-            }
+            const payloadType = this.getNodeParameter('payloadType', i, 'json') as 'json' | 'fields';
 
-            // Validate JSON and normalize stringification
             let normalized: string;
-            try {
-              const parsed = JSON.parse(dataStr);
-              normalized = JSON.stringify(parsed);
-            } catch {
-              throw new NodeOperationError(this.getNode(), 'Invalid JSON provided in Data', { itemIndex: i });
+            if (payloadType === 'json') {
+              const dataStr = this.getNodeParameter('data', i) as string;
+              if (!dataStr) {
+                throw new NodeOperationError(this.getNode(), 'Data (JSON) is required', { itemIndex: i });
+              }
+
+              try {
+                const parsed = JSON.parse(dataStr);
+                normalized = JSON.stringify(parsed);
+              } catch {
+                throw new NodeOperationError(this.getNode(), 'Invalid JSON provided in Data', { itemIndex: i });
+              }
+            } else {
+              const fields = (this.getNodeParameter('fields', i, {}) as IDataObject) || {};
+              const pairs = ((fields as any).field as IDataObject[]) || [];
+              const obj: Record<string, unknown> = {};
+              for (const pair of pairs) {
+                const k = String((pair as any).key || '').trim();
+                if (!k) {
+                  throw new NodeOperationError(this.getNode(), 'Field key must not be empty', { itemIndex: i });
+                }
+                obj[k] = (pair as any).value as string;
+              }
+              normalized = JSON.stringify(obj);
             }
 
             const ttl = (this.getNodeParameter('ttl', i, 0) as number) ?? 0;
             if (ttl < 0) {
               throw new NodeOperationError(this.getNode(), 'TTL must be >= 0', { itemIndex: i });
             }
-            const ttlUnit = (this.getNodeParameter('ttlUnit', i, 'seconds') as 'seconds' | 'minutes' | 'hours' | 'days');
+            const ttlUnit = (this.getNodeParameter('ttlUnit', i, 'hours') as 'seconds' | 'minutes' | 'hours' | 'days');
             const ttlSeconds = ttlToSeconds(ttl, ttlUnit);
 
             if (ttlSeconds > 0) {

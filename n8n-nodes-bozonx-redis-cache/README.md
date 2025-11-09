@@ -38,12 +38,18 @@ Follow the official community nodes installation guide: https://docs.n8n.io/inte
   Ключ в Redis, под которым сохраняется/читается значение, например `cache:my-key`.
 
 - Для режима `Write`:
-  - **Data (JSON)** (string, required)
-    Строка с корректным JSON. Пример: `{ "foo": "bar" }`.
+  - **Payload Type** (options)
+    Источник данных для записи:
+    - `JSON` — введите строку с корректным JSON в поле "Data (JSON)". Пример: `{ "foo": "bar" }`.
+    - `Custom Fields` — добавьте произвольные пары ключ-значение в коллекции "Fields"; они будут преобразованы в JSON-объект.
+  - **Data (JSON)** (string, required при `Payload Type = JSON`)
+    Строка с корректным JSON.
+  - **Fields** (fixedCollection, multiple)
+    Набор полей `key`/`value`, собираемый в JSON-объект при записи.
+  - **TTL Unit** (options)
+    Единицы измерения TTL: `seconds`, `minutes`, `hours`, `days`. По умолчанию — `hours`.
   - **TTL Value** (number)
     Числовое значение TTL. `0` — без срока жизни.
-  - **TTL Unit** (options)
-    Единицы измерения TTL: `seconds`, `minutes`, `hours`, `days`.
 
 ## Credentials
 
