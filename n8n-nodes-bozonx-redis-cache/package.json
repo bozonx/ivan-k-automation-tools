@@ -31,7 +31,7 @@
       "n8nNodesApiVersion": 1,
       "strict": true,
       "nodes": [
-          "dist/nodes/RedisCache/RedisCache.node.js"
+          "dist/nodes/RedisCache/BozonxRedisCache.node.js"
       ],
       "credentials": [
           "dist/credentials/Redis.credentials.js"

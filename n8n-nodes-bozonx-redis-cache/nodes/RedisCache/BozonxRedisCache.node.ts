@@ -19,7 +19,7 @@ interface FieldPair {
   fieldType?: 'string' | 'number' | 'boolean' | 'null' | 'object' | 'array' | 'json';
 }
 
-export class RedisCache implements INodeType {
+export class BozonxRedisCache implements INodeType {
   description: INodeTypeDescription = {
     displayName: 'Redis Cache',
     name: 'bozonxRedisCache',
