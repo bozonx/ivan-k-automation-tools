@@ -17,6 +17,7 @@ export class RedisCache implements INodeType {
     version: 1,
     description: 'Read and write JSON values in Redis',
     defaults: { name: 'Redis Cache' },
+    icon: 'file:redis-cache.svg',
     inputs: ['main'],
     outputs: ['main'],
     documentationUrl:
@@ -37,6 +38,7 @@ export class RedisCache implements INodeType {
           { name: 'Read', value: 'read' },
         ],
         default: 'write',
+        description: 'Select the operation mode',
       },
       {
         displayName: 'Key',
@@ -44,7 +46,8 @@ export class RedisCache implements INodeType {
         type: 'string',
         default: '',
         required: true,
-        description: 'Key under which the value is stored in Redis',
+        placeholder: 'cache:my-key',
+        description: 'Redis key to store or read the value',
       },
       {
         displayName: 'Data (JSON)',
@@ -53,7 +56,8 @@ export class RedisCache implements INodeType {
         typeOptions: { rows: 5 },
         default: '',
         required: true,
-        description: 'JSON string to write as value',
+        placeholder: '{ "foo": "bar" }',
+        description: 'JSON string to store as the Redis value',
         displayOptions: { show: { mode: ['write'] } },
       },
       {
@@ -61,7 +65,8 @@ export class RedisCache implements INodeType {
         name: 'ttl',
         type: 'number',
         default: 0,
-        description: 'Time-to-live value. 0 means no expiration',
+        placeholder: '0',
+        description: 'Time-to-live value. Set 0 for no expiration',
         displayOptions: { show: { mode: ['write'] } },
       },
       {
@@ -75,6 +80,7 @@ export class RedisCache implements INodeType {
           { name: 'Days', value: 'days' },
         ],
         default: 'seconds',
+        description: 'Unit for the TTL value',
         displayOptions: { show: { mode: ['write'] } },
       },
     ],

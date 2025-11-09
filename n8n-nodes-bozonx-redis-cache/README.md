@@ -1,6 +1,6 @@
-# n8n Node: Bozonx STT Gateway Microservice
+# n8n Node: Redis Cache
 
-Community node for n8n that performs synchronous speech-to-text transcription from a public audio URL via the STT Gateway microservice (default provider: AssemblyAI).
+Community node для n8n для кэширования данных в Redis: запись/чтение JSON-значений с опциональным TTL.
 
 [n8n](https://n8n.io/) is a [fair-code licensed](https://docs.n8n.io/sustainable-use-license/) workflow automation platform.
 
@@ -20,81 +20,52 @@ Follow the official community nodes installation guide: https://docs.n8n.io/inte
 
 ## How it works
 
-The node sends a POST request to the microservice endpoint:
-
-```
-POST {{gatewayUrl}}/{{basePath}}/transcriptions/file
-Content-Type: application/json
-
-{
-  "audioUrl": "https://example.com/audio.mp3",
-  "provider": "assemblyai",  
-  "timestamps": false,
-  "restorePunctuation": true,
-  "apiKey": "YOUR_ASSEMBLYAI_KEY"
-}
-```
-
-- `gatewayUrl` comes from Credentials. It must include protocol (http/https) and have no trailing slash.
-- `basePath` is a node parameter. Leading/trailing slashes are ignored. Default: `stt/api/v1`.
-- Authentication is done via the `Authorization: Bearer <token>` header provided by Credentials.
-
-### Example successful response (200)
-
-```json
-{
-  "text": "Transcribed text...",
-  "provider": "assemblyai",
-  "requestId": "abc123",
-  "durationSec": 123.45,
-  "language": "en",
-  "confidenceAvg": 0.92,
-  "wordsCount": 204,
-  "processingMs": 8421,
-  "timestampsEnabled": false,
-  "punctuationRestored": true
-}
-```
+- Режимы:
+  - `Write` — записывает строку JSON по ключу. При `ttl > 0` устанавливается срок жизни ключа.
+  - `Read` — читает значение по ключу и пытается распарсить как JSON.
+- Хранение: в Redis сохраняется строка JSON. При чтении выполняется `JSON.parse`.
+- Возвращаемые данные:
+  - Write: `{ ok: true, key, ttlSeconds }`
+  - Read (miss): `{ found: false, key }`
+  - Read (hit): `{ found: true, key, value: <object> }`
 
 ## Parameters
 
-- **Base Path** (string)
-  Default: `stt/api/v1`. Appended to the Gateway URL. Leading/trailing slashes are ignored.
+- **Mode** (options)
+  Выбор режима ноды: `Write` или `Read`. По умолчанию — `Write`.
 
-- **Audio URL** (string, required)
-  Public HTTPS URL to the audio file.
+- **Key** (string, required)
+  Ключ в Redis, под которым сохраняется/читается значение, например `cache:my-key`.
 
-- **Provider** (options, optional)
-  Speech-to-text provider. If omitted, the microservice uses its default provider. Available: `assemblyai`.
-
-- **Timestamps** (boolean)
-  Include word-level timestamps in provider request (if supported). Default: `false`.
-
-- **Restore Punctuation** (boolean)
-  Ask the provider to restore punctuation when supported. Default: `true`.
-
-- **Provider API Key** (string, optional)
-  Direct provider API key (BYO) when allowed by service policy.
+- Для режима `Write`:
+  - **Data (JSON)** (string, required)
+    Строка с корректным JSON. Пример: `{ "foo": "bar" }`.
+  - **TTL Value** (number)
+    Числовое значение TTL. `0` — без срока жизни.
+  - **TTL Unit** (options)
+    Единицы измерения TTL: `seconds`, `minutes`, `hours`, `days`.
 
 ## Credentials
 
-Use the `Bozonx Microservices API` credentials:
+Используются креды `Redis`:
 
-- **Gateway URL** (required)
-  Base URL of your API Gateway, without the base path (no trailing slash). Example: `https://api.example.com`.
+- **Host** — имя хоста или IP (по умолчанию `localhost`).
+- **Port** — TCP-порт Redis (по умолчанию `6379`).
+- **Username** — ACL-пользователь (опционально).
+- **Password** — пароль (опционально).
+- **TLS** — включение TLS/SSL (boolean).
+- **DB Index** — индекс базы (по умолчанию `0`).
 
-- **API Token** (required)
-  Bearer token added to the `Authorization` header.
+Можно использовать выражения и переменные окружения, например:
 
-You can use expressions and environment variables, e.g.:
-
-- Gateway URL: `{{$env.API_GATEWAY_URL}}`
-- API Token: `{{$env.API_TOKEN}}`
+- Host: `{{$env.REDIS_HOST}}`
+- Password: `{{$env.REDIS_PASSWORD}}`
 
 ## Advanced
 
-- **Continue On Fail** is supported in the node Settings. On error the item will return `{ "error": "..." }` and processing will continue for other items.
-- Default headers include `Accept: application/json`. Request body is JSON.
+- Поддерживается настройка ноды **Continue On Fail** — при ошибке айтем вернёт `{ "error": "..." }`, и обработка продолжится для остальных.
+- Одно подключение к Redis создаётся на запуск `execute` и закрывается после обработки всех айтемов.
+- При записи `ttl > 0` используется `SET key value EX <seconds>`, иначе — обычный `SET`.
 
 ## Compatibility
 
@@ -102,48 +73,5 @@ Built and tested with n8n `1.60.0+`.
 
 ## Resources
 
-- Service docs and API reference: see the repository root `README.md` and `docs/API.md`.
 - n8n community nodes docs: https://docs.n8n.io/integrations/#community-nodes
-
----
-
-## Redis Cache (новая нода)
-
-Простая нода для кэширования JSON-данных в Redis с режимами записи и чтения.
-
-### Установка
-
-Следуйте общим инструкциям community nodes. После установки пакет добавит ноду `Redis Cache` и креды `Redis`.
-
-### Как работает
-
-- Режимы:
-  - `Write` — запись значения по ключу, опционально с TTL.
-  - `Read` — чтение значения по ключу и парсинг JSON.
-- Значение хранится как строка JSON. При чтении строка парсится обратно в объект.
-
-### Параметры
-
-- **Mode** — `Write` или `Read`.
-- **Key** — ключ в Redis (обязателен).
-- Для `Write`:
-  - **Data (JSON)** — строка с JSON (обязательна).
-  - **TTL Value** — число, 0 означает без срока жизни.
-  - **TTL Unit** — единицы TTL: seconds, minutes, hours, days.
-
-### Креды
-
-Используйте креды `Redis`:
-
-- Host (по умолчанию `localhost`)
-- Port (по умолчанию `6379`)
-- Username (опционально)
-- Password (опционально)
-- TLS (включение защищённого соединения)
-- DB Index (по умолчанию `0`)
-
-### Поведение и ошибки
-
-- При отсутствии значения при чтении возвращается `{ found: false, key }`.
-- При успешной записи возвращается `{ ok: true, key, ttlSeconds }`.
-- Нода поддерживает «Continue On Fail». В случае ошибки текущий элемент вернёт `{ error: "..." }` и выполнение продолжится для остальных элементов.
+- node-redis (официальный клиент): https://github.com/redis/node-redis

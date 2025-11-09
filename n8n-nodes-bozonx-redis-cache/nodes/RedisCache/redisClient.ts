@@ -1,4 +1,4 @@
-import { createClient, type RedisClientType } from 'redis';
+import { createClient } from 'redis';
 
 export interface RedisConnectionOptions {
   host: string;
@@ -25,7 +25,7 @@ export function ttlToSeconds(ttl: number, unit: 'seconds' | 'minutes' | 'hours' 
   }
 }
 
-export async function createRedisClientConnected(options: RedisConnectionOptions): Promise<RedisClientType> {
+export async function createRedisClientConnected(options: RedisConnectionOptions): Promise<ReturnType<typeof createClient>> {
   const client = createClient({
     socket: {
       host: options.host,
@@ -37,9 +37,9 @@ export async function createRedisClientConnected(options: RedisConnectionOptions
     database: typeof options.db === 'number' ? options.db : undefined,
   });
 
-  client.on('error', (err) => {
+  client.on('error', (err: unknown) => {
     // Log to console; n8n will convert thrown errors in node logic
-    console.error('Redis Client Error', err);
+    (globalThis as any)?.console?.error?.('Redis Client Error', err);
   });
 
   await client.connect();

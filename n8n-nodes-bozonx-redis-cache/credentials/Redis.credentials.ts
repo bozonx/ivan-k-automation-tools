@@ -1,6 +1,6 @@
 import type { ICredentialType, INodeProperties } from 'n8n-workflow';
 
-export class BozonxRedis implements ICredentialType {
+export class Redis implements ICredentialType {
 	name = 'bozonxRedis';
 	displayName = 'Redis';
 	properties: INodeProperties[] = [
@@ -10,7 +10,8 @@ export class BozonxRedis implements ICredentialType {
 			type: 'string',
 			default: 'localhost',
 			required: true,
-			description: 'Redis host',
+			placeholder: 'localhost',
+			description: 'Redis host name or IP address',
 		},
 		{
 			displayName: 'Port',
@@ -18,14 +19,15 @@ export class BozonxRedis implements ICredentialType {
 			type: 'number',
 			default: 6379,
 			required: true,
-			description: 'Redis port',
+			description: 'Redis TCP port number',
 		},
 		{
 			displayName: 'Username',
 			name: 'username',
 			type: 'string',
 			default: '',
-			description: 'ACL username (optional)',
+			placeholder: 'myuser',
+			description: 'Redis ACL username (leave empty if not required)',
 		},
 		{
 			displayName: 'Password',
@@ -33,21 +35,22 @@ export class BozonxRedis implements ICredentialType {
 			type: 'string',
 			typeOptions: { password: true },
 			default: '',
-			description: 'Password (optional)',
+			placeholder: '********',
+			description: 'Password for authentication (leave empty if not required)',
 		},
 		{
 			displayName: 'TLS',
 			name: 'tls',
 			type: 'boolean',
 			default: false,
-			description: 'Enable TLS for the connection',
+			description: 'Enable TLS/SSL encryption for the connection',
 		},
 		{
 			displayName: 'DB Index',
 			name: 'db',
 			type: 'number',
 			default: 0,
-			description: 'Database index',
+			description: 'Database index number (0 by default)',
 		},
 	];
 }
