@@ -4,6 +4,7 @@
 
 - Monorepo with multiple independent projects
   - Microservices (Node.js + TypeScript + NestJS)
+  - N8n custom nodes
   - Docker containers for specific tools
   - Each project is autonomous and has its own dependencies
 
@@ -35,7 +36,5 @@
 ### Agent Expectations
 
 - Follow the above standards across all projects in the repository
-- Prefer targeted code edits over full rewrites if you not asked to refactor
 - When adding or changing functionality:
   - Update tests and documentation in their respective directories
-  - Record significant changes in the project's `CHANGELOG.md`
