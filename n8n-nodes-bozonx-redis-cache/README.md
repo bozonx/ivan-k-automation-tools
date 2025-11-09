@@ -45,7 +45,12 @@ Follow the official community nodes installation guide: https://docs.n8n.io/inte
   - **Data (JSON)** (string, required при `Payload Type = JSON`)
     Строка с корректным JSON.
   - **Fields** (fixedCollection, multiple)
-    Набор полей `key`/`value`, собираемый в JSON-объект при записи.
+    Набор полей, собираемый в JSON-объект при записи. Поддерживаемые типы значения:
+    - `String` — ввод в поле "String Value".
+    - `Number` — ввод в поле "Number Value".
+    - `Boolean` — ввод в поле "Boolean Value".
+    - `Null` — значение будет `null`.
+    - `JSON` — ввод валидного JSON в поле "JSON Value" (парсится в объект/массив/примитив).
   - **TTL Unit** (options)
     Единицы измерения TTL: `seconds`, `minutes`, `hours`, `days`. По умолчанию — `hours`.
   - **TTL Value** (number)

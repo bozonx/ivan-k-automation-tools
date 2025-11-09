@@ -31,10 +31,12 @@
         "n8nNodesApiVersion": 1,
         "strict": true,
         "nodes": [
-            "dist/nodes/SttGateway/SttGateway.node.js"
+            "dist/nodes/SttGateway/SttGateway.node.js",
+            "dist/nodes/RedisStreamProducer/RedisStreamProducer.node.js"
         ],
         "credentials": [
-            "dist/credentials/SttGatewayApi.credentials.js"
+            "dist/credentials/BozonxMicroservicesApi.credentials.js",
+            "dist/credentials/Redis.credentials.js"
         ]
     },
     "devDependencies": {
@@ -48,6 +50,6 @@
         "n8n-workflow": "*"
     },
     "dependencies": {
-        "redis": "^5.9.0"
-    }
+    "redis": "^5.9.0"
+  }
 }

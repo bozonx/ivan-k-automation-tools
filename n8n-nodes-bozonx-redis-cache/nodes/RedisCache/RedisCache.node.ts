@@ -87,7 +87,51 @@ export class RedisCache implements INodeType {
             displayName: 'Field',
             values: [
               { displayName: 'Key', name: 'key', type: 'string', default: '', required: true },
-              { displayName: 'Value', name: 'value', type: 'string', default: '' },
+              {
+                displayName: 'Value Type',
+                name: 'valueType',
+                type: 'options',
+                options: [
+                  { name: 'String', value: 'string' },
+                  { name: 'Number', value: 'number' },
+                  { name: 'Boolean', value: 'boolean' },
+                  { name: 'Null', value: 'null' },
+                  { name: 'JSON', value: 'json' },
+                ],
+                default: 'string',
+                description: 'Type of the value to serialize into JSON',
+              },
+              {
+                displayName: 'String Value',
+                name: 'valueString',
+                type: 'string',
+                default: '',
+                displayOptions: { show: { valueType: ['string'] } },
+              },
+              {
+                displayName: 'Number Value',
+                name: 'valueNumber',
+                type: 'number',
+                default: 0,
+                displayOptions: { show: { valueType: ['number'] } },
+              },
+              {
+                displayName: 'Boolean Value',
+                name: 'valueBoolean',
+                type: 'boolean',
+                default: false,
+                displayOptions: { show: { valueType: ['boolean'] } },
+              },
+              {
+                displayName: 'JSON Value',
+                name: 'valueJson',
+                type: 'string',
+                typeOptions: { rows: 3 },
+                default: '',
+                placeholder: '{ "nested": true }',
+                description: 'Provide a valid JSON to be parsed as the field value',
+                displayOptions: { show: { valueType: ['json'] } },
+              },
             ],
           },
         ],
@@ -173,7 +217,39 @@ export class RedisCache implements INodeType {
                 if (!k) {
                   throw new NodeOperationError(this.getNode(), 'Field key must not be empty', { itemIndex: i });
                 }
-                obj[k] = (pair as any).value as string;
+
+                const type = ((pair as any).valueType as string) || 'string';
+                let value: unknown;
+                switch (type) {
+                  case 'number': {
+                    const n = Number((pair as any).valueNumber);
+                    value = Number.isFinite(n) ? n : 0;
+                    break;
+                  }
+                  case 'boolean': {
+                    value = Boolean((pair as any).valueBoolean);
+                    break;
+                  }
+                  case 'null': {
+                    value = null;
+                    break;
+                  }
+                  case 'json': {
+                    const raw = (pair as any).valueJson as string;
+                    try {
+                      value = raw ? JSON.parse(raw) : null;
+                    } catch {
+                      throw new NodeOperationError(this.getNode(), `Invalid JSON for field "${k}"`, { itemIndex: i });
+                    }
+                    break;
+                  }
+                  case 'string':
+                  default: {
+                    value = ((pair as any).valueString as string) ?? '';
+                    break;
+                  }
+                }
+                obj[k] = value;
               }
               normalized = JSON.stringify(obj);
             }
