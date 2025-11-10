@@ -5,6 +5,8 @@ import {
   type INodeExecutionData,
   type INodeType,
   type INodeTypeDescription,
+  type ICredentialTestFunctions,
+  type ICredentialTestResult,
 } from 'n8n-workflow';
 
 import { createRedisClientConnected, ttlToSeconds, type RedisConnectionOptions } from './redisClient';
@@ -16,7 +18,6 @@ interface FieldPair {
   valueString?: string;
   valueJson?: string;
   valueType?: 'string' | 'number' | 'boolean' | 'null' | 'json';
-  fieldType?: 'string' | 'number' | 'boolean' | 'null' | 'object' | 'array' | 'json';
 }
 
 export class BozonxRedisCache implements INodeType {
@@ -144,7 +145,7 @@ export class BozonxRedisCache implements INodeType {
                 name: 'valueJson',
                 type: 'string',
                 default: '',
-                placeholder: '{ \'nested\': true }',
+                placeholder: '{ "nested": true }',
                 description: 'Provide a valid JSON to be parsed as the field value',
                 displayOptions: { show: { valueType: ['json'] } },
               },
@@ -178,6 +179,30 @@ export class BozonxRedisCache implements INodeType {
       },
     ],
 		usableAsTool: true,
+  };
+
+  methods = {
+    credentialTest: {
+      async bozonxRedis(this: ICredentialTestFunctions): Promise<ICredentialTestResult> {
+        try {
+          const creds = await this.getCredentials('bozonxRedis');
+          const options: RedisConnectionOptions = {
+            host: (creds?.host as string) || 'localhost',
+            port: (creds?.port as number) ?? 6379,
+            username: (creds?.username as string) || undefined,
+            password: (creds?.password as string) || undefined,
+            tls: Boolean(creds?.tls),
+            db: (creds?.db as number) ?? 0,
+          };
+
+          const client = await createRedisClientConnected(options);
+          await client.quit();
+          return { status: 'OK' };
+        } catch (error) {
+          return { status: 'Error', message: (error as Error).message };
+        }
+      },
+    },
   };
 
   async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {

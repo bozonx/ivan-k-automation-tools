@@ -1,4 +1,4 @@
-import type { ICredentialTestRequest, ICredentialType, Icon, INodeProperties } from 'n8n-workflow';
+import type { ICredentialType, Icon, INodeProperties } from 'n8n-workflow';
 
 export class Redis implements ICredentialType {
 	name = 'bozonxRedis';
@@ -6,13 +6,6 @@ export class Redis implements ICredentialType {
 	documentationUrl = 'https://github.com/bozonx/ivan-k-automation-tools/tree/main/n8n-nodes-bozonx-redis-cache#readme';
 	icon: Icon = { light: 'file:../nodes/RedisCache/redis-cache.svg', dark: 'file:../nodes/RedisCache/redis-cache.svg' };
 	testedBy = ['bozonxRedisCache'];
-	test: ICredentialTestRequest = {
-		request: {
-			baseURL: 'https://example.com',
-			url: '/',
-			method: 'GET',
-		},
-	};
 	properties: INodeProperties[] = [
 		{
 			displayName: 'Host',

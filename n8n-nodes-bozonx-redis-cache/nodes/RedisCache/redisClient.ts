@@ -1,3 +1,4 @@
+import { createClient } from 'redis';
 export interface RedisConnectionOptions {
   host: string;
   port: number;
@@ -31,37 +32,41 @@ type MinimalRedisClient = {
   destroy?: () => void;
 };
 
-export async function createRedisClientConnected(_options: RedisConnectionOptions): Promise<MinimalRedisClient> {
-  // Touch the options to avoid unused variable lint, while keeping behavior
-  void _options;
-  const store = new Map<string, { value: string; exp?: number }>();
+export async function createRedisClientConnected(options: RedisConnectionOptions): Promise<MinimalRedisClient> {
+  const scheme = options.tls ? 'rediss' : 'redis';
+  const authPart = options.username
+    ? `${encodeURIComponent(options.username)}:${encodeURIComponent(options.password ?? '')}@`
+    : options.password
+      ? `:${encodeURIComponent(options.password)}@`
+      : '';
+  const dbPart = typeof options.db === 'number' ? `/${options.db}` : '';
+  const url = `${scheme}://${authPart}${options.host}:${options.port}${dbPart}`;
 
-  const now = () => Date.now();
+  const clientImpl = createClient({ url });
+  await clientImpl.connect();
+
   const client: MinimalRedisClient = {
-    async connect() {
-      // no-op for in-memory
-    },
+    async connect() {},
     async quit() {
-      // no-op for in-memory
+      await clientImpl.quit();
     },
     async get(key: string) {
-      const entry = store.get(key);
-      if (!entry) return null;
-      if (entry.exp && entry.exp <= now()) {
-        store.delete(key);
-        return null;
-      }
-      return entry.value;
+      const value = await clientImpl.get(key);
+      return value ?? null;
     },
     async set(key: string, value: string, options?: { EX?: number }) {
-      const exp = options?.EX ? now() + options.EX * 1000 : undefined;
-      store.set(key, { value, exp });
+      if (options?.EX && options.EX > 0) {
+        await clientImpl.set(key, value, { EX: options.EX });
+      } else {
+        await clientImpl.set(key, value);
+      }
     },
     destroy() {
-      store.clear();
+      try {
+        clientImpl.disconnect();
+      } catch {}
     },
   };
 
-  await client.connect();
   return client;
 }

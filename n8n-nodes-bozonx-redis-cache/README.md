@@ -72,11 +72,6 @@ Follow the official community nodes installation guide: https://docs.n8n.io/inte
     - `Boolean` — ввод в поле "Boolean Value".
     - `Null` — значение будет `null`.
     - `JSON` — ввод валидного JSON в поле "JSON Value" (парсится в объект/массив/примитив).
-    Также доступен параметр **Field Type** — целевой тип JSON для каждого поля. Значение будет приведено к выбранному типу и провалидировано:
-    - `String`, `Number`, `Boolean`, `Null` — примитивные типы
-    - `Object` — требуются объекты (либо строка с валидным JSON-объектом)
-    - `Array` — требуются массивы (либо строка с валидным JSON-массивом)
-    - `JSON (any)` — допускает любой валидный JSON без дополнительного приведения
   - **TTL Unit** (options)
     Единицы измерения TTL: `seconds`, `minutes`, `hours`, `days`. По умолчанию — `hours`.
   - **TTL Value** (number)
@@ -112,8 +107,6 @@ Follow the official community nodes installation guide: https://docs.n8n.io/inte
 - Невалидный JSON в `JSON Value` для Custom Fields — ошибка: `Invalid JSON for field "<key>"`.
 - Пустой ключ поля в Custom Fields — ошибка: `Field key must not be empty`.
 - Невалидное число в Custom Fields (тип `Number`) — ошибка: `Invalid number for field "<key>"`.
-- Невалидный объект для `Field Type = Object` — ошибка: `Invalid object for field "<key>"`.
-- Невалидный массив для `Field Type = Array` — ошибка: `Invalid array for field "<key>"`.
 - При чтении обнаружено не-JSON значение — ошибка: `Stored value is not valid JSON`.
 - TTL < 0 — ошибка: `TTL must be >= 0`.
 
