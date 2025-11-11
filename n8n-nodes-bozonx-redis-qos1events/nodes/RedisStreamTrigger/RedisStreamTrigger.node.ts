@@ -113,6 +113,8 @@ export class RedisStreamTrigger implements INodeType {
             for (let i = 0; i < kv.length; i += 2) {
               const k = String(kv[i]);
               const v = String(kv[i + 1] ?? '');
+              // Skip internal marker field
+              if (k === '__empty') continue;
               fields[k] = v;
             }
 
@@ -218,6 +220,8 @@ export class RedisStreamTrigger implements INodeType {
             for (let i = 0; i < kv.length; i += 2) {
               const k = String(kv[i]);
               const v = String(kv[i + 1] ?? '');
+              // Skip internal marker field
+              if (k === '__empty') continue;
               fields[k] = v;
             }
 

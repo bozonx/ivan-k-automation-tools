@@ -158,7 +158,6 @@ export class RedisStreamProducer implements INodeType {
         }
 
         const fields: Array<[string, string]> = [];
-        let skipXadd = false;
         let resultPayloadKV: IDataObject | null = null;
 
         if (payloadMode === 'text') {
@@ -189,9 +188,6 @@ export class RedisStreamProducer implements INodeType {
               valueJson: (p as any).valueJson as string | undefined,
             }))
             .filter((p) => p.key.length > 0);
-          if (pairs.length === 0) {
-            skipXadd = true;
-          }
           const resultObj: IDataObject = {};
           for (const p of pairs) {
             let v: string;
@@ -235,6 +231,10 @@ export class RedisStreamProducer implements INodeType {
             fields.push([p.key, v]);
             resultObj[p.key] = typed as any;
           }
+          // If no fields, add a marker field so XADD succeeds
+          if (pairs.length === 0) {
+            fields.push(['__empty', 'true']);
+          }
           resultPayloadKV = Object.keys(resultObj).length > 0 ? resultObj : null;
         }
 
@@ -249,12 +249,9 @@ export class RedisStreamProducer implements INodeType {
 
         type RedisClientLike = { sendCommand(args: string[]): Promise<string> };
         const c = client as unknown as RedisClientLike;
-        let id: string | null = null;
-        if (!skipXadd) {
-          id = await c.sendCommand(cmd);
-          if (ttlSec && ttlSec > 0) {
-            await c.sendCommand(['EXPIRE', streamKey, String(ttlSec)]);
-          }
+        const id = await c.sendCommand(cmd);
+        if (ttlSec && ttlSec > 0) {
+          await c.sendCommand(['EXPIRE', streamKey, String(ttlSec)]);
         }
 
         const fieldsObj = Object.fromEntries(fields) as Record<string, string>;
