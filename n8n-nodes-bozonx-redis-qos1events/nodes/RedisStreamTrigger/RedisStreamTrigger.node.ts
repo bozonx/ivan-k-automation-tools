@@ -59,7 +59,9 @@ export class RedisStreamTrigger implements INodeType {
 
     const staticData = this.getWorkflowStaticData('node') as { lastId?: string } & IDataObject;
 
-    let lastId: string = staticData.lastId ?? '$';
+    const startMs = Date.now() - 10000; // read from 10 seconds before now
+    const computedStartId = `${startMs}-0`;
+    let lastId: string = staticData.lastId ?? computedStartId;
 
     type RedisClientLike = { sendCommand(args: string[]): Promise<any> };
     const c = client as unknown as RedisClientLike;
@@ -139,10 +141,54 @@ export class RedisStreamTrigger implements INodeType {
         running = false;
       },
       manualTriggerFunction: async () => {
-        // Allow manual test by making one quick non-blocking read
+        // Manual read with up to blockMs wait and emit results
         try {
-          const cmd: string[] = ['XREAD', 'COUNT', '5', 'BLOCK', '1', 'STREAMS', streamKey, lastId];
-          await c.sendCommand(cmd);
+          const cmd: string[] = ['XREAD'];
+          if (count && count > 0) cmd.push('COUNT', String(count));
+          if (blockMs && blockMs > 0) cmd.push('BLOCK', String(blockMs));
+          cmd.push('STREAMS', streamKey, lastId);
+
+          const res = await c.sendCommand(cmd);
+          if (!res || !Array.isArray(res) || res.length === 0) return;
+
+          const entriesWrap = res[0];
+          const entries = Array.isArray(entriesWrap) ? entriesWrap[1] : undefined;
+          if (!Array.isArray(entries) || entries.length === 0) return;
+
+          const outItems: Array<{ json: IDataObject }> = [];
+          for (const entry of entries) {
+            const id: string = entry[0];
+            const kv: string[] = entry[1] as string[];
+            lastId = id;
+            if (persistLastId) staticData.lastId = lastId;
+
+            const fields: Record<string, string> = {};
+            for (let i = 0; i < kv.length; i += 2) {
+              const k = String(kv[i]);
+              const v = String(kv[i + 1] ?? '');
+              fields[k] = v;
+            }
+
+            let json: IDataObject;
+            if (Object.keys(fields).length === 1 && (fields as any).data !== undefined) {
+              try {
+                const parsed = JSON.parse((fields as any).data as unknown as string);
+                json = (typeof parsed === 'object' && parsed !== null)
+                  ? (parsed as IDataObject)
+                  : { value: parsed };
+              } catch {
+                json = { data: (fields as any).data } as IDataObject;
+              }
+              (json as IDataObject)._stream = streamKey;
+              (json as IDataObject)._id = id;
+            } else {
+              json = { ...fields, _stream: streamKey, _id: id } as IDataObject;
+            }
+
+            outItems.push({ json });
+          }
+
+          if (outItems.length > 0) this.emit([outItems]);
         } catch {
           // ignore
         }
