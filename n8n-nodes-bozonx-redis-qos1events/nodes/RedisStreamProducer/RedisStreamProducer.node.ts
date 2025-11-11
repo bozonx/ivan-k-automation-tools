@@ -211,7 +211,24 @@ export class RedisStreamProducer implements INodeType {
           await c.sendCommand(['EXPIRE', streamKey, String(ttlSec)]);
         }
 
-        returnData.push({ json: { stream: streamKey, id, fields: Object.fromEntries(fields) }, pairedItem: { item: i } });
+        const fieldsObj = Object.fromEntries(fields) as Record<string, string>;
+        let payload: IDataObject | null = null;
+        if (Object.keys(fieldsObj).length === 1 && (fieldsObj as any).data !== undefined) {
+          try {
+            const parsed = JSON.parse((fieldsObj as any).data as unknown as string);
+            payload = (typeof parsed === 'object' && parsed !== null)
+              ? (parsed as IDataObject)
+              : { value: parsed } as IDataObject;
+          } catch {
+            payload = { data: (fieldsObj as any).data } as IDataObject;
+          }
+        } else if (Object.keys(fieldsObj).length > 0) {
+          payload = { ...fieldsObj } as IDataObject;
+        } else {
+          payload = null;
+        }
+        const json: IDataObject = { payload, _stream: streamKey, _id: id } as IDataObject;
+        returnData.push({ json, pairedItem: { item: i } });
       } catch (error) {
         if (this.continueOnFail()) {
           returnData.push({ json: { error: (error as Error).message } as IDataObject, pairedItem: { item: i } });

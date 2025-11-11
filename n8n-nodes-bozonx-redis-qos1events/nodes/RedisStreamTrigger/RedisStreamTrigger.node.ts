@@ -116,21 +116,23 @@ export class RedisStreamTrigger implements INodeType {
               fields[k] = v;
             }
 
-            let json: IDataObject;
+            let payload: IDataObject | null = null;
             if (Object.keys(fields).length === 1 && (fields as any).data !== undefined) {
               try {
                 const parsed = JSON.parse((fields as any).data as unknown as string);
-                json = (typeof parsed === 'object' && parsed !== null)
+                payload = (typeof parsed === 'object' && parsed !== null)
                   ? (parsed as IDataObject)
-                  : { value: parsed };
+                  : { value: parsed } as IDataObject;
               } catch {
-                json = { data: (fields as any).data } as IDataObject;
+                payload = { data: (fields as any).data } as IDataObject;
               }
-              (json as IDataObject)._stream = streamKey;
-              (json as IDataObject)._id = id;
+            } else if (Object.keys(fields).length > 0) {
+              payload = { ...fields } as IDataObject;
             } else {
-              json = { ...fields, _stream: streamKey, _id: id } as IDataObject;
+              payload = null;
             }
+
+            const json: IDataObject = { payload, _stream: streamKey, _id: id } as IDataObject;
 
             outItems.push({ json });
           }
@@ -183,21 +185,23 @@ export class RedisStreamTrigger implements INodeType {
               fields[k] = v;
             }
 
-            let json: IDataObject;
+            let payload: IDataObject | null = null;
             if (Object.keys(fields).length === 1 && (fields as any).data !== undefined) {
               try {
                 const parsed = JSON.parse((fields as any).data as unknown as string);
-                json = (typeof parsed === 'object' && parsed !== null)
+                payload = (typeof parsed === 'object' && parsed !== null)
                   ? (parsed as IDataObject)
-                  : { value: parsed };
+                  : { value: parsed } as IDataObject;
               } catch {
-                json = { data: (fields as any).data } as IDataObject;
+                payload = { data: (fields as any).data } as IDataObject;
               }
-              (json as IDataObject)._stream = streamKey;
-              (json as IDataObject)._id = id;
+            } else if (Object.keys(fields).length > 0) {
+              payload = { ...fields } as IDataObject;
             } else {
-              json = { ...fields, _stream: streamKey, _id: id } as IDataObject;
+              payload = null;
             }
+
+            const json: IDataObject = { payload, _stream: streamKey, _id: id } as IDataObject;
 
             outItems.push({ json });
           }
