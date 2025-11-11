@@ -1,6 +1,6 @@
 {
     "name": "n8n-nodes-bozonx-redis-qos1events",
-    "version": "0.4.0",
+    "version": "0.5.0",
     "description": "n8n node for Redis QoS1 events",
     "license": "MIT",
     "homepage": "",
@@ -16,13 +16,13 @@
         "url": "https://github.com/bozonx/ivan-k-automation-tools"
     },
     "scripts": {
-        "build": "n8n-node build",
-        "build:watch": "tsc --watch",
-        "dev": "n8n-node dev",
-        "lint": "n8n-node lint",
+		"build": "n8n-node build",
+		"build:watch": "tsc --watch",
+		"dev": "n8n-node dev",
+		"lint": "n8n-node lint",
         "lint:fix": "n8n-node lint --fix",
-        "release": "n8n-node release",
-        "prepublishOnly": "n8n-node prerelease"
+		"release:n8n": "n8n-node release",
+		"prepublishOnly:n8n": "n8n-node prerelease"
     },
     "files": [
         "dist"
