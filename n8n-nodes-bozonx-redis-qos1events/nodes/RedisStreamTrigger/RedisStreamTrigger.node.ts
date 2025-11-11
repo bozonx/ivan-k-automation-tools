@@ -116,15 +116,21 @@ export class RedisStreamTrigger implements INodeType {
               fields[k] = v;
             }
 
-            let payload: IDataObject | null = null;
-            if (Object.keys(fields).length === 1 && (fields as any).data !== undefined) {
-              try {
-                const parsed = JSON.parse((fields as any).data as unknown as string);
-                payload = (typeof parsed === 'object' && parsed !== null)
-                  ? (parsed as IDataObject)
-                  : { value: parsed } as IDataObject;
-              } catch {
-                payload = { data: (fields as any).data } as IDataObject;
+            let payload: unknown = null;
+            if (Object.keys(fields).length === 1) {
+              if ((fields as any).data !== undefined) {
+                try {
+                  const parsed = JSON.parse((fields as any).data as unknown as string);
+                  payload = (typeof parsed === 'object' && parsed !== null)
+                    ? (parsed as IDataObject)
+                    : { value: parsed } as IDataObject;
+                } catch {
+                  payload = { data: (fields as any).data } as IDataObject;
+                }
+              } else if ((fields as any).payload !== undefined) {
+                payload = (fields as any).payload as unknown as string;
+              } else {
+                payload = { ...fields } as IDataObject;
               }
             } else if (Object.keys(fields).length > 0) {
               payload = { ...fields } as IDataObject;
@@ -185,15 +191,21 @@ export class RedisStreamTrigger implements INodeType {
               fields[k] = v;
             }
 
-            let payload: IDataObject | null = null;
-            if (Object.keys(fields).length === 1 && (fields as any).data !== undefined) {
-              try {
-                const parsed = JSON.parse((fields as any).data as unknown as string);
-                payload = (typeof parsed === 'object' && parsed !== null)
-                  ? (parsed as IDataObject)
-                  : { value: parsed } as IDataObject;
-              } catch {
-                payload = { data: (fields as any).data } as IDataObject;
+            let payload: unknown = null;
+            if (Object.keys(fields).length === 1) {
+              if ((fields as any).data !== undefined) {
+                try {
+                  const parsed = JSON.parse((fields as any).data as unknown as string);
+                  payload = (typeof parsed === 'object' && parsed !== null)
+                    ? (parsed as IDataObject)
+                    : { value: parsed } as IDataObject;
+                } catch {
+                  payload = { data: (fields as any).data } as IDataObject;
+                }
+              } else if ((fields as any).payload !== undefined) {
+                payload = (fields as any).payload as unknown as string;
+              } else {
+                payload = { ...fields } as IDataObject;
               }
             } else if (Object.keys(fields).length > 0) {
               payload = { ...fields } as IDataObject;

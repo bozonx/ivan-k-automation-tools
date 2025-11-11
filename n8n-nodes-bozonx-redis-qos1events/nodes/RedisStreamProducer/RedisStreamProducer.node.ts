@@ -40,20 +40,21 @@ export class RedisStreamProducer implements INodeType {
         name: 'payloadMode',
         type: 'options',
         options: [
-          { name: 'JSON (Single Field)', value: 'json', description: 'Send a single field named "data" containing JSON.stringify of the input item' },
-          { name: 'Key-Value (From UI)', value: 'kv', description: 'Send key-value pairs defined below (multiple pairs can be added). Input item JSON is not used.' },
+          { name: 'Text', value: 'text', description: 'Send a single field named "payload" containing the provided text' },
+          { name: 'JSON', value: 'json', description: 'Send a single field named "data" containing JSON.stringify of the provided or incoming item' },
+          { name: 'Key-Value', value: 'kv', description: 'Send key-value pairs defined below (multiple pairs can be added). Input item JSON is not used.' },
         ],
-        default: 'json',
+        default: 'text',
         description: 'Select how to build message fields',
       },
       {
         displayName: 'Payload',
-        name: 'jsonPayload',
+        name: 'stringPayload',
         type: 'string',
-        displayOptions: { show: { payloadMode: ['json'] } },
+        displayOptions: { show: { payloadMode: ['text', 'json'] } },
         typeOptions: { rows: 8 },
         default: '',
-        description: 'JSON to send as the single "data" field. If empty, the incoming item JSON will be used.',
+        description: 'Content for single-field modes. For Text, sent as-is in field "payload". For JSON, must be valid JSON (or leave empty to use the incoming item JSON).',
       },
       {
         displayName: 'Payload',
@@ -132,12 +133,15 @@ export class RedisStreamProducer implements INodeType {
 
         const fields: Array<[string, string]> = [];
 
-        if (payloadMode === 'json') {
-          const jsonText = (this.getNodeParameter('jsonPayload', i, '') as string).trim();
+        if (payloadMode === 'text') {
+          const text = (this.getNodeParameter('stringPayload', i, '') as string).trim();
+          fields.push(['payload', text]);
+        } else if (payloadMode === 'json') {
+          const raw = (this.getNodeParameter('stringPayload', i, '') as string).trim();
           let dataObj: unknown;
-          if (jsonText) {
+          if (raw) {
             try {
-              dataObj = JSON.parse(jsonText);
+              dataObj = JSON.parse(raw);
             } catch {
               throw new NodeOperationError(this.getNode(), 'Invalid JSON in Payload', { itemIndex: i });
             }
@@ -212,20 +216,28 @@ export class RedisStreamProducer implements INodeType {
         }
 
         const fieldsObj = Object.fromEntries(fields) as Record<string, string>;
-        let payload: IDataObject | null = null;
-        if (Object.keys(fieldsObj).length === 1 && (fieldsObj as any).data !== undefined) {
-          try {
-            const parsed = JSON.parse((fieldsObj as any).data as unknown as string);
-            payload = (typeof parsed === 'object' && parsed !== null)
-              ? (parsed as IDataObject)
-              : { value: parsed } as IDataObject;
-          } catch {
-            payload = { data: (fieldsObj as any).data } as IDataObject;
-          }
-        } else if (Object.keys(fieldsObj).length > 0) {
-          payload = { ...fieldsObj } as IDataObject;
+        let payload: unknown = null;
+        if (payloadMode === 'kv') {
+          payload = Object.keys(fieldsObj).length > 0 ? ({ ...fieldsObj } as IDataObject) : null;
         } else {
-          payload = null;
+          if (Object.keys(fieldsObj).length === 1) {
+            if ((fieldsObj as any).data !== undefined) {
+              try {
+                const parsed = JSON.parse((fieldsObj as any).data as unknown as string);
+                payload = (typeof parsed === 'object' && parsed !== null)
+                  ? (parsed as IDataObject)
+                  : ({ value: parsed } as IDataObject);
+              } catch {
+                payload = { data: (fieldsObj as any).data } as IDataObject;
+              }
+            } else if ((fieldsObj as any).payload !== undefined) {
+              payload = (fieldsObj as any).payload as unknown as string;
+            }
+          } else if (Object.keys(fieldsObj).length > 0) {
+            payload = { ...fieldsObj } as IDataObject;
+          } else {
+            payload = null;
+          }
         }
         const json: IDataObject = { payload, _stream: streamKey, _id: id } as IDataObject;
         returnData.push({ json, pairedItem: { item: i } });
