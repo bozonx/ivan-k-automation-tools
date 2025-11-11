@@ -6,7 +6,8 @@ import {
   type INodeType,
   type INodeTypeDescription,
   type ICredentialTestFunctions,
-  type ICredentialTestResult,
+  type INodeCredentialTestResult,
+  type ICredentialsDecrypted,
 } from 'n8n-workflow';
 
 import { createRedisClientConnected, ttlToSeconds, type RedisConnectionOptions } from './redisClient';
@@ -183,21 +184,24 @@ export class BozonxRedisCache implements INodeType {
 
   methods = {
     credentialTest: {
-      async bozonxRedis(this: ICredentialTestFunctions): Promise<ICredentialTestResult> {
+      async bozonxRedis(
+        this: ICredentialTestFunctions,
+        credential: ICredentialsDecrypted,
+      ): Promise<INodeCredentialTestResult> {
         try {
-          const creds = await this.getCredentials('bozonxRedis');
+          const creds = credential.data as IDataObject;
           const options: RedisConnectionOptions = {
-            host: (creds?.host as string) || 'localhost',
-            port: (creds?.port as number) ?? 6379,
-            username: (creds?.username as string) || undefined,
-            password: (creds?.password as string) || undefined,
-            tls: Boolean(creds?.tls),
-            db: (creds?.db as number) ?? 0,
+            host: (creds.host as string) || 'localhost',
+            port: (creds.port as number) ?? 6379,
+            username: (creds.username as string) || undefined,
+            password: (creds.password as string) || undefined,
+            tls: Boolean(creds.tls),
+            db: (creds.db as number) ?? 0,
           };
 
           const client = await createRedisClientConnected(options);
           await client.quit();
-          return { status: 'OK' };
+          return { status: 'OK', message: 'Connection successful' };
         } catch (error) {
           return { status: 'Error', message: (error as Error).message };
         }
