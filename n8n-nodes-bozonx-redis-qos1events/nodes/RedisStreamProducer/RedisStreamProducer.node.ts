@@ -159,6 +159,7 @@ export class RedisStreamProducer implements INodeType {
 
         const fields: Array<[string, string]> = [];
         let skipXadd = false;
+        let resultPayloadKV: IDataObject | null = null;
 
         if (payloadMode === 'text') {
           const text = (this.getNodeParameter('stringPayload', i, '') as string).trim();
@@ -191,8 +192,10 @@ export class RedisStreamProducer implements INodeType {
           if (pairs.length === 0) {
             skipXadd = true;
           }
+          const resultObj: IDataObject = {};
           for (const p of pairs) {
             let v: string;
+            let typed: unknown;
             switch (p.type) {
               case 'number': {
                 const n = Number(p.valueNumber);
@@ -200,17 +203,20 @@ export class RedisStreamProducer implements INodeType {
                   throw new NodeOperationError(this.getNode(), `Invalid number for key "${p.key}"`, { itemIndex: i });
                 }
                 v = String(n);
+                typed = n;
                 break;
               }
               case 'boolean': {
                 const b = Boolean(p.valueBoolean);
                 v = b ? 'true' : 'false';
+                typed = b;
                 break;
               }
               case 'json': {
                 try {
                   const parsed = JSON.parse(p.valueJson ?? '');
                   v = JSON.stringify(parsed);
+                  typed = parsed as unknown;
                 } catch {
                   throw new NodeOperationError(this.getNode(), `Invalid JSON for key "${p.key}"`, { itemIndex: i });
                 }
@@ -218,14 +224,18 @@ export class RedisStreamProducer implements INodeType {
               }
               case 'null': {
                 v = 'null';
+                typed = null;
                 break;
               }
               case 'string':
               default:
                 v = String(p.valueString ?? '');
+                typed = p.valueString ?? '';
             }
             fields.push([p.key, v]);
+            resultObj[p.key] = typed as any;
           }
+          resultPayloadKV = Object.keys(resultObj).length > 0 ? resultObj : null;
         }
 
         const cmd: string[] = ['XADD', streamKey];
@@ -250,7 +260,7 @@ export class RedisStreamProducer implements INodeType {
         const fieldsObj = Object.fromEntries(fields) as Record<string, string>;
         let payload: unknown = null;
         if (payloadMode === 'kv') {
-          payload = Object.keys(fieldsObj).length > 0 ? ({ ...fieldsObj } as IDataObject) : null;
+          payload = resultPayloadKV;
         } else {
           if (Object.keys(fieldsObj).length === 1) {
             if ((fieldsObj as any).data !== undefined) {
