@@ -34,57 +34,6 @@ export class RedisStreamTrigger implements INodeType {
         required: true,
         description: 'Redis Stream key to read messages from, e.g. "events:stt"',
       },
-      {
-        displayName: 'Starting Position',
-        name: 'startFrom',
-        type: 'options',
-        options: [
-          { name: 'From Now (Only New)', value: 'now', description: 'Start from the latest ID ($)' },
-          { name: 'From Beginning', value: 'begin', description: 'Start from 0-0' },
-          { name: 'From Specific ID', value: 'id', description: 'Start from a provided ID' },
-        ],
-        default: 'now',
-      },
-      {
-        displayName: 'Start ID',
-        name: 'startId',
-        type: 'string',
-        default: '0-0',
-        displayOptions: { show: { startFrom: ['id'] } },
-        description: 'Redis Stream ID to start reading from (exclusive)',
-      },
-      {
-        displayName: 'Block Time (ms)',
-        name: 'blockMs',
-        type: 'number',
-        default: 10000,
-        description: 'How long to block for new messages per request. Use 0 for no block (not recommended).',
-      },
-      {
-        displayName: 'Batch Size',
-        name: 'count',
-        type: 'number',
-        default: 50,
-        description: 'Maximum number of entries to read per request',
-      },
-      {
-        displayName: 'Output Mode',
-        name: 'outputMode',
-        type: 'options',
-        options: [
-          { name: 'Auto (JSON if single "data" field)', value: 'auto' },
-          { name: 'Fields Object', value: 'fields' },
-          { name: 'Raw (id, stream, fields)', value: 'raw' },
-        ],
-        default: 'auto',
-      },
-      {
-        displayName: 'Persist Last ID',
-        name: 'persistLastId',
-        type: 'boolean',
-        default: true,
-        description: 'Persist the last processed ID across workflow restarts',
-      },
     ],
   };
 
@@ -100,12 +49,9 @@ export class RedisStreamTrigger implements INodeType {
     const client = await getRedisClientConnected({ host, port, username, password, tls, db });
 
     const streamKey = (this.getNodeParameter('streamKey', 0) as string).trim();
-    const startFrom = this.getNodeParameter('startFrom', 0) as string;
-    const startIdParam = (this.getNodeParameter('startId', 0) as string) || '0-0';
-    const blockMs = (this.getNodeParameter('blockMs', 0) as number) || 10000;
-    const count = (this.getNodeParameter('count', 0) as number) || 50;
-    const outputMode = (this.getNodeParameter('outputMode', 0) as string) || 'auto';
-    const persistLastId = (this.getNodeParameter('persistLastId', 0) as boolean) || false;
+    const blockMs = 10000;
+    const count = 50;
+    const persistLastId = true;
 
     if (!streamKey) {
       throw new NodeOperationError(this.getNode(), 'Stream Key is required');
@@ -113,16 +59,7 @@ export class RedisStreamTrigger implements INodeType {
 
     const staticData = this.getWorkflowStaticData('node') as { lastId?: string } & IDataObject;
 
-    let lastId: string;
-    if (persistLastId && staticData.lastId) {
-      lastId = staticData.lastId;
-    } else if (startFrom === 'now') {
-      lastId = '$';
-    } else if (startFrom === 'begin') {
-      lastId = '0-0';
-    } else {
-      lastId = startIdParam || '0-0';
-    }
+    let lastId: string = staticData.lastId ?? '$';
 
     type RedisClientLike = { sendCommand(args: string[]): Promise<any> };
     const c = client as unknown as RedisClientLike;
@@ -164,24 +101,19 @@ export class RedisStreamTrigger implements INodeType {
             }
 
             let json: IDataObject;
-            if (outputMode === 'raw') {
-              json = { stream: streamKey, id, fields };
-            } else if (outputMode === 'fields') {
-              json = { ...fields, _stream: streamKey, _id: id };
-            } else {
-              // auto
-              if (Object.keys(fields).length === 1 && fields.data !== undefined) {
-                try {
-                  const parsed = JSON.parse(fields.data);
-                  json = (typeof parsed === 'object' && parsed !== null) ? (parsed as IDataObject) : { value: parsed };
-                } catch {
-                  json = { data: fields.data };
-                }
-                (json as IDataObject)._stream = streamKey;
-                (json as IDataObject)._id = id;
-              } else {
-                json = { ...fields, _stream: streamKey, _id: id };
+            if (Object.keys(fields).length === 1 && (fields as any).data !== undefined) {
+              try {
+                const parsed = JSON.parse((fields as any).data as unknown as string);
+                json = (typeof parsed === 'object' && parsed !== null)
+                  ? (parsed as IDataObject)
+                  : { value: parsed };
+              } catch {
+                json = { data: (fields as any).data } as IDataObject;
               }
+              (json as IDataObject)._stream = streamKey;
+              (json as IDataObject)._id = id;
+            } else {
+              json = { ...fields, _stream: streamKey, _id: id } as IDataObject;
             }
 
             outItems.push({ json });
