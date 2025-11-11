@@ -86,13 +86,6 @@ export class RedisStreamProducer implements INodeType {
         ],
         description: 'Key-value pairs used when Payload Mode = Key-Value (from UI)'
       },
-      {
-        displayName: 'Stream TTL (Seconds)',
-        name: 'ttlSec',
-        type: 'number',
-        default: 86400,
-        description: 'Optional key TTL. If &gt; 0, EXPIRE &lt;stream&gt; &lt;ttl&gt; is executed after XADD.',
-      },
     ],
 		usableAsTool: true,
   };
@@ -117,7 +110,7 @@ export class RedisStreamProducer implements INodeType {
         const messageIdParam = '*';
         const payloadMode = this.getNodeParameter('payloadMode', i) as string;
         const maxLen = 1000000;
-        const ttlSec = (this.getNodeParameter('ttlSec', i) as number) || 0;
+        const ttlSec = 86400;
 
         if (!streamKey) {
           throw new NodeOperationError(this.getNode(), 'Stream Key is required', { itemIndex: i });
