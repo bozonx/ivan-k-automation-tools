@@ -10,12 +10,12 @@ import { getRedisClientConnected } from '../RedisStreamProducer/redisClient';
 
 export class RedisStreamTrigger implements INodeType {
   description: INodeTypeDescription = {
-    displayName: 'Redis Stream Trigger',
+    displayName: 'Redis Sub',
     name: 'bozonxRedisStreamTrigger',
     group: ['trigger'],
     version: 1,
     description: 'Emit items when events appear in a Redis Stream (XREAD)',
-    defaults: { name: 'Redis Stream Trigger' },
+    defaults: { name: 'Redis Sub' },
     icon: 'file:redis-stream-trigger.svg',
     inputs: [],
     outputs: ['main'],
@@ -27,12 +27,19 @@ export class RedisStreamTrigger implements INodeType {
     ],
     properties: [
       {
-        displayName: 'Stream Key',
+        displayName: 'Event name',
         name: 'streamKey',
         type: 'string',
         default: 'my-service:main',
         required: true,
-        description: 'Redis Stream key to read messages from, e.g. "my-service:main"',
+        description: 'Event name (Redis Stream key) to read messages from, e.g. "my-service:main"',
+      },
+      {
+        displayName: 'Allowed Stale (Seconds)',
+        name: 'staleSeconds',
+        type: 'number',
+        default: 0,
+        description: 'If > 0, on startup also emit messages that are at most this many seconds old. 0 means only new messages after start.',
       },
     ],
   };
@@ -54,14 +61,21 @@ export class RedisStreamTrigger implements INodeType {
     const persistLastId = true;
 
     if (!streamKey) {
-      throw new NodeOperationError(this.getNode(), 'Stream Key is required');
+      throw new NodeOperationError(this.getNode(), 'Event name is required');
     }
 
     const staticData = this.getWorkflowStaticData('node') as { lastId?: string } & IDataObject;
 
-    const startMs = Date.now() - 10000; // read from 10 seconds before now
-    const computedStartId = `${startMs}-0`;
-    let lastId: string = staticData.lastId ?? computedStartId;
+    const staleSeconds = (this.getNodeParameter('staleSeconds', 0) as number) ?? 0;
+    let lastId: string;
+    if (typeof staticData.lastId === 'string' && staticData.lastId) {
+      lastId = staticData.lastId;
+    } else if (!staleSeconds || staleSeconds <= 0) {
+      lastId = '$'; // only new messages from now
+    } else {
+      const startMs = Date.now() - Math.floor(staleSeconds * 1000);
+      lastId = `${startMs}-0`;
+    }
 
     type RedisClientLike = { sendCommand(args: string[]): Promise<any> };
     const c = client as unknown as RedisClientLike;

@@ -10,12 +10,12 @@ import { getRedisClientConnected } from './redisClient';
 
 export class RedisStreamProducer implements INodeType {
   description: INodeTypeDescription = {
-    displayName: 'Redis Stream Producer',
+    displayName: 'Redis Pub',
     name: 'bozonxRedisStreamProducer',
     group: ['output'],
     version: 1,
     description: 'Append events to a Redis Stream using XADD',
-    defaults: { name: 'Redis Stream Producer' },
+    defaults: { name: 'Redis Pub' },
     icon: 'file:redis-stream-producer.svg',
     inputs: ['main'],
     outputs: ['main'],
@@ -27,13 +27,13 @@ export class RedisStreamProducer implements INodeType {
     ],
     properties: [
       {
-        displayName: 'Stream Key',
+        displayName: 'Event name',
         name: 'streamKey',
         type: 'string',
         default: 'my-service:main',
         required: true,
         description:
-          'Redis Stream key to append messages to, e.g. "my-service:main"',
+          'Event name (Redis Stream key) to append messages to, e.g. "my-service:main"',
       },
       {
         displayName: 'Payload Mode',
@@ -79,15 +79,29 @@ export class RedisStreamProducer implements INodeType {
                 name: 'value',
                 type: 'string',
                 default: '',
-                description: 'Field value (stored as string)',
+                description: 'Field value',
+              },
+              {
+                displayName: 'Type',
+                name: 'type',
+                type: 'options',
+                options: [
+                  { name: 'String', value: 'string' },
+                  { name: 'Number', value: 'number' },
+                  { name: 'Boolean', value: 'boolean' },
+                  { name: 'JSON', value: 'json' },
+                  { name: 'Null', value: 'null' },
+                ],
+                default: 'string',
+                description: 'Value type. Will be validated and serialized accordingly',
               },
             ],
           },
         ],
-        description: 'Key-value pairs used when Payload Mode = Key-Value (from UI)'
+        description: 'Key-value pairs used when Payload Mode = Key-Value (from UI)',
       },
     ],
-		usableAsTool: true,
+    usableAsTool: true,
   };
 
   async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
@@ -113,7 +127,7 @@ export class RedisStreamProducer implements INodeType {
         const ttlSec = 86400;
 
         if (!streamKey) {
-          throw new NodeOperationError(this.getNode(), 'Stream Key is required', { itemIndex: i });
+          throw new NodeOperationError(this.getNode(), 'Event name is required', { itemIndex: i });
         }
 
         const fields: Array<[string, string]> = [];
@@ -134,12 +148,50 @@ export class RedisStreamProducer implements INodeType {
         } else {
           const payload = this.getNodeParameter('payload', i, {}) as IDataObject;
           const pairs = ((payload.pair as IDataObject[]) || [])
-            .map((p) => ({ key: String(p.key ?? ''), value: String(p.value ?? '') }))
+            .map((p) => ({ key: String(p.key ?? ''), value: String(p.value ?? ''), type: String(p.type ?? 'string') }))
             .filter((p) => p.key.length > 0);
           if (pairs.length === 0) {
             throw new NodeOperationError(this.getNode(), 'At least one key-value pair is required in Payload', { itemIndex: i });
           }
-          for (const p of pairs) fields.push([p.key, p.value]);
+          for (const p of pairs) {
+            let v: string;
+            switch (p.type) {
+              case 'number': {
+                const n = Number(p.value);
+                if (!Number.isFinite(n)) {
+                  throw new NodeOperationError(this.getNode(), `Invalid number for key "${p.key}"`, { itemIndex: i });
+                }
+                v = String(n);
+                break;
+              }
+              case 'boolean': {
+                const t = String(p.value).trim().toLowerCase();
+                if (t === 'true' || t === '1') v = 'true';
+                else if (t === 'false' || t === '0') v = 'false';
+                else {
+                  throw new NodeOperationError(this.getNode(), `Invalid boolean for key "${p.key}" (expected true/false)`, { itemIndex: i });
+                }
+                break;
+              }
+              case 'json': {
+                try {
+                  const parsed = JSON.parse(p.value);
+                  v = JSON.stringify(parsed);
+                } catch {
+                  throw new NodeOperationError(this.getNode(), `Invalid JSON for key "${p.key}"`, { itemIndex: i });
+                }
+                break;
+              }
+              case 'null': {
+                v = 'null';
+                break;
+              }
+              case 'string':
+              default:
+                v = p.value;
+            }
+            fields.push([p.key, v]);
+          }
         }
 
         const cmd: string[] = ['XADD', streamKey];

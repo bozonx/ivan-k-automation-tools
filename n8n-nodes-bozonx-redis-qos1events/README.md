@@ -1,6 +1,9 @@
-# n8n Node: Redis Stream Producer
+# n8n Nodes: Redis Pub / Redis Sub
 
-Community node for n8n that appends events to a Redis Stream using XADD.
+Community nodes for n8n to work with Redis Streams:
+
+- Redis Pub: append events to a Redis Stream via XADD
+- Redis Sub: emit items when events appear in a Redis Stream via XREAD
 
 Sections:
 
@@ -32,26 +35,25 @@ Delivery semantics for consumers are determined by how subscribers read the stre
 - For “at-least-one” delivery, use Redis Consumer Groups (`XREADGROUP`) and acknowledge with `XACK`.
 - To deliver to multiple independent subscriber groups, create multiple Consumer Groups. The producer only appends once.
 
-## Parameters
+## Redis Pub: Parameters
 
-- Stream Key (string, required)
-  Redis Stream key to append messages to, e.g. `events:stt`. Default: `events:default`.
-
-- Message ID (string)
-  `*` by default. Set a fixed ID for idempotency if required.
+- Event name (string, required)
+  Redis Stream key to append messages to, e.g. `my-service:main`.
 
 - Payload Mode (options)
   - JSON (single field): send one field `data` with `JSON.stringify($json)`.
   - Key-Value (from UI): build fields from the UI `Payload` collection.
 
 - Payload (collection)
-  Only used when Payload Mode = Key-Value. Add multiple key-value pairs. Values are stored as strings.
+  Only used when Payload Mode = Key-Value. Add multiple key-value pairs. Each pair has a Key, Value, and Type. Values are validated and serialized according to the selected type (string, number, boolean, JSON, null).
 
-- Max Stream Length (number)
-  If > 0, enables `XADD MAXLEN ~ N` to approximately trim the stream to about N newest entries. Leave 0 to disable trimming. Typical values: thousands to millions depending on retention needs.
+## Redis Sub: Parameters
 
-- Stream TTL (seconds, number)
-  If > 0, executes `EXPIRE <stream> <ttlSeconds>` after the append.
+- Event name (string, required)
+  Redis Stream key to read messages from, e.g. `my-service:main`.
+
+- Allowed Stale (Seconds) (number)
+  If > 0, on startup also emit messages that are at most this many seconds old. 0 means only new messages after start.
 
 ## Credentials
 
