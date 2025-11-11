@@ -76,13 +76,6 @@ export class RedisStreamProducer implements INodeType {
                 description: 'Field name',
               },
               {
-                displayName: 'Value',
-                name: 'value',
-                type: 'string',
-                default: '',
-                description: 'Field value',
-              },
-              {
                 displayName: 'Type',
                 name: 'type',
                 type: 'options',
@@ -95,6 +88,39 @@ export class RedisStreamProducer implements INodeType {
                 ],
                 default: 'string',
                 description: 'Value type. Will be validated and serialized accordingly',
+              },
+              {
+                displayName: 'Value',
+                name: 'valueString',
+                type: 'string',
+                default: '',
+                description: 'Field value',
+                displayOptions: { show: { type: ['string'] } },
+              },
+              {
+                displayName: 'Value',
+                name: 'valueNumber',
+                type: 'number',
+                default: 0,
+                description: 'Field value',
+                displayOptions: { show: { type: ['number'] } },
+              },
+              {
+                displayName: 'Value',
+                name: 'valueBoolean',
+                type: 'boolean',
+                default: false,
+                description: 'Field value',
+                displayOptions: { show: { type: ['boolean'] } },
+              },
+              {
+                displayName: 'Value',
+                name: 'valueJson',
+                type: 'string',
+                typeOptions: { rows: 8 },
+                default: '',
+                description: 'Field value as JSON string',
+                displayOptions: { show: { type: ['json'] } },
               },
             ],
           },
@@ -153,7 +179,14 @@ export class RedisStreamProducer implements INodeType {
         } else {
           const payload = this.getNodeParameter('payload', i, {}) as IDataObject;
           const pairs = ((payload.pair as IDataObject[]) || [])
-            .map((p) => ({ key: String(p.key ?? ''), value: String(p.value ?? ''), type: String(p.type ?? 'string') }))
+            .map((p) => ({
+              key: String(p.key ?? ''),
+              type: String(p.type ?? 'string'),
+              valueString: (p as any).valueString as string | undefined,
+              valueNumber: (p as any).valueNumber as number | undefined,
+              valueBoolean: (p as any).valueBoolean as boolean | undefined,
+              valueJson: (p as any).valueJson as string | undefined,
+            }))
             .filter((p) => p.key.length > 0);
           if (pairs.length === 0) {
             skipXadd = true;
@@ -162,7 +195,7 @@ export class RedisStreamProducer implements INodeType {
             let v: string;
             switch (p.type) {
               case 'number': {
-                const n = Number(p.value);
+                const n = Number(p.valueNumber);
                 if (!Number.isFinite(n)) {
                   throw new NodeOperationError(this.getNode(), `Invalid number for key "${p.key}"`, { itemIndex: i });
                 }
@@ -170,19 +203,13 @@ export class RedisStreamProducer implements INodeType {
                 break;
               }
               case 'boolean': {
-                const t = String(p.value).trim().toLowerCase();
-                if (t === 'true' || t === '1') {
-                  v = 'true';
-                } else if (t === 'false' || t === '0') {
-                  v = 'false';
-                } else {
-                  throw new NodeOperationError(this.getNode(), `Invalid boolean for key "${p.key}" (expected true/false)`, { itemIndex: i });
-                }
+                const b = Boolean(p.valueBoolean);
+                v = b ? 'true' : 'false';
                 break;
               }
               case 'json': {
                 try {
-                  const parsed = JSON.parse(p.value);
+                  const parsed = JSON.parse(p.valueJson ?? '');
                   v = JSON.stringify(parsed);
                 } catch {
                   throw new NodeOperationError(this.getNode(), `Invalid JSON for key "${p.key}"`, { itemIndex: i });
@@ -195,7 +222,7 @@ export class RedisStreamProducer implements INodeType {
               }
               case 'string':
               default:
-                v = p.value;
+                v = String(p.valueString ?? '');
             }
             fields.push([p.key, v]);
           }
