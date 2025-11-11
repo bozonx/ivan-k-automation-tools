@@ -30,10 +30,10 @@ export class RedisStreamProducer implements INodeType {
         displayName: 'Stream Key',
         name: 'streamKey',
         type: 'string',
-        default: 'events:default',
+        default: 'my-service:main',
         required: true,
         description:
-          'Redis Stream key to append messages to, e.g. "events:stt"',
+          'Redis Stream key to append messages to, e.g. "my-service:main"',
       },
       {
         displayName: 'Payload Mode',

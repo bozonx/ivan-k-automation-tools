@@ -30,9 +30,9 @@ export class RedisStreamTrigger implements INodeType {
         displayName: 'Stream Key',
         name: 'streamKey',
         type: 'string',
-        default: 'events:default',
+        default: 'my-service:main',
         required: true,
-        description: 'Redis Stream key to read messages from, e.g. "events:stt"',
+        description: 'Redis Stream key to read messages from, e.g. "my-service:main"',
       },
     ],
   };
