@@ -10,7 +10,7 @@ export interface RedisConnectionOptions {
 }
 
 // Use loose typing to avoid generics incompatibilities across redis versions
-let clients = new Map<string, any>();
+const clients = new Map<string, any>();
 
 function buildUrl(opts: RedisConnectionOptions): string {
   const proto = opts.tls ? 'rediss' : 'redis';

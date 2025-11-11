@@ -40,8 +40,8 @@ export class RedisStreamProducer implements INodeType {
         name: 'payloadMode',
         type: 'options',
         options: [
-          { name: 'JSON (single field)', value: 'json', description: 'Send a single field named "data" containing JSON.stringify of the input item' },
-          { name: 'Key-Value (from UI)', value: 'kv', description: 'Send key-value pairs defined below (multiple pairs can be added). Input item JSON is not used.' },
+          { name: 'JSON (Single Field)', value: 'json', description: 'Send a single field named "data" containing JSON.stringify of the input item' },
+          { name: 'Key-Value (From UI)', value: 'kv', description: 'Send key-value pairs defined below (multiple pairs can be added). Input item JSON is not used.' },
         ],
         default: 'json',
         description: 'Select how to build message fields',
@@ -91,18 +91,17 @@ export class RedisStreamProducer implements INodeType {
         name: 'maxLen',
         type: 'number',
         default: 0,
-        description:
-          'If set (> 0), uses XADD MAXLEN ~ <N> to approximately trim the stream to about N newest entries. Leave 0 to disable trimming. Typical values range from thousands to millions depending on retention needs.',
+        description: 'If set (&gt; 0), uses XADD MAXLEN ~ &lt;N&gt; to approximately trim the stream to about N newest entries. Leave 0 to disable trimming. Typical values range from thousands to millions depending on retention needs.',
       },
       {
-        displayName: 'Stream TTL (seconds)',
+        displayName: 'Stream TTL (Seconds)',
         name: 'ttlSec',
         type: 'number',
         default: 0,
-        description:
-          'Optional key TTL. If > 0, EXPIRE <stream> <ttl> is executed after XADD.',
+        description: 'Optional key TTL. If &gt; 0, EXPIRE &lt;stream&gt; &lt;ttl&gt; is executed after XADD.',
       },
     ],
+		usableAsTool: true,
   };
 
   async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {

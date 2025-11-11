@@ -64,7 +64,7 @@ export async function createRedisClientConnected(options: RedisConnectionOptions
     destroy() {
       try {
         clientImpl.disconnect();
-      } catch {}
+      } catch (e) { void e; }
     },
   };
 
