@@ -87,17 +87,10 @@ export class RedisStreamProducer implements INodeType {
         description: 'Key-value pairs used when Payload Mode = Key-Value (from UI)'
       },
       {
-        displayName: 'Max Stream Length',
-        name: 'maxLen',
-        type: 'number',
-        default: 0,
-        description: 'If set (&gt; 0), uses XADD MAXLEN ~ &lt;N&gt; to approximately trim the stream to about N newest entries. Leave 0 to disable trimming. Typical values range from thousands to millions depending on retention needs.',
-      },
-      {
         displayName: 'Stream TTL (Seconds)',
         name: 'ttlSec',
         type: 'number',
-        default: 0,
+        default: 86400,
         description: 'Optional key TTL. If &gt; 0, EXPIRE &lt;stream&gt; &lt;ttl&gt; is executed after XADD.',
       },
     ],
@@ -123,7 +116,7 @@ export class RedisStreamProducer implements INodeType {
         const streamKey = (this.getNodeParameter('streamKey', i) as string).trim();
         const messageIdParam = '*';
         const payloadMode = this.getNodeParameter('payloadMode', i) as string;
-        const maxLen = (this.getNodeParameter('maxLen', i) as number) || 0;
+        const maxLen = 1000000;
         const ttlSec = (this.getNodeParameter('ttlSec', i) as number) || 0;
 
         if (!streamKey) {
