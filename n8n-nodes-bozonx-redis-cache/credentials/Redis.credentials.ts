@@ -6,6 +6,7 @@ export class Redis implements ICredentialType {
 	documentationUrl = 'https://github.com/bozonx/ivan-k-automation-tools/tree/main/n8n-nodes-bozonx-redis-cache#readme';
 	icon: Icon = { light: 'file:../nodes/RedisCache/redis-cache.svg', dark: 'file:../nodes/RedisCache/redis-cache.dark.svg' };
 	testedBy = ['bozonxRedisCache'];
+	test = { request: { baseURL: 'https://example.com' } } as const;
 	properties: INodeProperties[] = [
 		{
 			displayName: 'Host',

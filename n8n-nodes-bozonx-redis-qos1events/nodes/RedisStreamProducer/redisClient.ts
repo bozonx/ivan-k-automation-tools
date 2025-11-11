@@ -9,8 +9,8 @@ export interface RedisConnectionOptions {
   db?: number;
 }
 
-// Use loose typing to avoid generics incompatibilities across redis versions
-const clients = new Map<string, any>();
+// Cache clients by URL
+const clients = new Map<string, unknown>();
 
 function buildUrl(opts: RedisConnectionOptions): string {
   const proto = opts.tls ? 'rediss' : 'redis';
@@ -21,16 +21,21 @@ function buildUrl(opts: RedisConnectionOptions): string {
   return `${proto}://${authPart}${opts.host}:${opts.port}${dbPath}`;
 }
 
-export async function getRedisClientConnected(opts: RedisConnectionOptions): Promise<any> {
+type RedisClientLike = {
+  isOpen?: boolean;
+  connect(): Promise<void>;
+};
+
+export async function getRedisClientConnected(opts: RedisConnectionOptions): Promise<unknown> {
   const url = buildUrl(opts);
-  const cached = clients.get(url);
+  const cached = clients.get(url) as RedisClientLike | undefined;
   if (cached) {
-    if ((cached as any).isOpen) return cached;
-    try { await cached.connect(); return cached; } catch { /* fallthrough */ }
+    if (cached.isOpen) return cached as unknown;
+    try { await cached.connect(); return cached as unknown; } catch { /* fallthrough */ }
   }
   const client = createClient({ url });
-  client.on('error', () => {/* suppress unhandled error handler */});
+  client.on('error', () => { /* suppress unhandled error handler */ });
   await client.connect();
-  clients.set(url, client);
-  return client;
+  clients.set(url, client as unknown);
+  return client as unknown;
 }

@@ -138,7 +138,7 @@ export class RedisStreamProducer implements INodeType {
           if (jsonText) {
             try {
               dataObj = JSON.parse(jsonText);
-            } catch (e) {
+            } catch {
               throw new NodeOperationError(this.getNode(), 'Invalid JSON in Payload', { itemIndex: i });
             }
           } else {
@@ -165,10 +165,12 @@ export class RedisStreamProducer implements INodeType {
           cmd.push(k, v);
         }
 
-        const id = (await (client as any).sendCommand(cmd)) as string;
+        type RedisClientLike = { sendCommand(args: string[]): Promise<string> };
+        const c = client as unknown as RedisClientLike;
+        const id = await c.sendCommand(cmd);
 
         if (ttlSec && ttlSec > 0) {
-          await (client as any).sendCommand(['EXPIRE', streamKey, String(ttlSec)]);
+          await c.sendCommand(['EXPIRE', streamKey, String(ttlSec)]);
         }
 
         returnData.push({ json: { stream: streamKey, id, fields: Object.fromEntries(fields) }, pairedItem: { item: i } });
