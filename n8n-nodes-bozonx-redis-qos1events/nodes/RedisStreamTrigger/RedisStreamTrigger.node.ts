@@ -130,10 +130,40 @@ export class RedisStreamTrigger implements INodeType {
               } else if ((fields as any).payload !== undefined) {
                 payload = (fields as any).payload as unknown as string;
               } else {
-                payload = { ...fields } as IDataObject;
+                const typed: IDataObject = {};
+                for (const [k, sv] of Object.entries(fields)) {
+                  const t = sv.trim();
+                  let val: unknown = sv;
+                  if (t === 'true') val = true;
+                  else if (t === 'false') val = false;
+                  else if (t === 'null') val = null;
+                  else if ((t.startsWith('{') && t.endsWith('}')) || (t.startsWith('[') && t.endsWith(']'))) {
+                    try { val = JSON.parse(t); } catch {}
+                  } else {
+                    const n = Number(t);
+                    if (t !== '' && Number.isFinite(n)) val = n;
+                  }
+                  typed[k] = val as any;
+                }
+                payload = typed as IDataObject;
               }
             } else if (Object.keys(fields).length > 0) {
-              payload = { ...fields } as IDataObject;
+              const typed: IDataObject = {};
+              for (const [k, sv] of Object.entries(fields)) {
+                const t = sv.trim();
+                let val: unknown = sv;
+                if (t === 'true') val = true;
+                else if (t === 'false') val = false;
+                else if (t === 'null') val = null;
+                else if ((t.startsWith('{') && t.endsWith('}')) || (t.startsWith('[') && t.endsWith(']'))) {
+                  try { val = JSON.parse(t); } catch {}
+                } else {
+                  const n = Number(t);
+                  if (t !== '' && Number.isFinite(n)) val = n;
+                }
+                typed[k] = val as any;
+              }
+              payload = typed as IDataObject;
             } else {
               payload = null;
             }
