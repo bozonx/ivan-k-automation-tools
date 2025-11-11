@@ -5,7 +5,7 @@ export class Redis implements ICredentialType {
   displayName = 'Redis (Streams)';
   documentationUrl = 'https://github.com/bozonx/ivan-k-automation-tools/tree/main/n8n-nodes-bozonx-redis-qos1events#readme';
   icon: Icon = { light: 'file:../nodes/RedisStreamProducer/redis-stream-producer.svg', dark: 'file:../nodes/RedisStreamProducer/redis-stream-producer.dark.svg' };
-  testedBy = ['bozonxRedisStreamProducer'];
+  testedBy = ['bozonxRedisStreamProducer', 'bozonxRedisStreamTrigger'];
   properties: INodeProperties[] = [
     {
       displayName: 'Host',
