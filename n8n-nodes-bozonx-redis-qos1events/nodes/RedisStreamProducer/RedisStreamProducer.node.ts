@@ -132,6 +132,7 @@ export class RedisStreamProducer implements INodeType {
         }
 
         const fields: Array<[string, string]> = [];
+        let skipXadd = false;
 
         if (payloadMode === 'text') {
           const text = (this.getNodeParameter('stringPayload', i, '') as string).trim();
@@ -155,7 +156,7 @@ export class RedisStreamProducer implements INodeType {
             .map((p) => ({ key: String(p.key ?? ''), value: String(p.value ?? ''), type: String(p.type ?? 'string') }))
             .filter((p) => p.key.length > 0);
           if (pairs.length === 0) {
-            throw new NodeOperationError(this.getNode(), 'At least one key-value pair is required in Payload', { itemIndex: i });
+            skipXadd = true;
           }
           for (const p of pairs) {
             let v: string;
@@ -170,9 +171,11 @@ export class RedisStreamProducer implements INodeType {
               }
               case 'boolean': {
                 const t = String(p.value).trim().toLowerCase();
-                if (t === 'true' || t === '1') v = 'true';
-                else if (t === 'false' || t === '0') v = 'false';
-                else {
+                if (t === 'true' || t === '1') {
+                  v = 'true';
+                } else if (t === 'false' || t === '0') {
+                  v = 'false';
+                } else {
                   throw new NodeOperationError(this.getNode(), `Invalid boolean for key "${p.key}" (expected true/false)`, { itemIndex: i });
                 }
                 break;
@@ -209,10 +212,12 @@ export class RedisStreamProducer implements INodeType {
 
         type RedisClientLike = { sendCommand(args: string[]): Promise<string> };
         const c = client as unknown as RedisClientLike;
-        const id = await c.sendCommand(cmd);
-
-        if (ttlSec && ttlSec > 0) {
-          await c.sendCommand(['EXPIRE', streamKey, String(ttlSec)]);
+        let id: string | null = null;
+        if (!skipXadd) {
+          id = await c.sendCommand(cmd);
+          if (ttlSec && ttlSec > 0) {
+            await c.sendCommand(['EXPIRE', streamKey, String(ttlSec)]);
+          }
         }
 
         const fieldsObj = Object.fromEntries(fields) as Record<string, string>;
