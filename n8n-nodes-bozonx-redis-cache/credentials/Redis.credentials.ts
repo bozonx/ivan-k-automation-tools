@@ -4,7 +4,7 @@ export class Redis implements ICredentialType {
 	name = 'bozonxRedis';
 	displayName = 'Redis';
 	documentationUrl = 'https://github.com/bozonx/ivan-k-automation-tools/tree/main/n8n-nodes-bozonx-redis-cache#readme';
-	icon: Icon = { light: 'file:../nodes/RedisCache/redis-cache.svg', dark: 'file:../nodes/RedisCache/redis-cache.svg' };
+	icon: Icon = { light: 'file:../nodes/RedisCache/redis-cache.svg', dark: 'file:../nodes/RedisCache/redis-cache.dark.svg' };
 	testedBy = ['bozonxRedisCache'];
 	properties: INodeProperties[] = [
 		{
@@ -20,6 +20,7 @@ export class Redis implements ICredentialType {
 			displayName: 'Port',
 			name: 'port',
 			type: 'number',
+			typeOptions: { minValue: 1, maxValue: 65535 },
 			default: 6379,
 			required: true,
 			description: 'Redis TCP port number',
@@ -52,6 +53,7 @@ export class Redis implements ICredentialType {
 			displayName: 'DB Index',
 			name: 'db',
 			type: 'number',
+			typeOptions: { minValue: 0, maxValue: 15 },
 			default: 0,
 			description: 'Database index number (0 by default)',
 		},
