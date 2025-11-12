@@ -79,11 +79,11 @@ export class BozonxRedisCache implements INodeType {
 				name: 'payloadType',
 				type: 'options',
 				options: [
+					{ name: 'Data Fields', value: 'fields' },
 					{ name: 'JSON', value: 'json' },
-					{ name: 'Custom Fields', value: 'fields' },
 				],
-				default: 'json',
-				description: 'Choose how you will provide the JSON to store.',
+				default: 'fields',
+				description: 'Choose how you will provide the data to store.',
 				displayOptions: { show: { mode: ['write'] } },
 			},
 			{
@@ -146,6 +146,7 @@ export class BozonxRedisCache implements INodeType {
 								displayName: 'JSON Value',
 								name: 'valueJson',
 								type: 'string',
+								typeOptions: { rows: 5 },
 								default: '',
 								placeholder: '{ "nested": true }',
 								description:
