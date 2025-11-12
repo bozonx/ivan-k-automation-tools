@@ -8,7 +8,7 @@ import {
 } from 'n8n-workflow';
 import { getRedisClientConnected } from './redisClient';
 
-export class RedisStreamProducer implements INodeType {
+export class BozonxRedisStreamProducer implements INodeType {
 	description: INodeTypeDescription = {
 		displayName: 'Redis Pub',
 		name: 'bozonxRedisStreamProducer',

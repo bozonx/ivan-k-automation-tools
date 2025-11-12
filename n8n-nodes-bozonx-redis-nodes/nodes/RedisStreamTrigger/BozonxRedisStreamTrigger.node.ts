@@ -14,7 +14,7 @@ declare function setTimeout(
     ...args: unknown[]
 ): unknown;
 
-export class RedisStreamTrigger implements INodeType {
+export class BozonxRedisStreamTrigger implements INodeType {
 	description: INodeTypeDescription = {
 		displayName: 'Redis Sub Trigger',
 		name: 'bozonxRedisStreamTrigger',

@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-bozonx-redis-nodes",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "description": "n8n community nodes for Redis: Cache and Streams (producer/trigger via Streams)",
   "license": "MIT",
   "keywords": [
@@ -28,6 +28,7 @@
   ],
   "n8n": {
     "n8nNodesApiVersion": 1,
+    "strict": true,
     "nodes": [
       "dist/nodes/RedisCache/BozonxRedisCache.node.js",
       "dist/nodes/RedisStreamProducer/BozonxRedisStreamProducer.node.js",
