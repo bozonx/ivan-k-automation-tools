@@ -194,14 +194,17 @@ export class RedisStreamProducer implements INodeType {
 				} else {
 					const payload = this.getNodeParameter('payload', i, {}) as IDataObject;
 					const pairs = ((payload.pair as IDataObject[]) || [])
-						.map((p) => ({
-							key: String(p.key ?? ''),
-							type: String(p.type ?? 'string'),
-							valueString: (p as any).valueString as string | undefined,
-							valueNumber: (p as any).valueNumber as number | undefined,
-							valueBoolean: (p as any).valueBoolean as boolean | undefined,
-							valueJson: (p as any).valueJson as string | undefined,
-						}))
+						.map((p) => {
+							const obj = p as unknown as Record<string, unknown>;
+							return {
+								key: String(obj.key ?? ''),
+								type: String(obj.type ?? 'string'),
+								valueString: typeof obj.valueString === 'string' ? (obj.valueString as string) : undefined,
+								valueNumber: typeof obj.valueNumber === 'number' ? (obj.valueNumber as number) : undefined,
+								valueBoolean: typeof obj.valueBoolean === 'boolean' ? (obj.valueBoolean as boolean) : undefined,
+								valueJson: typeof obj.valueJson === 'string' ? (obj.valueJson as string) : undefined,
+							};
+						})
 						.filter((p) => p.key.length > 0);
 					const resultObj: IDataObject = {};
 					for (const p of pairs) {
@@ -250,7 +253,7 @@ export class RedisStreamProducer implements INodeType {
 								typed = p.valueString ?? '';
 						}
 						fields.push([p.key, v]);
-						resultObj[p.key] = typed as any;
+						(resultObj as Record<string, unknown>)[p.key] = typed as unknown;
 					}
 					// If no fields, add a marker field so XADD succeeds
 					if (pairs.length === 0) {
@@ -281,18 +284,18 @@ export class RedisStreamProducer implements INodeType {
 					payload = resultPayloadKV;
 				} else {
 					if (Object.keys(fieldsObj).length === 1) {
-						if ((fieldsObj as any).data !== undefined) {
+						if (fieldsObj['data'] !== undefined) {
 							try {
-								const parsed = JSON.parse((fieldsObj as any).data as unknown as string);
+								const parsed = JSON.parse(fieldsObj['data'] as string);
 								payload =
 									typeof parsed === 'object' && parsed !== null
 										? (parsed as IDataObject)
 										: ({ value: parsed } as IDataObject);
 							} catch {
-								payload = { data: (fieldsObj as any).data } as IDataObject;
+								payload = { data: fieldsObj['data'] } as IDataObject;
 							}
-						} else if ((fieldsObj as any).payload !== undefined) {
-							payload = (fieldsObj as any).payload as unknown as string;
+						} else if (fieldsObj['payload'] !== undefined) {
+							payload = fieldsObj['payload'];
 						}
 					} else if (Object.keys(fieldsObj).length > 0) {
 						payload = { ...fieldsObj } as IDataObject;

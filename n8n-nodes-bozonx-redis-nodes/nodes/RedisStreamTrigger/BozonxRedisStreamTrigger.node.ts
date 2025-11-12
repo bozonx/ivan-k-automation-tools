@@ -85,7 +85,7 @@ export class RedisStreamTrigger implements INodeType {
 			lastId = `${startMs}-0`;
 		}
 
-		type RedisClientLike = { sendCommand(args: string[]): Promise<any> };
+		type RedisClientLike = { sendCommand(args: string[]): Promise<unknown> };
 		const c = client as unknown as RedisClientLike;
 
 		let running = true;
@@ -128,20 +128,20 @@ export class RedisStreamTrigger implements INodeType {
 
 						let payload: unknown = null;
 						if (Object.keys(fields).length === 1) {
-							if ((fields as any).data !== undefined) {
+							if (fields['data'] !== undefined) {
 								try {
-									const parsed = JSON.parse((fields as any).data as unknown as string);
+									const parsed = JSON.parse(fields['data'] as string);
 									payload =
 										typeof parsed === 'object' && parsed !== null
 											? (parsed as IDataObject)
 											: ({ value: parsed } as IDataObject);
 								} catch {
-									payload = { data: (fields as any).data } as IDataObject;
+									payload = { data: fields['data'] } as IDataObject;
 								}
-							} else if ((fields as any).payload !== undefined) {
-								payload = (fields as any).payload as unknown as string;
+							} else if (fields['payload'] !== undefined) {
+								payload = fields['payload'];
 							} else {
-								const typed: IDataObject = {};
+								const typed: Record<string, unknown> = {};
 								for (const [k, sv] of Object.entries(fields)) {
 									const t = sv.trim();
 									let val: unknown = sv;
@@ -159,12 +159,12 @@ export class RedisStreamTrigger implements INodeType {
 										const n = Number(t);
 										if (t !== '' && Number.isFinite(n)) val = n;
 									}
-									typed[k] = val as any;
+									typed[k] = val;
 								}
 								payload = typed as IDataObject;
 							}
 						} else if (Object.keys(fields).length > 0) {
-							const typed: IDataObject = {};
+							const typed: Record<string, unknown> = {};
 							for (const [k, sv] of Object.entries(fields)) {
 								const t = sv.trim();
 								let val: unknown = sv;
@@ -182,7 +182,7 @@ export class RedisStreamTrigger implements INodeType {
 									const n = Number(t);
 									if (t !== '' && Number.isFinite(n)) val = n;
 								}
-								typed[k] = val as any;
+								typed[k] = val;
 							}
 							payload = typed as IDataObject;
 						} else {
@@ -246,18 +246,18 @@ export class RedisStreamTrigger implements INodeType {
 
 						let payload: unknown = null;
 						if (Object.keys(fields).length === 1) {
-							if ((fields as any).data !== undefined) {
+							if (fields['data'] !== undefined) {
 								try {
-									const parsed = JSON.parse((fields as any).data as unknown as string);
+									const parsed = JSON.parse(fields['data'] as string);
 									payload =
 										typeof parsed === 'object' && parsed !== null
 											? (parsed as IDataObject)
 											: ({ value: parsed } as IDataObject);
 								} catch {
-									payload = { data: (fields as any).data } as IDataObject;
+									payload = { data: fields['data'] } as IDataObject;
 								}
-							} else if ((fields as any).payload !== undefined) {
-								payload = (fields as any).payload as unknown as string;
+							} else if (fields['payload'] !== undefined) {
+								payload = fields['payload'];
 							} else {
 								payload = { ...fields } as IDataObject;
 							}
