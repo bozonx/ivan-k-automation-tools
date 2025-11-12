@@ -1,0 +1,54 @@
+{
+  "name": "n8n-nodes-bozonx-redis-nodes",
+  "version": "1.0.0",
+  "description": "n8n community nodes for Redis: Cache and Streams (producer/trigger via Streams)",
+  "license": "MIT",
+  "keywords": [
+    "n8n-community-node-package"
+  ],
+  "author": {
+    "name": "Ivan",
+    "email": "ipkozyrin@gmail.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bozonx/ivan-k-automation-tools"
+  },
+  "scripts": {
+    "build": "n8n-node build",
+    "build:watch": "tsc --watch",
+    "dev": "n8n-node dev",
+    "lint": "n8n-node lint",
+    "lint:fix": "n8n-node lint --fix",
+    "release:n8n": "n8n-node release",
+    "prepublishOnly:n8n": "n8n-node prerelease"
+  },
+  "files": [
+    "dist"
+  ],
+  "n8n": {
+    "n8nNodesApiVersion": 1,
+    "strict": true,
+    "nodes": [
+      "dist/nodes/RedisCache/BozonxRedisCache.node.js",
+      "dist/nodes/RedisStreamProducer/RedisStreamProducer.node.js",
+      "dist/nodes/RedisStreamTrigger/RedisStreamTrigger.node.js"
+    ],
+    "credentials": [
+      "dist/credentials/BozonxRedis.credentials.js"
+    ]
+  },
+  "devDependencies": {
+    "@n8n/node-cli": "^0.14.0",
+    "eslint": "9.39.1",
+    "prettier": "3.6.2",
+    "release-it": "^19.0.6",
+    "typescript": "5.9.3"
+  },
+  "peerDependencies": {
+    "n8n-workflow": "*"
+  },
+  "dependencies": {
+    "redis": "^5.9.0"
+  }
+}

@@ -9,9 +9,6 @@ trailingComma: es5
 bracketSpacing: true
 bracketSameLine: false
 arrowParens: always
-objectWrap: collapse
-
-# Настройки для JSDoc
-jsdocSpaces: 1
-jsdocDescriptionWithDot: false
-jsdocDescriptionTag: false
+endOfLine: lf
+embeddedLanguageFormatting: auto
+htmlWhitespaceSensitivity: css

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Redis Sub icon (dark)">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ff6b6b"/>
+      <stop offset="100%" stop-color="#d64545"/>
+    </linearGradient>
+  </defs>
+  <g fill="none" fill-rule="evenodd">
+    <ellipse cx="28" cy="18" rx="20" ry="7" fill="url(#g)"/>
+    <path d="M8 18v12c0 4 9 7 20 7s20-3 20-7V18c0 4-9 7-20 7S8 22 8 18z" fill="#a82f2f"/>
+    <ellipse cx="28" cy="30" rx="20" ry="7" fill="url(#g)"/>
+    <path d="M8 30v12c0 4 9 7 20 7s20-3 20-7V30c0 4-9 7-20 7S8 34 8 30z" fill="#922828"/>
+    <!-- Trigger arrow (incoming) -->
+    <path d="M24 22L12 32l12 10v-6h12c4.418 0 8-3.134 8-7s-3.582-7-8-7H24v-6z" fill="#ffffff" opacity="0.95"/>
+    <rect x="41" y="45" width="18" height="12" rx="3" fill="#000000" opacity="0.7"/>
+    <text x="50" y="54" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="9" font-weight="700" fill="#FFFFFF" opacity="0.98">sub</text>
+  </g>
+</svg>
