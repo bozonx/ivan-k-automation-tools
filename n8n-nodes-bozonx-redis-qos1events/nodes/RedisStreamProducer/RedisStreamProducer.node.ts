@@ -14,14 +14,14 @@ export class RedisStreamProducer implements INodeType {
     name: 'bozonxRedisStreamProducer',
     group: ['output'],
     version: 1,
-    description: 'Append events to a Redis Stream using XADD',
+    description: 'Append entries to a Redis Stream using XADD',
     defaults: { name: 'Redis Pub' },
     icon: 'file:redis-stream-producer.svg',
     inputs: ['main'],
     outputs: ['main'],
     credentials: [
       {
-        name: 'bozonxRedisStreams',
+        name: 'bozonxRedis',
         required: true,
       },
     ],
@@ -33,19 +33,19 @@ export class RedisStreamProducer implements INodeType {
         default: 'my-service:main',
         required: true,
         description:
-          'Event name (Redis Stream key) to append messages to, e.g. "my-service:main"',
+          'Redis Stream key (event name) to append entries to, e.g. "my-service:main"',
       },
       {
         displayName: 'Payload Mode',
         name: 'payloadMode',
         type: 'options',
         options: [
-          { name: 'Text', value: 'text', description: 'Send a single field named "payload" containing the provided text' },
-          { name: 'JSON', value: 'json', description: 'Send a single field named "data" containing JSON.stringify of the provided or incoming item' },
-          { name: 'Key-Value', value: 'kv', description: 'Send key-value pairs defined below (multiple pairs can be added). Input item JSON is not used.' },
+          { name: 'Text', value: 'text', description: 'Send a single field named "payload" with the provided text' },
+          { name: 'JSON', value: 'json', description: 'Send a single field named "data" with the JSON string of the provided JSON or the incoming item (if left empty)' },
+          { name: 'Key-Value', value: 'kv', description: 'Send the key-value pairs configured below. The incoming item is ignored.' },
         ],
         default: 'text',
-        description: 'Select how to build message fields',
+        description: 'Choose how the stream entry fields are constructed',
       },
       {
         displayName: 'Payload',
@@ -54,7 +54,7 @@ export class RedisStreamProducer implements INodeType {
         displayOptions: { show: { payloadMode: ['text', 'json'] } },
         typeOptions: { rows: 8 },
         default: '',
-        description: 'Content for single-field modes. For Text, sent as-is in field "payload". For JSON, must be valid JSON (or leave empty to use the incoming item JSON).',
+        description: 'Content used by Text and JSON modes. For Text, sent as-is in field "payload". For JSON, provide valid JSON or leave empty to use the incoming item as JSON.',
       },
       {
         displayName: 'Payload',
@@ -87,7 +87,7 @@ export class RedisStreamProducer implements INodeType {
                   { name: 'Null', value: 'null' },
                 ],
                 default: 'string',
-                description: 'Value type. Will be validated and serialized accordingly',
+                description: 'Value type. It will be validated and serialized accordingly.',
               },
               {
                 displayName: 'Value',
@@ -119,13 +119,13 @@ export class RedisStreamProducer implements INodeType {
                 type: 'string',
                 typeOptions: { rows: 8 },
                 default: '',
-                description: 'Field value as JSON string',
+                description: 'Field value as JSON (stringified)',
                 displayOptions: { show: { type: ['json'] } },
               },
             ],
           },
         ],
-        description: 'Key-value pairs used when Payload Mode = Key-Value (from UI)',
+        description: 'Key-value pairs used when Payload Mode is Key-Value',
       },
     ],
     usableAsTool: true,
@@ -135,7 +135,7 @@ export class RedisStreamProducer implements INodeType {
     const items = this.getInputData();
     const returnData: INodeExecutionData[] = [];
 
-    const creds = await this.getCredentials('bozonxRedisStreams');
+    const creds = await this.getCredentials('bozonxRedis');
     const host = (creds?.host as string) || 'localhost';
     const port = (creds?.port as number) ?? 6379;
     const username = (creds?.username as string) || '';

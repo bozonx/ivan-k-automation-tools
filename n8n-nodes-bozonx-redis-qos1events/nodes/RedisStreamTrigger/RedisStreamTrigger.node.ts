@@ -10,42 +10,42 @@ import { getRedisClientConnected } from '../RedisStreamProducer/redisClient';
 
 export class RedisStreamTrigger implements INodeType {
   description: INodeTypeDescription = {
-    displayName: 'Redis Sub',
+    displayName: 'Redis Stream Trigger',
     name: 'bozonxRedisStreamTrigger',
     group: ['trigger'],
     version: 1,
-    description: 'Emit items when events appear in a Redis Stream (XREAD)',
-    defaults: { name: 'Redis Sub' },
+    description: 'Emit items when new entries appear in a Redis Stream (XREAD)',
+    defaults: { name: 'Redis Stream Trigger' },
     icon: 'file:redis-stream-trigger.svg',
     inputs: [],
     outputs: ['main'],
     credentials: [
       {
-        name: 'bozonxRedisStreams',
+        name: 'bozonxRedis',
         required: true,
       },
     ],
     properties: [
       {
-        displayName: 'Event name',
+        displayName: 'Stream Key',
         name: 'streamKey',
         type: 'string',
         default: 'my-service:main',
         required: true,
-        description: 'Event name (Redis Stream key) to read messages from, e.g. "my-service:main"',
+        description: 'Redis Stream key to read entries from, e.g. "my-service:main"',
       },
       {
         displayName: 'Allowed Stale (Seconds)',
         name: 'staleSeconds',
         type: 'number',
         default: 0,
-        description: 'If > 0, on startup also emit messages that are at most this many seconds old. 0 means only new messages after start.',
+        description: 'On start, also emit entries up to this many seconds old (if > 0). 0 emits only new entries after the node starts.',
       },
     ],
   };
 
   async trigger(this: ITriggerFunctions): Promise<ITriggerResponse> {
-    const creds = await this.getCredentials('bozonxRedisStreams');
+    const creds = await this.getCredentials('bozonxRedis');
     const host = (creds?.host as string) || 'localhost';
     const port = (creds?.port as number) ?? 6379;
     const username = (creds?.username as string) || '';

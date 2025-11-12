@@ -47,11 +47,11 @@ export class BozonxRedisCache implements INodeType {
         name: 'mode',
         type: 'options',
         options: [
-          { name: 'Write', value: 'write' },
-          { name: 'Read', value: 'read' },
+          { name: 'Write', value: 'write', description: 'Store JSON under the given key (optional TTL).' },
+          { name: 'Read', value: 'read', description: 'Fetch and parse JSON stored under the key.' },
         ],
         default: 'write',
-        description: 'Select the operation mode',
+        description: 'Choose whether to write to or read from Redis.',
       },
       {
         displayName: 'Key',
@@ -60,7 +60,7 @@ export class BozonxRedisCache implements INodeType {
         default: '',
         required: true,
         placeholder: 'cache:my-key',
-        description: 'Redis key to store or read the value',
+        description: 'Redis key to write to or read from.',
       },
       {
         displayName: 'Payload Type',
@@ -71,7 +71,7 @@ export class BozonxRedisCache implements INodeType {
           { name: 'Custom Fields', value: 'fields' },
         ],
         default: 'json',
-        description: 'Select the payload source',
+        description: 'Choose how you will provide the JSON to store.',
         displayOptions: { show: { mode: ['write'] } },
       },
       {
@@ -82,7 +82,7 @@ export class BozonxRedisCache implements INodeType {
         default: '',
         required: true,
         placeholder: '{ "foo": "bar" }',
-        description: 'JSON string to store as the Redis value',
+        description: 'JSON to store at the key. Must be valid JSON.',
         displayOptions: { show: { mode: ['write'], payloadType: ['json'] } },
       },
       {
@@ -92,7 +92,7 @@ export class BozonxRedisCache implements INodeType {
         typeOptions: { multipleValues: true },
         default: {},
         placeholder: 'Add Field',
-        description: 'Key-value pairs to build a JSON object',
+        description: 'Define fields that will be composed into a JSON object.',
         displayOptions: { show: { mode: ['write'], payloadType: ['fields'] } },
         options: [
           {
@@ -104,6 +104,7 @@ export class BozonxRedisCache implements INodeType {
                 name: 'valueBoolean',
                 type: 'boolean',
                 default: false,
+                description: 'True/false value for the field.',
                 displayOptions: { show: { valueType: ['boolean'] } },
               },
               {
@@ -112,7 +113,7 @@ export class BozonxRedisCache implements INodeType {
                 type: 'string',
                 default: '',
                 placeholder: '{ "nested": true }',
-                description: 'Provide a valid JSON to be parsed as the field value',
+                description: 'Provide valid JSON to be parsed as the field value (e.g. object or array).',
                 displayOptions: { show: { valueType: ['json'] } },
               },
               {
@@ -121,12 +122,16 @@ export class BozonxRedisCache implements INodeType {
                 type: 'string',
                 default: '',
                 required: true,
+                placeholder: 'userId',
+                description: 'Field name in the resulting JSON object.',
               },
               {
                 displayName: 'Number Value',
                 name: 'valueNumber',
                 type: 'number',
                 default: 0,
+                placeholder: '42',
+                description: 'Numeric value for the field.',
                 displayOptions: { show: { valueType: ['number'] } },
               },
               {
@@ -134,6 +139,8 @@ export class BozonxRedisCache implements INodeType {
                 name: 'valueString',
                 type: 'string',
                 default: '',
+                placeholder: 'john.doe',
+                description: 'Text value for the field.',
                 displayOptions: { show: { valueType: ['string'] } },
               },
               {
@@ -165,7 +172,7 @@ export class BozonxRedisCache implements INodeType {
           { name: 'Days', value: 'days' },
         ],
         default: 'hours',
-        description: 'Unit for the TTL value',
+        description: 'Time unit for the TTL.',
         displayOptions: { show: { mode: ['write'] } },
       },
       {

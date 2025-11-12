@@ -1,8 +1,8 @@
 import type { ICredentialType, Icon, INodeProperties } from 'n8n-workflow';
 
 export class Redis implements ICredentialType {
-  name = 'bozonxRedisStreams';
-  displayName = 'Redis (Streams)';
+  name = 'bozonxRedis';
+  displayName = 'Redis';
   documentationUrl = 'https://github.com/bozonx/ivan-k-automation-tools/tree/main/n8n-nodes-bozonx-redis-qos1events#readme';
   icon: Icon = { light: 'file:../nodes/RedisStreamProducer/redis-stream-producer.svg', dark: 'file:../nodes/RedisStreamProducer/redis-stream-producer.dark.svg' };
   testedBy = ['bozonxRedisStreamProducer', 'bozonxRedisStreamTrigger'];
@@ -20,6 +20,7 @@ export class Redis implements ICredentialType {
       displayName: 'Port',
       name: 'port',
       type: 'number',
+      typeOptions: { minValue: 1, maxValue: 65535 },
       default: 6379,
       required: true,
       description: 'Redis TCP port number',
@@ -52,8 +53,10 @@ export class Redis implements ICredentialType {
       displayName: 'DB Index',
       name: 'db',
       type: 'number',
+      typeOptions: { minValue: 0, maxValue: 15 },
       default: 0,
       description: 'Database index number (0 by default)',
     },
   ];
 }
+
