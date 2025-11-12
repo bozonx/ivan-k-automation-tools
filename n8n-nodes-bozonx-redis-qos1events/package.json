@@ -35,7 +35,7 @@
             "dist/nodes/RedisStreamTrigger/RedisStreamTrigger.node.js"
         ],
         "credentials": [
-            "dist/credentials/Redis.credentials.js"
+            "dist/credentials/BozonxRedis.credentials.js"
         ]
     },
     "devDependencies": {
