@@ -10,12 +10,12 @@ import { getRedisClientConnected } from '../RedisStreamProducer/redisClient';
 
 export class RedisStreamTrigger implements INodeType {
 	description: INodeTypeDescription = {
-		displayName: 'Redis Pub Trigger',
+		displayName: 'Redis Sub Trigger',
 		name: 'bozonxRedisStreamTrigger',
 		group: ['trigger'],
 		version: 1,
 		description: 'Emit items when new entries appear in a Redis Stream (XREAD)',
-		defaults: { name: 'Redis Pub Trigger' },
+		defaults: { name: 'Redis Sub Trigger' },
 		icon: 'file:redis-stream-trigger.svg',
 		inputs: [],
 		outputs: ['main'],
