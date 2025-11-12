@@ -27,7 +27,7 @@ export class RedisStreamTrigger implements INodeType {
 		],
 		properties: [
 			{
-				displayName: 'Stream Key',
+				displayName: 'Event name',
 				name: 'streamKey',
 				type: 'string',
 				default: 'my-service:main',
