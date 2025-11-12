@@ -266,6 +266,7 @@ export class BozonxRedisCache implements INodeType {
 							| 'fields';
 
 						let normalized: string;
+						let payloadObj: unknown;
 						if (payloadType === 'json') {
 							const dataStr = this.getNodeParameter('data', i) as string;
 							if (!dataStr) {
@@ -277,6 +278,7 @@ export class BozonxRedisCache implements INodeType {
 							try {
 								const parsed = JSON.parse(dataStr);
 								normalized = JSON.stringify(parsed);
+								payloadObj = parsed;
 							} catch {
 								throw new NodeOperationError(this.getNode(), 'Invalid JSON provided in Data', {
 									itemIndex: i,
@@ -340,6 +342,7 @@ export class BozonxRedisCache implements INodeType {
 								obj[k] = value;
 							}
 							normalized = JSON.stringify(obj);
+							payloadObj = obj;
 						}
 						const ttl = this.getNodeParameter('ttl', i, 0) as number;
 						if (ttl < 0) {
@@ -359,7 +362,7 @@ export class BozonxRedisCache implements INodeType {
 						}
 
 						returnData.push({
-							json: { ok: true, key, ttlSeconds } as IDataObject,
+							json: { ok: true, key, ttlSeconds, data: payloadObj } as IDataObject,
 							pairedItem: { item: i },
 						});
 					} else {
@@ -375,7 +378,7 @@ export class BozonxRedisCache implements INodeType {
 						try {
 							const parsed = JSON.parse(value);
 							returnData.push({
-								json: { found: true, key, value: parsed } as IDataObject,
+								json: { found: true, key, data: parsed } as IDataObject,
 								pairedItem: { item: i },
 							});
 						} catch {
