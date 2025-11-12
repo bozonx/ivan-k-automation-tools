@@ -3,8 +3,12 @@ import type { ICredentialType, Icon, INodeProperties } from 'n8n-workflow';
 export class Redis implements ICredentialType {
 	name = 'bozonxRedis';
 	displayName = 'Redis';
-	documentationUrl = 'https://github.com/bozonx/ivan-k-automation-tools/tree/main/n8n-nodes-bozonx-redis-cache#readme';
-	icon: Icon = { light: 'file:../nodes/RedisCache/redis-cache.svg', dark: 'file:../nodes/RedisCache/redis-cache.dark.svg' };
+	documentationUrl =
+		'https://github.com/bozonx/ivan-k-automation-tools/tree/main/n8n-nodes-bozonx-redis-cache#readme';
+	icon: Icon = {
+		light: 'file:../nodes/RedisCache/redis-cache.svg',
+		dark: 'file:../nodes/RedisCache/redis-cache.dark.svg',
+	};
 	testedBy = ['bozonxRedisCache'];
 	test = { request: { baseURL: 'https://example.com' } } as const;
 	properties: INodeProperties[] = [
@@ -17,6 +21,7 @@ export class Redis implements ICredentialType {
 			placeholder: 'localhost',
 			description: 'Redis host name or IP address',
 		},
+
 		{
 			displayName: 'Port',
 			name: 'port',

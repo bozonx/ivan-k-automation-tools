@@ -1,0 +1,17 @@
+# Основные настройки форматирования
+printWidth: 100
+tabWidth: 2
+useTabs: false
+semi: false
+singleQuote: true
+quoteProps: as-needed
+trailingComma: es5
+bracketSpacing: true
+bracketSameLine: false
+arrowParens: always
+objectWrap: collapse
+
+# Настройки для JSDoc
+jsdocSpaces: 1
+jsdocDescriptionWithDot: false
+jsdocDescriptionTag: false
