@@ -27,7 +27,7 @@ export class RedisStreamProducer implements INodeType {
 		],
 		properties: [
 			{
-				displayName: 'Event name',
+				displayName: 'Event Name',
 				name: 'streamKey',
 				type: 'string',
 				default: 'my-service:main',
@@ -93,11 +93,11 @@ export class RedisStreamProducer implements INodeType {
 								name: 'type',
 								type: 'options',
 								options: [
-									{ name: 'String', value: 'string' },
-									{ name: 'Number', value: 'number' },
 									{ name: 'Boolean', value: 'boolean' },
 									{ name: 'JSON', value: 'json' },
 									{ name: 'Null', value: 'null' },
+									{ name: 'Number', value: 'number' },
+									{ name: 'String', value: 'string' },
 								],
 								default: 'string',
 								description: 'Value type. It will be validated and serialized accordingly.',
@@ -123,7 +123,7 @@ export class RedisStreamProducer implements INodeType {
 								name: 'valueBoolean',
 								type: 'boolean',
 								default: false,
-								description: 'Field value',
+								description: 'Whether the field value is true or false',
 								displayOptions: { show: { type: ['boolean'] } },
 							},
 							{

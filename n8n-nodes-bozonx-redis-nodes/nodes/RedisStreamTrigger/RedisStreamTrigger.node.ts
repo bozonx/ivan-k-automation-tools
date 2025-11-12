@@ -8,6 +8,12 @@ import {
 } from 'n8n-workflow';
 import { getRedisClientConnected } from '../RedisStreamProducer/redisClient';
 
+declare function setTimeout(
+    handler: (...args: unknown[]) => void,
+    timeout?: number,
+    ...args: unknown[]
+): unknown;
+
 export class RedisStreamTrigger implements INodeType {
 	description: INodeTypeDescription = {
 		displayName: 'Redis Sub Trigger',
@@ -27,7 +33,7 @@ export class RedisStreamTrigger implements INodeType {
 		],
 		properties: [
 			{
-				displayName: 'Event name',
+				displayName: 'Event Name',
 				name: 'streamKey',
 				type: 'string',
 				default: 'my-service:main',
@@ -43,6 +49,7 @@ export class RedisStreamTrigger implements INodeType {
 					'On start, also emit entries up to this many seconds old (if > 0). 0 emits only new entries after the node starts.',
 			},
 		],
+		usableAsTool: true,
 	};
 
 	async trigger(this: ITriggerFunctions): Promise<ITriggerResponse> {
@@ -147,7 +154,7 @@ export class RedisStreamTrigger implements INodeType {
 									) {
 										try {
 											val = JSON.parse(t);
-										} catch {}
+										} catch { void 0; }
 									} else {
 										const n = Number(t);
 										if (t !== '' && Number.isFinite(n)) val = n;
@@ -170,7 +177,7 @@ export class RedisStreamTrigger implements INodeType {
 								) {
 									try {
 										val = JSON.parse(t);
-									} catch {}
+									} catch { void 0; }
 								} else {
 									const n = Number(t);
 									if (t !== '' && Number.isFinite(n)) val = n;
@@ -191,9 +198,9 @@ export class RedisStreamTrigger implements INodeType {
 						// Emit to workflow
 						this.emit([outItems]);
 					}
-				} catch (error) {
+				} catch {
 					// Temporary error while reading; wait briefly and retry
-					await new Promise((r) => (globalThis as any).setTimeout(r, 1000));
+					await new Promise((r) => setTimeout(r as () => void, 1000));
 					continue;
 				}
 			}

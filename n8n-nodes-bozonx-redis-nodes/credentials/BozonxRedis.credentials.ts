@@ -8,7 +8,7 @@ export class BozonxRedis implements ICredentialType {
     light: 'file:../nodes/RedisCache/redis-cache.svg',
     dark: 'file:../nodes/RedisCache/redis-cache.dark.svg',
   };
-  testedBy = ['bozonxRedisCache', 'bozonxRedisStreamProducer', 'bozonxRedisStreamTrigger'];
+  testedBy = ['bozonxRedisCache'];
   properties: INodeProperties[] = [
     {
       displayName: 'Host',

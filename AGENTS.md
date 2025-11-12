@@ -24,5 +24,6 @@
   - Development stage docs: `\<projectName\>/dev_docs/`
   - Update `\<projectName\>/docs/CHANGELOG.md` for significant changes
   - Keep `\<projectName\>/README.md` up to date (setup/run instructions)
+  - README, all the documentation, jsdoc, messages and strings have to be in English
 - Environment variables: `.env.production.example` is the source of truth for expected variables
 - `.env.example` reflects new/modified environment variables

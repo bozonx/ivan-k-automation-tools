@@ -36,11 +36,16 @@ You can use expressions and env vars, e.g. `{{$env.REDIS_HOST}}`, `{{$env.REDIS_
 - Write → Payload Type: JSON or Custom Fields
 - TTL: value + unit (0 disables expiration)
 
-Write result: `{ ok: true, key, ttlSeconds }`
+Write result: `{ ok: true, key, ttlSeconds, data }`
 
-Read result hit: `{ found: true, key, value }`
+Read result hit: `{ found: true, key, data }`
 
 Read result miss: `{ found: false, key }`
+
+Details:
+- When Payload Type is JSON, a valid JSON string is required.
+- When Payload Type is Data Fields, you can add multiple fields with a selected value type (string, number, boolean, json, null). JSON values are validated and stringified.
+- TTL is optional; set to 0 to store without expiration. Units supported: seconds, minutes, hours, days.
 
 ### 2) Redis Pub (Streams)
 
@@ -55,12 +60,23 @@ Output item example:
 { "payload": <parsed_payload>, "_stream": "mystream", "_id": "1728666000000-0" }
 ```
 
+Details:
+- Text mode sends a single field "payload" with the provided text.
+- JSON mode sends a single field "data". If left empty, the incoming item is used and stringified.
+- Key-Value mode lets you define typed fields (string, number, boolean, json, null). Invalid JSON values are rejected.
+
 ### 3) Redis Stream Trigger (Streams)
 
 - Stream Key
 - Allowed Stale (Seconds): if > 0, on start emit recent entries; 0 → only new
 - Blocking read: `BLOCK 10000`, batch size: `COUNT 50`
 - Persists last ID in workflow static data
+
+Emitted item example:
+
+```json
+{ "payload": <parsed_payload_or_fields>, "_stream": "mystream", "_id": "1728666000000-0" }
+```
 
 ## Quick Start
 
@@ -69,6 +85,28 @@ Output item example:
 3. Redis Cache (Read): set same key
 4. Redis Pub: set stream key and payload
 5. Redis Stream Trigger: set same stream key, optional Allowed Stale
+
+## Usage Examples
+
+- Redis Cache (Write JSON):
+  - Mode: Write
+  - Key: `cache:user:42`
+  - Payload Type: JSON
+  - Data: `{ "id": 42, "name": "Ada" }`
+  - TTL Unit: hours, TTL Value: 24
+
+- Redis Cache (Read):
+  - Mode: Read
+  - Key: `cache:user:42`
+
+- Redis Pub (JSON):
+  - Stream Key: `my-service:main`
+  - Payload Mode: JSON
+  - Payload: leave empty to send the incoming item as JSON
+
+- Redis Stream Trigger:
+  - Stream Key: `my-service:main`
+  - Allowed Stale (Seconds): `0` for only new entries
 
 ## Development
 
@@ -79,6 +117,14 @@ Output item example:
 
 Before publishing, the CLI will run `n8n-node prerelease` automatically.
 
+Publishing options:
+- n8n Community Node flow: `pnpm release:n8n`
+- Plain npm publish (without n8n flow): see `dev_docs/publish.md`
+
 ## Compatibility
 
 Built and tested with n8n 1.60.0+ and node-redis 5.x.
+
+## License
+
+MIT
