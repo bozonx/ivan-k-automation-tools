@@ -21,16 +21,14 @@ Or install directly in n8n:
 ### Telegram File Proxy API
 
 - **Telegram Bot Token**: Your bot token from @BotFather (e.g., `123456:ABC-DEF...`)
-- **Worker URL**: Cloudflare Worker URL (e.g., `https://telegram-file-proxy.your-account.workers.dev`)
-- **AES Key**: AES-256 key matching the worker's `KEY` secret. Formats:
-  - `base64:...` (recommended)
-  - `hex:...`
+- **Worker URL**: Cloudflare Worker URL (e.g., `https://hidden-url-proxy.your-account.workers.dev`)
+- **AES Key**: AES-256 key in base64 format (must match worker's `KEY_BASE64` secret)
 
 Generate key:
 ```bash
 openssl rand -base64 32
 ```
-Then prefix with `base64:` in both n8n credentials and worker secret.
+Use the output directly (no prefix needed) in both n8n credentials and worker secret.
 
 ## Node: Telegram File Proxy
 
@@ -60,7 +58,7 @@ This URL can be passed to external services without exposing your bot token.
 
 ## Related
 
-- [telegram-file-proxy-worker](../telegram-file-proxy-worker) - Cloudflare Worker for decryption and proxying
+- [hidden-url-proxy](../hidden-url-proxy) - Cloudflare Worker for decryption and proxying
 
 ## License
 

@@ -37,9 +37,9 @@ export class BozonxTelegramFileProxyApi implements ICredentialType {
 			typeOptions: { password: true },
 			default: '',
 			required: true,
-			placeholder: 'base64:...',
+			placeholder: 'aGVsbG93b3JsZA==',
 			description:
-				'AES-256 key for encryption. Formats: base64:... or hex:... (must match worker KEY)',
+				'AES-256 key in base64 format (must match worker KEY_BASE64). Generate with: openssl rand -base64 32',
 		},
 	];
 

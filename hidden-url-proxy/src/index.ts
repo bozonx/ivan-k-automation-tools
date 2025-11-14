@@ -44,7 +44,7 @@ export default {
       }
       if (iv.byteLength !== 16) return jsonError(400, 'Invalid IV length');
 
-      const keyBytes = await readKey(env.KEY);
+      const keyBytes = await readKey(env.KEY_BASE64);
       if (!keyBytes) return jsonError(401, 'KEY is not set');
       if (keyBytes.byteLength !== 32) return jsonError(401, 'KEY must be 32 bytes');
 

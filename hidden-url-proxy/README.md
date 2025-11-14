@@ -11,11 +11,10 @@ Notes
 - Transparent reverse proxy: origin headers/body are returned as-is (except `content-length` is removed if size limiting is active).
 
 ## Env
-- KEY: AES-256 key. Formats: `base64:<...>`, `hex:<...>`, or raw 32-byte string.
+- KEY_BASE64: AES-256 key in base64 format (required).
   - Key generation: Use a secure random 32-byte key.
-    - In Node.js: `crypto.randomBytes(32).toString('base64')` (then prefix `base64:`)
-    - In shell: `openssl rand -base64 32` (then prefix `base64:`)
-    - Or use `hex:` with `openssl rand -hex 32`
+    - In Node.js: `crypto.randomBytes(32).toString('base64')` (no prefix needed)
+    - In shell: `openssl rand -base64 32` (no prefix needed)
 - TIMEOUT_SECS: optional, default `60` seconds. Aborts the origin request on timeout.
 - MAX_MEGABYTES: optional, if set to a positive integer (in MB):
   - If origin `Content-Length` is known and larger -> respond `413`.
@@ -30,5 +29,6 @@ pnpm dev
 ## Deploy
 ```bash
 wrangler login
+wrangler secret put KEY_BASE64
 pnpm deploy
 ```

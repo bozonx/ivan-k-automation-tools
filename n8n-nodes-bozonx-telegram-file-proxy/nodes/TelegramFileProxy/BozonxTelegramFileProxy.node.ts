@@ -137,12 +137,18 @@ export class BozonxTelegramFileProxy implements INodeType {
 }
 
 function parseKey(raw: string): Buffer {
+	// First check for explicit prefixes
 	if (raw.startsWith('base64:')) {
 		return Buffer.from(raw.slice(7), 'base64');
 	}
 	if (raw.startsWith('hex:')) {
 		return Buffer.from(raw.slice(4), 'hex');
 	}
-	// Treat as UTF-8 string
-	return Buffer.from(raw, 'utf8');
+	// Default: treat as base64 (for compatibility with new KEY_BASE64 format)
+	try {
+		return Buffer.from(raw, 'base64');
+	} catch {
+		// Fallback to UTF-8 if not valid base64
+		return Buffer.from(raw, 'utf8');
+	}
 }
