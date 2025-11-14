@@ -1,0 +1,7 @@
+name = "telegram-file-proxy-worker"
+main = "src/index.ts"
+compatibility_date = "2025-11-14"
+
+[vars]
+# Optional defaults
+TIMEOUT_MS = 15000
