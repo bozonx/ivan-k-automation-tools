@@ -51,11 +51,8 @@ export class BozonxTelegramFileProxyApi implements ICredentialType {
 	test: ICredentialTestRequest = {
 		request: {
 			baseURL: '={{$credentials.workerUrl}}',
-			url: '/',
+			url: '/health',
 			method: 'GET',
-			qs: {
-				q: 'dGVzdA==', // base64("test") - will fail decryption but tests reachability
-			},
 			skipSslCertificateValidation: false,
 		},
 	};

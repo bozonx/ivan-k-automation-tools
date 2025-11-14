@@ -5,6 +5,3 @@ compatibility_date = "2025-11-14"
 [vars]
 # Optional defaults
 TIMEOUT_SECS = 60
-
-[secrets]
-KEY_BASE64 = ""

@@ -15,6 +15,13 @@ export default {
           headers: { Allow: 'GET', 'content-type': 'text/plain; charset=utf-8' },
         })
       }
+      const urlForHealth = new URL(request.url)
+      if (urlForHealth.pathname === '/health') {
+        return new Response('ok', {
+          status: 200,
+          headers: { 'content-type': 'text/plain; charset=utf-8' },
+        })
+      }
 
       const q = await extractQ(request)
       if (!q) return jsonError(400, "Missing 'q'")
