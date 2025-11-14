@@ -1,4 +1,4 @@
-name = "telegram-file-proxy-worker"
+name = "hidden-url-proxy"
 main = "src/index.ts"
 compatibility_date = "2025-11-14"
 

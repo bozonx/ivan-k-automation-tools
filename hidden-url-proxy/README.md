@@ -1,4 +1,4 @@
-# Telegram Encrypted URL Proxy (Cloudflare Worker)
+# hidden-url-proxy Encrypted URL Proxy (Cloudflare Worker)
 
 Accepts base64-encoded AES-256-CBC container at the root route and proxies the decrypted URL.
 
