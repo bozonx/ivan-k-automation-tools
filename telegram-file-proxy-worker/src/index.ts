@@ -1,14 +1,21 @@
 export interface Env {
   KEY?: string;
   TIMEOUT_MS?: string | number;
+  MAX_BYTES?: string | number;
 }
 
-const textEncoder = new TextEncoder();
 const textDecoder = new TextDecoder();
 
 export default {
-  async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+  async fetch(request: Request, env: Env, _ctx: ExecutionContext): Promise<Response> {
     try {
+      if (request.method !== 'GET') {
+        return new Response('Method Not Allowed', {
+          status: 405,
+          headers: { Allow: 'GET', 'content-type': 'text/plain; charset=utf-8' },
+        });
+      }
+
       const q = await extractQ(request);
       if (!q) return jsonError(400, "Missing 'q'");
 
@@ -84,8 +91,23 @@ export default {
         signal,
       });
 
-      // Transparent pass-through of origin response
+      // Optional size limit
+      const maxBytesRaw = env.MAX_BYTES;
+      const maxBytes = maxBytesRaw != null ? parseInt(String(maxBytesRaw), 10) : undefined;
       const headers = new Headers(originResp.headers);
+
+      if (typeof maxBytes === 'number' && Number.isFinite(maxBytes) && maxBytes > 0) {
+        const cl = headers.get('content-length');
+        if (cl && Number.isFinite(Number(cl)) && Number(cl) > maxBytes) {
+          return jsonError(413, 'Response too large');
+        }
+        // If we wrap/limit the stream, drop content-length since we may cut early
+        headers.delete('content-length');
+        const limited = originResp.body ? limitStream(originResp.body, maxBytes) : null;
+        return new Response(limited, { status: originResp.status, headers });
+      }
+
+      // Transparent pass-through of origin response
       return new Response(originResp.body, { status: originResp.status, headers });
     } catch (err) {
       return jsonError(500, 'Internal error');
@@ -94,25 +116,8 @@ export default {
 };
 
 async function extractQ(request: Request): Promise<string | null> {
-  if (request.method === 'GET') {
-    const url = new URL(request.url);
-    return url.searchParams.get('q');
-  }
-  if (request.method === 'POST') {
-    const ctype = request.headers.get('content-type') || '';
-    const bodyText = await request.text();
-    if (!bodyText) return null;
-    if (ctype.includes('application/json')) {
-      try {
-        const j = JSON.parse(bodyText);
-        if (j && typeof j.q === 'string') return j.q;
-      } catch {
-        // fallthrough to treat as raw text
-      }
-    }
-    return bodyText;
-  }
-  return null;
+  const url = new URL(request.url);
+  return url.searchParams.get('q');
 }
 
 function base64ToBytes(b64: string): Uint8Array {
@@ -165,4 +170,32 @@ function normalizeB64(b64: string): string {
   else if (pad === 3) s += '=';
   else if (pad !== 0) s += '=== '.slice(0, (4 - pad) % 4); // defensive, should not hit
   return s;
+}
+
+function limitStream(body: ReadableStream<Uint8Array>, limit: number): ReadableStream<Uint8Array> {
+  const reader = body.getReader();
+  let count = 0;
+  return new ReadableStream<Uint8Array>({
+    async pull(controller) {
+      const { value, done } = await reader.read();
+      if (done) {
+        controller.close();
+        return;
+      }
+      count += value.byteLength;
+      if (count <= limit) {
+        controller.enqueue(value);
+        return;
+      }
+      // Exceeded: enqueue only remaining allowed bytes then close
+      const over = count - limit;
+      const allowed = value.subarray(0, value.byteLength - over);
+      if (allowed.byteLength > 0) controller.enqueue(allowed);
+      controller.close();
+      await reader.cancel();
+    },
+    async cancel(reason) {
+      await reader.cancel(reason);
+    },
+  });
 }
