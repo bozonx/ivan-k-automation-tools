@@ -4,4 +4,4 @@ compatibility_date = "2025-11-14"
 
 [vars]
 # Optional defaults
-TIMEOUT_MS = 15000
+TIMEOUT_SECS = 60

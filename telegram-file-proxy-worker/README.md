@@ -12,10 +12,14 @@ Notes
 
 ## Env
 - KEY: AES-256 key. Formats: `base64:<...>`, `hex:<...>`, or raw 32-byte string.
-- TIMEOUT_MS: optional, default `15000` ms. Aborts the origin request on timeout.
-- MAX_BYTES: optional, if set to a positive integer:
+  - Key generation: Use a secure random 32-byte key.
+    - In Node.js: `crypto.randomBytes(32).toString('base64')` (then prefix `base64:`)
+    - In shell: `openssl rand -base64 32` (then prefix `base64:`)
+    - Or use `hex:` with `openssl rand -hex 32`
+- TIMEOUT_SECS: optional, default `60` seconds. Aborts the origin request on timeout.
+- MAX_MEGABYTES: optional, if set to a positive integer (in MB):
   - If origin `Content-Length` is known and larger -> respond `413`.
-  - Otherwise, stream is capped at `MAX_BYTES` and `content-length` is removed.
+  - Otherwise, stream is capped at `MAX_MEGABYTES * 1024 * 1024` bytes and `content-length` is removed.
 
 ## Run
 ```bash

@@ -1,7 +1,7 @@
 export interface Env {
   KEY?: string;
-  TIMEOUT_MS?: string | number;
-  MAX_BYTES?: string | number;
+  TIMEOUT_SECS?: string | number;
+  MAX_MEGABYTES?: string | number;
 }
 
 const textDecoder = new TextDecoder();
@@ -76,7 +76,7 @@ export default {
       }
       if (target.protocol !== 'http:' && target.protocol !== 'https:') return jsonError(403, 'Scheme not allowed');
 
-      const timeoutMs = parseInt(String(env.TIMEOUT_MS ?? '15000'), 10);
+      const timeoutMs = parseInt(String(env.TIMEOUT_SECS ?? '60'), 10) * 1000;
       const signal: AbortSignal = (AbortSignal as any).timeout && typeof (AbortSignal as any).timeout === 'function'
         ? (AbortSignal as any).timeout(timeoutMs)
         : (() => {
@@ -92,8 +92,8 @@ export default {
       });
 
       // Optional size limit
-      const maxBytesRaw = env.MAX_BYTES;
-      const maxBytes = maxBytesRaw != null ? parseInt(String(maxBytesRaw), 10) : undefined;
+      const maxMegaBytesRaw = env.MAX_MEGABYTES;
+      const maxBytes = maxMegaBytesRaw != null ? parseInt(String(maxMegaBytesRaw), 10) * 1024 * 1024 : undefined;
       const headers = new Headers(originResp.headers);
 
       if (typeof maxBytes === 'number' && Number.isFinite(maxBytes) && maxBytes > 0) {
