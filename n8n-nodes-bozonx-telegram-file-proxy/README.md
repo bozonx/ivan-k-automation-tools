@@ -36,9 +36,9 @@ Then prefix with `base64:` in both n8n credentials and worker secret.
 
 ### Parameters
 
-- **File Path**: Telegram file path from `getFile` API response (e.g., `photos/file_123.jpg`)
+- **File ID**: Telegram `file_id` from message (e.g., `AgACAgIAAxkBAAIBY2...`)
 
-**Important**: You must first call Telegram's `getFile` API to get the `file_path` for a `file_id`. This node does NOT call the API automatically.
+The node automatically calls Telegram's `getFile` API to get the `file_path` and builds the download URL.
 
 ### Output
 
@@ -53,11 +53,10 @@ This URL can be passed to external services without exposing your bot token.
 
 ## Example Workflow
 
-1. **Telegram Trigger** receives audio message with `file_id`
-2. **HTTP Request** to `https://api.telegram.org/bot<TOKEN>/getFile?file_id=<file_id>` → get `file_path`
-3. **Telegram File Proxy** node encrypts file URL using `file_path`
-4. **HTTP Request** sends `encryptedUrl` to speech-to-text service
-5. Service fetches file via worker (token hidden)
+1. **Telegram Trigger** receives message with file → gets `file_id`
+2. **Telegram File Proxy** node automatically calls `getFile` API, gets `file_path`, encrypts URL
+3. **HTTP Request** sends `encryptedUrl` to speech-to-text service
+4. Service fetches file via worker (token hidden)
 
 ## Related
 

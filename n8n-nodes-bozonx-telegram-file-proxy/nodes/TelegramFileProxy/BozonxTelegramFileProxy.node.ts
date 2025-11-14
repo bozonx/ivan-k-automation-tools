@@ -30,14 +30,13 @@ export class BozonxTelegramFileProxy implements INodeType {
 		],
 		properties: [
 			{
-				displayName: 'File Path',
+				displayName: 'File ID',
 				name: 'fileId',
 				type: 'string',
 				default: '',
 				required: true,
-				placeholder: 'photos/file_123.jpg',
-				description:
-					'Telegram file path (from getFile API response) or file_id if you know the direct path',
+				placeholder: 'AgACAgIAAxkBAAIBY2...',
+				description: 'Telegram file_id. The node will automatically call getFile API to get the file_path.',
 			},
 		],
 		usableAsTool: true,
@@ -73,8 +72,33 @@ export class BozonxTelegramFileProxy implements INodeType {
 					});
 				}
 
+				// Call getFile API to get file_path
+				const getFileUrl = `https://api.telegram.org/bot${botToken}/getFile?file_id=${encodeURIComponent(fileId)}`;
+				const getFileResponse = await fetch(getFileUrl);
+				if (!getFileResponse.ok) {
+					throw new NodeOperationError(
+						this.getNode(),
+						`Failed to get file info: ${getFileResponse.status} ${getFileResponse.statusText}`,
+						{ itemIndex: i },
+					);
+				}
+
+				const getFileData = await getFileResponse.json() as {
+					ok: boolean;
+					result?: { file_path?: string };
+				};
+				if (!getFileData.ok || !getFileData.result?.file_path) {
+					throw new NodeOperationError(
+						this.getNode(),
+						'Invalid response from getFile API or file not found',
+						{ itemIndex: i },
+					);
+				}
+
+				const filePath = getFileData.result.file_path;
+
 				// Build Telegram file URL
-				const telegramUrl = `https://api.telegram.org/file/bot${botToken}/${fileId}`;
+				const telegramUrl = `https://api.telegram.org/file/bot${botToken}/${filePath}`;
 
 				// Encrypt URL
 				const iv = randomBytes(16);
