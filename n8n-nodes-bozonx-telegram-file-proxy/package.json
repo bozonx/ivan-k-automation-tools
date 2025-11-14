@@ -1,0 +1,49 @@
+{
+  "name": "n8n-nodes-bozonx-telegram-file-proxy",
+  "version": "0.1.0",
+  "description": "n8n node to encrypt Telegram file URLs for proxying through Cloudflare Worker",
+  "license": "MIT",
+  "keywords": [
+    "n8n-community-node-package"
+  ],
+  "author": {
+    "name": "Ivan K"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bozonx/ivan-k-automation-tools"
+  },
+  "scripts": {
+    "build": "n8n-node build",
+    "build:watch": "tsc --watch",
+    "dev": "n8n-node dev",
+    "lint": "n8n-node lint",
+    "lint:fix": "n8n-node lint --fix",
+    "release:n8n": "n8n-node release",
+    "prepublishOnly:n8n": "n8n-node prerelease",
+    "publish:npm": "pnpm build && pnpm publish --access public"
+  },
+  "files": [
+    "dist"
+  ],
+  "n8n": {
+    "n8nNodesApiVersion": 1,
+    "nodes": [
+      "dist/nodes/TelegramFileProxy/BozonxTelegramFileProxy.node.js"
+    ],
+    "credentials": [
+      "dist/credentials/BozonxTelegramFileProxyApi.credentials.js"
+    ]
+  },
+  "devDependencies": {
+    "@n8n/node-cli": "^0.14.0",
+    "@types/node": "^22.10.2",
+    "eslint": "9.39.1",
+    "prettier": "3.6.2",
+    "release-it": "^19.0.6",
+    "typescript": "5.9.3"
+  },
+  "peerDependencies": {
+    "n8n-workflow": "*"
+  }
+}
