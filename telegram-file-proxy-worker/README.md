@@ -29,6 +29,6 @@ pnpm dev
 
 ## Deploy
 ```bash
-wrangler secret put KEY
+wrangler login
 pnpm deploy
 ```
